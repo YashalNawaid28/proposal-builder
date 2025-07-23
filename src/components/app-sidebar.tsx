@@ -1,28 +1,10 @@
-"use client"
-
-import * as React from "react"
+"use client";
+import * as React from "react";
 import {
-  IconCamera,
-  IconChartBar,
-  IconDashboard,
-  IconDatabase,
-  IconFileAi,
-  IconFileDescription,
-  IconFileWord,
-  IconFolder,
-  IconHelp,
-  IconInnerShadowTop,
-  IconListDetails,
-  IconReport,
-  IconSearch,
+  IconBuildingStore,
+  IconSignLeft,
   IconSettings,
-  IconUsers,
-} from "@tabler/icons-react"
-
-import { NavDocuments } from "@/components/nav-documents"
-import { NavMain } from "@/components/nav-main"
-import { NavSecondary } from "@/components/nav-secondary"
-import { NavUser } from "@/components/nav-user"
+} from "@tabler/icons-react";
 import {
   Sidebar,
   SidebarContent,
@@ -31,151 +13,89 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
+import Image from "next/image";
+import { UserButton } from "@stackframe/stack";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
+const navLinks = [
+  {
+    title: "Brands",
+    icon: IconBuildingStore,
+    href: "/brands",
   },
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "#",
-      icon: IconDashboard,
-    },
-    {
-      title: "Lifecycle",
-      url: "#",
-      icon: IconListDetails,
-    },
-    {
-      title: "Analytics",
-      url: "#",
-      icon: IconChartBar,
-    },
-    {
-      title: "Projects",
-      url: "#",
-      icon: IconFolder,
-    },
-    {
-      title: "Team",
-      url: "#",
-      icon: IconUsers,
-    },
-  ],
-  navClouds: [
-    {
-      title: "Capture",
-      icon: IconCamera,
-      isActive: true,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Proposal",
-      icon: IconFileDescription,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Prompts",
-      icon: IconFileAi,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Settings",
-      url: "#",
-      icon: IconSettings,
-    },
-    {
-      title: "Get Help",
-      url: "#",
-      icon: IconHelp,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: IconSearch,
-    },
-  ],
-  documents: [
-    {
-      name: "Data Library",
-      url: "#",
-      icon: IconDatabase,
-    },
-    {
-      name: "Reports",
-      url: "#",
-      icon: IconReport,
-    },
-    {
-      name: "Word Assistant",
-      url: "#",
-      icon: IconFileWord,
-    },
-  ],
-}
+  {
+    title: "Signs",
+    icon: IconSignLeft,
+    href: "/signs",
+  },
+  {
+    title: "Options",
+    icon: IconSettings,
+    href: "/options",
+  },
+];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const pathname = usePathname();
   return (
-    <Sidebar collapsible="offcanvas" {...props}>
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5"
-            >
-              <a href="#">
-                <IconInnerShadowTop className="!size-5" />
-                <span className="text-base font-semibold">Acme Inc.</span>
-              </a>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+    <Sidebar
+      collapsible="offcanvas"
+      className="bg-black text-white"
+      style={
+        {
+          "--sidebar-accent": "#374151",
+          "--sidebar-accent-foreground": "#fff",
+        } as React.CSSProperties & Record<string, string>
+      }
+      {...props}
+    >
+      <SidebarHeader className="flex flex-col bg-black items-center gap-4 pt-8 pb-4">
+        {/* Logo and Branding */}
+        <Image
+          width={230}
+          height={64}
+          src="/images/logo.svg"
+          alt="Visible Graphics Logo"
+        />
       </SidebarHeader>
-      <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavDocuments items={data.documents} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+      <SidebarContent className="flex flex-col bg-black gap-2 px-4">
+        {/* Section Title */}
+        <div className="text-sm text-gray-400 mb-2 mt-2">Admin</div>
+        {/* Navigation Links */}
+        <SidebarMenu className="w-full">
+          {navLinks.map((link, idx) => {
+            const isActive =
+              pathname === link.href ||
+              (idx === 0 &&
+                (pathname === "/dashboard" || pathname === "/brands"));
+            return (
+              <SidebarMenuItem key={link.title}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive}
+                  className={`w-full flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+                    isActive
+                      ? "bg-gray-700 text-white"
+                      : "hover:bg-gray-800/60 text-white"
+                  }`}
+                >
+                  <Link href={link.href} className="w-full flex items-center">
+                    <link.icon className="w-5 h-5" />
+                    <span className="ml-2 text-sm font-medium">
+                      {link.title}
+                    </span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
+        </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter>
-        <NavUser user={data.user} />
+      <SidebarFooter className="mt-auto bg-black px-4 pb-4">
+        <UserButton showUserInfo={true} />
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }
