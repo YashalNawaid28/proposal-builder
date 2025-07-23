@@ -1,4 +1,4 @@
-'use client'
+'use client';
 import React, { useState } from 'react';
 import { useUser } from '@stackframe/stack';
 
@@ -11,32 +11,72 @@ const endpoints = [
 export default function ApiTester() {
   const [results, setResults] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
+  const [signId, setSignId] = useState('');
+  const [brandId, setBrandId] = useState('');
   const user = useUser();
-  console.log('Stack Auth user:', user);
-  console.log('Sending request.user.id:', user?.id);
 
-  const callApi = async (endpoint: typeof endpoints[0]) => {
+  const callApi = async (endpoint: typeof endpoints[0], extraQuery: string = '') => {
+    const url = extraQuery ? `${endpoint.url}?${extraQuery}` : endpoint.url;
     setLoading((prev) => ({ ...prev, [endpoint.name]: true }));
-    console.log('Sending request.user.id:', user?.id);
     try {
-      const res = await fetch(endpoint.url, {
+      const res = await fetch(url, {
         method: endpoint.method,
-       headers: {
-  'request.user.id': user?.id || '',
-}
+        headers: {
+          'request.user.id': user?.id || '',
+        },
       });
       const data = await res.json();
       setResults((prev) => ({ ...prev, [endpoint.name]: data }));
     } catch (e) {
-      setResults((prev) => ({ ...prev, [endpoint.name]: { error: String(e) } }));
+      setResults((prev) => ({
+        ...prev,
+        [endpoint.name]: { error: String(e) },
+      }));
     } finally {
       setLoading((prev) => ({ ...prev, [endpoint.name]: false }));
+    }
+  };
+
+  const callGetBySignId = async () => {
+    const name = 'Get Options by SignId';
+    setLoading((prev) => ({ ...prev, [name]: true }));
+    try {
+      const res = await fetch(`/api/options/get-by-signId?sign_id=${signId}`, {
+        headers: {
+          'request.user.id': user?.id || '',
+        },
+      });
+      const data = await res.json();
+      setResults((prev) => ({ ...prev, [name]: data }));
+    } catch (e) {
+      setResults((prev) => ({ ...prev, [name]: { error: String(e) } }));
+    } finally {
+      setLoading((prev) => ({ ...prev, [name]: false }));
+    }
+  };
+
+  const callGetByBrandId = async () => {
+    const name = 'Get Signs by BrandId';
+    setLoading((prev) => ({ ...prev, [name]: true }));
+    try {
+      const res = await fetch(`/api/signs/get-by-brandId?brand_id=${brandId}`, {
+        headers: {
+          'request.user.id': user?.id || '',
+        },
+      });
+      const data = await res.json();
+      setResults((prev) => ({ ...prev, [name]: data }));
+    } catch (e) {
+      setResults((prev) => ({ ...prev, [name]: { error: String(e) } }));
+    } finally {
+      setLoading((prev) => ({ ...prev, [name]: false }));
     }
   };
 
   return (
     <div style={{ padding: 24 }}>
       <h1>API Tester (Stack Auth)</h1>
+
       <ul>
         {endpoints.map((ep) => (
           <li key={ep.name} style={{ marginBottom: 16 }}>
@@ -48,7 +88,49 @@ export default function ApiTester() {
             </pre>
           </li>
         ))}
+
+        {/* GET SIGNS BY BRAND ID */}
+        <li style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <input
+              type="text"
+              placeholder="Enter brand_id"
+              value={brandId}
+              onChange={(e) => setBrandId(e.target.value)}
+              style={{ padding: 6, flex: 1 }}
+            />
+            <button onClick={callGetByBrandId} disabled={loading['Get Signs by BrandId']}>
+              {loading['Get Signs by BrandId'] ? 'Loading...' : 'Get Signs by BrandId'}
+            </button>
+          </div>
+          <pre style={{ background: '#f4f4f4', padding: 8, marginTop: 8 }}>
+            {results['Get Signs by BrandId']
+              ? JSON.stringify(results['Get Signs by BrandId'], null, 2)
+              : ''}
+          </pre>
+        </li>
+
+        {/* GET OPTIONS BY SIGN ID */}
+        <li style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <input
+              type="text"
+              placeholder="Enter sign_id"
+              value={signId}
+              onChange={(e) => setSignId(e.target.value)}
+              style={{ padding: 6, flex: 1 }}
+            />
+            <button onClick={callGetBySignId} disabled={loading['Get Options by SignId']}>
+              {loading['Get Options by SignId'] ? 'Loading...' : 'Get Options by SignId'}
+            </button>
+          </div>
+          <pre style={{ background: '#f4f4f4', padding: 8, marginTop: 8 }}>
+            {results['Get Options by SignId']
+              ? JSON.stringify(results['Get Options by SignId'], null, 2)
+              : ''}
+          </pre>
+        </li>
       </ul>
     </div>
   );
-} 
+}
