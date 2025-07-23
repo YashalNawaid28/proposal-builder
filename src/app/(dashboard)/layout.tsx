@@ -1,6 +1,6 @@
 import { UserSyncProvider } from "../../components/user-sync-provider";
 import { AppSidebar } from "@/components/app-sidebar";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 export default function MainLayout({
   children,
@@ -18,7 +18,7 @@ export default function MainLayout({
         }
       >
         <AppSidebar variant="inset" />
-        <SidebarInset>{children}</SidebarInset>
+        <div className="flex-1">{children}</div>
       </SidebarProvider>
     </UserSyncProvider>
   );
