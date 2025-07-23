@@ -1,28 +1,12 @@
-"use client"
-
-import * as React from "react"
+"use client";
+import * as React from "react";
 import {
-  IconCamera,
-  IconChartBar,
-  IconDashboard,
-  IconDatabase,
-  IconFileAi,
-  IconFileDescription,
-  IconFileWord,
-  IconFolder,
-  IconHelp,
-  IconInnerShadowTop,
-  IconListDetails,
-  IconReport,
-  IconSearch,
+  IconBuildingStore,
+  IconSignLeft,
   IconSettings,
-  IconUsers,
-} from "@tabler/icons-react"
-
-import { NavDocuments } from "@/components/nav-documents"
-import { NavMain } from "@/components/nav-main"
-import { NavSecondary } from "@/components/nav-secondary"
-import { NavUser } from "@/components/nav-user"
+  IconChevronDown,
+} from "@tabler/icons-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Sidebar,
   SidebarContent,
@@ -31,151 +15,94 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
+import Image from "next/image";
 
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
+const user = {
+  name: "Nick Rogers",
+  email: "nick@visiblegraphics.com",
+  avatar: "/avatars/shadcn.jpg",
+};
+
+const navLinks = [
+  {
+    title: "Brands",
+    icon: IconBuildingStore,
+    active: true,
   },
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "#",
-      icon: IconDashboard,
-    },
-    {
-      title: "Lifecycle",
-      url: "#",
-      icon: IconListDetails,
-    },
-    {
-      title: "Analytics",
-      url: "#",
-      icon: IconChartBar,
-    },
-    {
-      title: "Projects",
-      url: "#",
-      icon: IconFolder,
-    },
-    {
-      title: "Team",
-      url: "#",
-      icon: IconUsers,
-    },
-  ],
-  navClouds: [
-    {
-      title: "Capture",
-      icon: IconCamera,
-      isActive: true,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Proposal",
-      icon: IconFileDescription,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Prompts",
-      icon: IconFileAi,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Settings",
-      url: "#",
-      icon: IconSettings,
-    },
-    {
-      title: "Get Help",
-      url: "#",
-      icon: IconHelp,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: IconSearch,
-    },
-  ],
-  documents: [
-    {
-      name: "Data Library",
-      url: "#",
-      icon: IconDatabase,
-    },
-    {
-      name: "Reports",
-      url: "#",
-      icon: IconReport,
-    },
-    {
-      name: "Word Assistant",
-      url: "#",
-      icon: IconFileWord,
-    },
-  ],
-}
+  {
+    title: "Signs",
+    icon: IconSignLeft,
+    active: false,
+  },
+  {
+    title: "Options",
+    icon: IconSettings,
+    active: false,
+  },
+];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar collapsible="offcanvas" {...props}>
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5"
-            >
-              <a href="#">
-                <IconInnerShadowTop className="!size-5" />
-                <span className="text-base font-semibold">Acme Inc.</span>
-              </a>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+    <Sidebar
+      collapsible="offcanvas"
+      className="bg-black text-white"
+      style={
+        {
+          "--sidebar-accent": "#374151", // Tailwind gray-700
+          "--sidebar-accent-foreground": "#fff",
+        } as React.CSSProperties & Record<string, string>
+      }
+      {...props}
+    >
+      <SidebarHeader className="flex flex-col bg-black items-center gap-4 pt-8 pb-4">
+        {/* Logo and Branding */}
+        <Image
+          width={230}
+          height={64}
+          src="/images/logo.svg"
+          alt="Visible Graphics Logo"
+        />
       </SidebarHeader>
-      <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavDocuments items={data.documents} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+      <SidebarContent className="flex flex-col bg-black gap-2 px-4">
+        {/* Section Title */}
+        <div className="text-sm text-gray-400 mb-2 mt-2">Admin</div>
+        {/* Navigation Links */}
+        <SidebarMenu className="w-full">
+          {navLinks.map((link) => (
+            <SidebarMenuItem key={link.title}>
+              <SidebarMenuButton
+                asChild
+                isActive={link.active}
+                className={`w-full flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+                  link.active
+                    ? "bg-gray-700 text-white"
+                    : "hover:bg-gray-800/60 text-white"
+                }`}
+              >
+                <a href="#">
+                  <link.icon className="w-5 h-5" />
+                  <span className="ml-2 text-sm font-medium">{link.title}</span>
+                </a>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter>
-        <NavUser user={data.user} />
+      <SidebarFooter className="mt-auto bg-black px-4 pb-4">
+        {/* User Profile */}
+        <div className="flex items-center gap-3 rounded-lg p-2">
+          <Avatar className="h-9 w-9 rounded-lg grayscale">
+            <AvatarImage src={user.avatar} alt={user.name} />
+            <AvatarFallback className="rounded-lg">NR</AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <div className="truncate text-sm font-medium">{user.name}</div>
+            <div className="truncate text-xs text-gray-400">{user.email}</div>
+          </div>
+          <IconChevronDown className="w-4 h-4 text-gray-400" />
+        </div>
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }
