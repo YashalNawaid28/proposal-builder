@@ -20,8 +20,7 @@ const rowData = [
   },
 ];
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const StatusCell = (params: any) => (
+const StatusCell = () => (
   <span className="bg-green-100 text-green-700 px-3 py-1 rounded text-xs font-medium">
     Active
   </span>
@@ -69,6 +68,7 @@ const BrandsPage = () => {
       {
         headerName: "Brand Name",
         field: "brandName",
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         cellRenderer: (params: any) => (
           <span className="font-semibold">{params.value}</span>
         ),
@@ -84,6 +84,7 @@ const BrandsPage = () => {
       {
         headerName: "Signs",
         field: "signs",
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         valueFormatter: (p: any) => `${p.value} Signs`,
         flex: 1,
         cellClass: "ag-center-text",
@@ -91,6 +92,7 @@ const BrandsPage = () => {
       {
         headerName: "Services",
         field: "services",
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         valueFormatter: (p: any) => `${p.value} Services`,
         flex: 1,
         cellClass: "ag-center-text",

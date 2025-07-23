@@ -1,5 +1,5 @@
 "use client";
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { AgGridReact } from "ag-grid-react";
 import { ColDef } from "ag-grid-community";
 import "ag-grid-community/styles/ag-grid.css";
@@ -10,24 +10,32 @@ import { IconChevronRight } from "@tabler/icons-react";
 import { ICellRendererParams } from "ag-grid-community";
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-const rowData = [
+const signData = [
   {
-    signImage: "/images/daves-hot-chicken-sign1.png",
     signName: "Channel Letters",
-    signDescription:
-      "{Size} {Raceway-Mounted Option} {Color} {Fabrication Type} Channel Letters {w/ Behind-The-Wall Option}",
+    size: '12"',
+    signPrice: "$3,520.00",
+    installPrice: "$1,970.00",
+    signBudget: "$1,936.00",
+    installBudget: "$1,083.00",
+    raceway: "$600.00",
     status: "Active",
     dateAdded: "Aug 1st, 2025",
+    signOptions: "Raceway, Raceway Size, Color, Fabrication Type",
   },
   {
-    signImage: "/images/daves-hot-chicken-sign2.png",
-    signName: "2-Line Channel Letters",
-    signDescription:
-      "{Size} {Raceway-Mounted Option} {Color} {Fabrication Type}  Channel Letters {w/ Behind-The-Wall Option}",
+    signName: "Channel Letters",
+    size: '13"',
+    signPrice: "$3,520.00",
+    installPrice: "$1,970.00",
+    signBudget: "$1,936.00",
+    installBudget: "$1,083.00",
+    raceway: "$600.00",
     status: "Active",
     dateAdded: "Aug 1st, 2025",
+    signOptions: "Raceway, Raceway Size, Color, Fabrication Type",
   },
-  // ... add more rows as needed ...
+  // ...add more rows as needed
 ];
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -50,74 +58,90 @@ const SignImageCell = (params: any) => (
   </div>
 );
 
-const DropdownArrowCell = (props: ICellRendererParams) => (
-  <button
-    type="button"
-    className="flex items-center justify-center w-full h-full focus:outline-none"
-    // onClick will be added for expand/collapse logic
-  >
-    <IconChevronRight className="transition-transform duration-200" size={20} />
-  </button>
-);
-
 const SignsPage = () => {
   const [tab, setTab] = useState("all");
-  const columnDefs = useMemo<ColDef[]>(
-    () => [
-      {
-        headerName: "",
-        field: "dropdown",
-        width: 40,
-        pinned: "left" as const,
-        suppressMenu: true,
-        suppressMovable: true,
-        suppressSizeToFit: true,
-        resizable: false,
-        cellClass: "ag-center-text",
-        cellRenderer: DropdownArrowCell,
-        // No checkboxSelection or headerCheckboxSelection
-      },
-      {
-        headerName: "Sign Image",
-        field: "signImage",
-        cellRenderer: SignImageCell,
-        flex: 1,
-        suppressMenu: true,
-        suppressMovable: true,
-        resizable: false,
-        cellClass: "ag-center-text",
-      },
-      {
-        headerName: "Sign Name",
-        field: "signName",
-        cellRenderer: (params: any) => (
-          <span className="font-semibold">{params.value}</span>
-        ),
-        flex: 1,
-        cellClass: "ag-center-text",
-      },
-      {
-        headerName: "Sign Description",
-        field: "signDescription",
-        flex: 3,
-        cellClass: "ag-sign-description-cell ag-center-text",
-      },
-      {
-        headerName: "Status",
-        field: "status",
-        cellRenderer: StatusCell,
-        flex: 1,
-        cellClass: "ag-center-text",
-      },
-      {
-        headerName: "Date Added",
-        field: "dateAdded",
-        flex: 1,
-        cellClass: "ag-center-text",
-      },
-    ],
-    []
-  );
+  const [expandedRow, setExpandedRow] = useState<number | null>(null);
+  const [columnDefs, setColumnDefs] = useState<ColDef[]>([
+    {
+      headerName: "",
+      field: "dropdown",
+      width: 40,
+      pinned: "left" as const,
+      suppressMovable: true,
+      suppressSizeToFit: true,
+      resizable: false,
+      cellClass: "ag-center-text",
+      cellRenderer: (params: ICellRendererParams) => (
+        <button
+          type="button"
+          className="flex items-center justify-center w-4 focus:outline-none"
+          onClick={() =>
+            setExpandedRow(
+              params.node.rowIndex === expandedRow ? null : params.node.rowIndex
+            )
+          }
+        >
+          <IconChevronRight
+            className={`transition-transform duration-200 ${
+              params.node.rowIndex === expandedRow ? "rotate-90" : ""
+            }`}
+            size={30}
+          />
+        </button>
+      ),
+    },
+    {
+      headerName: "Sign Image",
+      field: "signImage",
+      cellRenderer: SignImageCell,
+      flex: 1,
+      suppressMovable: true,
+      resizable: false,
+      cellClass: "ag-center-text",
+    },
+    {
+      headerName: "Sign Name",
+      field: "signName",
+      cellRenderer: (params: ICellRendererParams) => (
+        <span className="font-semibold">{params.value}</span>
+      ),
+      flex: 1,
+      cellClass: "ag-center-text",
+    },
+    {
+      headerName: "Sign Description",
+      field: "signDescription",
+      flex: 3,
+      cellClass: "ag-sign-description-cell ag-center-text",
+    },
+    {
+      headerName: "Status",
+      field: "status",
+      cellRenderer: StatusCell,
+      flex: 1,
+      cellClass: "ag-center-text",
+    },
+    {
+      headerName: "Date Added",
+      field: "dateAdded",
+      flex: 1,
+      cellClass: "ag-center-text",
+    },
+  ]);
+
+  // Grouped table columnDefs
+  const groupedColumnDefs: ColDef[] = [
+    { field: "signName", rowGroup: true, hide: true },
+    { field: "size" },
+    { field: "signPrice" },
+    { field: "installPrice" },
+    { field: "signBudget" },
+    { field: "installBudget" },
+    { field: "raceway" },
+    { field: "status" },
+    { field: "dateAdded" },
+    { field: "signOptions" },
+  ];
 
   // Custom header style
   const gridOptions = {
@@ -204,7 +228,7 @@ const SignsPage = () => {
           style={{ width: "100%", background: "white" }}
         >
           <AgGridReact
-            rowData={rowData}
+            rowData={signData}
             columnDefs={columnDefs}
             domLayout="autoHeight"
             headerHeight={48}
@@ -213,6 +237,23 @@ const SignsPage = () => {
             gridOptions={gridOptions}
           />
         </div>
+        {/* Render grouped table below the expanded row */}
+        {expandedRow !== null && (
+          <div
+            className="ag-theme-alpine mt-4"
+            style={{ width: "100%", background: "white" }}
+          >
+            <AgGridReact
+              rowData={signData}
+              columnDefs={groupedColumnDefs}
+              domLayout="autoHeight"
+              headerHeight={48}
+              rowHeight={56}
+              groupDisplayType="multipleColumns"
+              gridOptions={gridOptions}
+            />
+          </div>
+        )}
       </div>
     </>
   );

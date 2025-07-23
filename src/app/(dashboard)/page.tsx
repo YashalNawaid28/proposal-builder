@@ -14,7 +14,7 @@ export default function Home() {
     } else {
       router.push("/handler/sign-in");
     }
-  }, [user]);
+  }, [user, router]);
 
   // Show loading state while checking authentication
   return (

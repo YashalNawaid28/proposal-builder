@@ -15,7 +15,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import Image from "next/image";
-import { UserButton, useUser } from "@stackframe/stack";
+import { UserButton } from "@stackframe/stack";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
