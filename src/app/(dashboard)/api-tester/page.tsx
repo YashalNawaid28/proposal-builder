@@ -77,23 +77,7 @@ export default function ApiTester() {
     }
   };
 
-  const callGetPricingBySignId = async () => {
-    const name = 'Get Sign Pricing by SignId';
-    setLoading((prev) => ({ ...prev, [name]: true }));
-    try {
-      const res = await fetch(`/api/sign-pricing/get-by-signId?sign_id=${pricingSignId}`, {
-        headers: {
-          'request.user.id': user?.id || '',
-        },
-      });
-      const data = await res.json();
-      setResults((prev) => ({ ...prev, [name]: data }));
-    } catch (e) {
-      setResults((prev) => ({ ...prev, [name]: { error: String(e) } }));
-    } finally {
-      setLoading((prev) => ({ ...prev, [name]: false }));
-    }
-  };
+ 
 
   const callGetPricingBySignId = async () => {
     const name = 'Get Sign Pricing by SignId';

@@ -101,12 +101,16 @@ const BrandsPage = () => {
   useEffect(() => {
     const fetchBrands = async () => {
       setLoading(true);
+      console.log("user id " , user)
       try {
         const res = await fetch("/api/brands", {
           headers: {
             "request.user.id": user?.id || "",
+            
           },
         });
+
+        
         
         if (!res.ok) {
           throw new Error("Failed to fetch brands");
