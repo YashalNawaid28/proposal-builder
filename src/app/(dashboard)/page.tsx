@@ -11,11 +11,11 @@ export default function Home() {
 
   useEffect(() => {
     if (user?.id) {
-      router.push("/dashboard");
+      router.push("/brands");
     } else {
       router.push("/handler/sign-in");
     }
-  }, [user]);
+  }, [user, router]);
 
   // Show loading state while checking authentication
   return (
