@@ -18,12 +18,54 @@ export const DetailCellRenderer = (
 
   // Columns for the detail grid (excluding Sign Options)
   const detailColumnDefs: ColDef<ISignDetail>[] = [
-    { field: "size", headerName: "Size", width: 100 },
-    { field: "signPrice", headerName: "Sign Price", width: 130 },
-    { field: "installPrice", headerName: "Install Price", width: 130 },
-    { field: "signBudget", headerName: "Sign Budget", width: 130 },
-    { field: "installBudget", headerName: "Install Budget", width: 130 },
-    { field: "raceway", headerName: "Raceway", width: 110 },
+    {
+      field: "size",
+      headerName: "Size",
+      width: 100,
+      suppressHeaderMenuButton: true,
+      suppressHeaderFilterButton: true,
+      menuTabs: [],
+    },
+    {
+      field: "signPrice",
+      headerName: "Sign Price",
+      width: 130,
+      suppressHeaderMenuButton: true,
+      suppressHeaderFilterButton: true,
+      menuTabs: [],
+    },
+    {
+      field: "installPrice",
+      headerName: "Install Price",
+      width: 130,
+      suppressHeaderMenuButton: true,
+      suppressHeaderFilterButton: true,
+      menuTabs: [],
+    },
+    {
+      field: "signBudget",
+      headerName: "Sign Budget",
+      width: 130,
+      suppressHeaderMenuButton: true,
+      suppressHeaderFilterButton: true,
+      menuTabs: [],
+    },
+    {
+      field: "installBudget",
+      headerName: "Install Budget",
+      width: 130,
+      suppressHeaderMenuButton: true,
+      suppressHeaderFilterButton: true,
+      menuTabs: [],
+    },
+    {
+      field: "raceway",
+      headerName: "Raceway",
+      width: 110,
+      suppressHeaderMenuButton: true,
+      suppressHeaderFilterButton: true,
+      menuTabs: [],
+    },
     {
       headerName: "Sign Options",
       cellRenderer: () => (
@@ -43,6 +85,9 @@ export const DetailCellRenderer = (
       ),
       flex: 2,
       cellClass: "ag-center-text",
+      suppressHeaderMenuButton: true,
+      suppressHeaderFilterButton: true,
+      menuTabs: [],
     },
   ];
 
@@ -69,7 +114,6 @@ export const DetailCellRenderer = (
     rowData: props.data?.details ?? [],
     defaultColDef: {
       sortable: true,
-      filter: true,
       resizable: true,
     },
     suppressHorizontalScroll: false,
@@ -86,20 +130,64 @@ export const DetailCellRenderer = (
   };
 
   return (
-    <div
-      className="detail-cell-renderer"
-      style={{
-        width: "100%",
-        height: "100%",
-        margin: 0,
-        padding: 0,
-        background: "#F9F9FB",
-        boxSizing: "border-box",
-      }}
-    >
+    <>
+      <style>{`
+        .custom-ag-header, .ag-header, .ag-header-cell, .ag-header-row {
+          background-color: #f3f4f6 !important; /* Tailwind bg-gray-100 */
+          color: #111827 !important;
+          font-weight: 600;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+        }
+        .ag-header-cell:not(:last-child), .ag-cell:not(:last-child) {
+          border-right: 1px solid #d1d5db !important; /* Tailwind border-gray-300 */
+        }
+        .ag-row-selected, .ag-row-hover {
+          background: white !important;
+        }
+        .ag-center-text {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          text-align: center !important;
+          height: 100%;
+        }
+        .ag-header-cell-label {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          width: 100%;
+          height: 100%;
+          text-align: center !important;
+        }
+        /* Center checkboxes in header and data cells for the first column */
+        .ag-header-cell[col-id=""] .ag-header-cell-label,
+        .ag-cell[col-id=""] {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          height: 100%;
+          width: 100%;
+        }
+        .ag-icon-center {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          width: 100% !important;
+          height: 100% !important;
+        }
+        .ag-theme-alpine .ag-cell, .ag-theme-alpine .ag-header-cell {
+          padding-left: 16px !important;
+          padding-right: 16px !important;
+        }
+        /* Add 12px left margin to the header checkbox wrapper for visual centering */
+        .ag-header-select-all .ag-checkbox-input-wrapper {
+          margin-left: 12px !important;
+        }
+      `}</style>
       <div
-        className="detail-grid-container ag-theme-alpine"
-        ref={containerRef}
+        className="detail-cell-renderer"
         style={{
           width: "100%",
           height: "100%",
@@ -109,9 +197,22 @@ export const DetailCellRenderer = (
           boxSizing: "border-box",
         }}
       >
-        <AgGridReact<ISignDetail> {...detailGridOptions} />
-        {renderSignOptionsBlock()}
+        <div
+          className="detail-grid-container ag-theme-alpine"
+          ref={containerRef}
+          style={{
+            width: "100%",
+            height: "100%",
+            margin: 0,
+            padding: 0,
+            background: "#F9F9FB",
+            boxSizing: "border-box",
+          }}
+        >
+          <AgGridReact<ISignDetail> {...detailGridOptions} />
+          {renderSignOptionsBlock()}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
