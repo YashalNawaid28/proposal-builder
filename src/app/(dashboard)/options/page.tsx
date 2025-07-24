@@ -1,153 +1,59 @@
 "use client";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { AgGridReact } from "ag-grid-react";
-import { ColDef } from "ag-grid-community";
+import { ColDef, ICellRendererParams } from "ag-grid-community";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import { ModuleRegistry, AllCommunityModule } from "ag-grid-community";
 import Image from "next/image";
+import { useUser } from "@stackframe/stack";
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-const optionsData = [
-  {
-    icon: "dropdown",
-    name: "Color",
-    placeholder: "{color}",
-    type: "Dropdown",
-    status: "Active",
-    values: ["Red", "White"],
-  },
-  {
-    icon: "input",
-    name: "Raceway Size",
-    placeholder: "{raceway_size}",
-    type: "Input",
-    status: "Active",
-    values: ["N/A"],
-  },
-  {
-    icon: "input",
-    name: "Backer Panel Size (Line 1)",
-    placeholder: "{backer_panel_size_line1}",
-    type: "Input",
-    status: "Active",
-    values: ["N/A"],
-  },
-  {
-    icon: "input",
-    name: "Backer Panel Size (Line 2)",
-    placeholder: "{backer_panel_size_line2}",
-    type: "Input",
-    status: "Active",
-    values: ["N/A"],
-  },
-  {
-    icon: "dropdown",
-    name: "Fab Type",
-    placeholder: "{fab_type}",
-    type: "Dropdown",
-    status: "Active",
-    values: [
-      "Face-Lit",
-      "Halo-Lit +20%",
-      "Trimless +75%",
-      "Face + Halo-Lit",
-      "Face + Halo-Lit (Duel LEDs) +20%",
-    ],
-  },
-  {
-    icon: "dropdown",
-    name: "Fab Material",
-    placeholder: "{fab_material}",
-    type: "Dropdown",
-    status: "Active",
-    values: [
-      "Plastic",
-      "Pan-Formed Aluminum +60%",
-      "Flex Face",
-      "Routed Aluminum +50%",
-      "Routed Push-Thru +75%",
-      "Pan-Formed Aluminum Push-Thru +100%",
-    ],
-  },
-  {
-    icon: "dropdown",
-    name: "Print Material",
-    placeholder: "{print_material}",
-    type: "Dropdown",
-    status: "Active",
-    values: [
-      "Vinyl",
-      "Digitally Printed Vinyl +68%",
-      "Window Tint",
-      "Window Tint Install",
-      "Digitally Printed Wallpaper +170%",
-      "Digitally Printed Wallpaper Install +50%",
-    ],
-  },
-  {
-    icon: "dropdown",
-    name: "Mounting Surface",
-    placeholder: "{mounting_surface}",
-    type: "Dropdown",
-    status: "Active",
-    values: ["Glass", "Drywall", "Concrete +60%", "Brick +100%"],
-  },
-  {
-    icon: "dropdown",
-    name: "Panel Style",
-    placeholder: "{panel_style}",
-    type: "Dropdown",
-    status: "Active",
-    values: ["Single-Sided", "Double-Sided +100%"],
-  },
-  {
-    icon: "dropdown",
-    name: "Illumination",
-    placeholder: "{illumination}",
-    type: "Dropdown",
-    status: "Active",
-    values: ["Yes +5%", "No"],
-  },
-  {
-    icon: "dropdown",
-    name: "Backer Illumination",
-    placeholder: "{backer_illumination}",
-    type: "Dropdown",
-    status: "Active",
-    values: ["Yes", "No"],
-  },
-  {
-    icon: "dropdown",
-    name: "View",
-    placeholder: "{panel_style}",
-    type: "Dropdown",
-    status: "Active",
-    values: ["Single-Sided", "Double-Sided +50%"],
-  },
-  {
-    icon: "dropdown",
-    name: "Anti-Graffiti",
-    placeholder: "{anti-graffiti}",
-    type: "Dropdown",
-    status: "Active",
-    values: ["Yes +$4/SF", "No"],
-  },
-];
+// Define interfaces for our data structures
+interface OptionData {
+  id: string;
+  sign_id: string;
+  option_icon: string;
+  option_name: string;
+  placeholder: string;
+  input_type: string;
+  status: string;
+  values: string[];
+}
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const StatusCell = (params: any) => (
-  <span className="bg-green-100 text-green-700 px-3 py-1 rounded text-xs font-medium">
-    {params.value}
-  </span>
-);
+interface OptionRowData {
+  id: string;
+  iconUrl: string;
+  name: string;
+  placeholder: string;
+  type: string;
+  status: string;
+  values: string[];
+}
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const ValuesCell = (params: any) => (
+const StatusCell = (params: ICellRendererParams) => {
+  const status = params.value as string;
+  let bgColor = "bg-green-100";
+  let textColor = "text-green-700";
+
+  if (status === "Draft") {
+    bgColor = "bg-yellow-100";
+    textColor = "text-yellow-700";
+  } else if (status === "Archived") {
+    bgColor = "bg-gray-100";
+    textColor = "text-gray-700";
+  }
+
+  return (
+    <span className={`${bgColor} ${textColor} px-3 py-1 rounded text-xs font-medium`}>
+      {status}
+    </span>
+  );
+};
+
+const ValuesCell = (params: ICellRendererParams) => (
   <div className="flex flex-wrap justify-start">
-    {" "}
-    {/* increased gap for more spacing */}
-    {params.value.map((val: string, idx: number) => (
+    {(params.value as string[]).map((val: string, idx: number) => (
       <span
         key={idx}
         className="bg-gray-100 px-2 py-1 rounded text-xs font-medium border border-gray-300 mx-1 my-1"
@@ -158,9 +64,28 @@ const ValuesCell = (params: any) => (
   </div>
 );
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const IconCell = (params: any) =>
-  params.data.iconUrl ? (
+const IconCell = (params: ICellRendererParams) => {
+  const [imgError, setImgError] = useState(false);
+  
+  // If image failed to load, show initials based on option name
+  if (imgError || !params.data.iconUrl) {
+    const optionName = params.data.name || "Option";
+    const initials = optionName.split(" ")
+      .map((word : any) => word[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2);
+      
+    return (
+      <div className="flex items-center justify-center h-full w-full">
+        <div className="w-8 h-8 rounded bg-gray-200 flex items-center justify-center text-gray-600 text-xs font-medium">
+          {initials}
+        </div>
+      </div>
+    );
+  }
+  
+  return (
     <div className="flex items-center justify-center h-full w-full">
       <Image
         src={params.data.iconUrl}
@@ -168,32 +93,86 @@ const IconCell = (params: any) =>
         width={32}
         height={32}
         className="rounded"
+        unoptimized={true} // Bypass domain verification
+        onError={() => setImgError(true)}
       />
     </div>
-  ) : (
-    <div className="flex items-center justify-center h-full w-full text-xs text-gray-400">
-      N/A
-    </div>
   );
+};
 
 // Custom header style
 const gridOptions = {
   suppressRowClickSelection: true,
   suppressCellSelection: true,
   headerHeight: 48,
-  rowHeight: 56,
   getHeaderClass: () => "custom-ag-header",
 };
 
 const OptionsPage = () => {
-  const [tab, setTab] = useState("all");
+  const user = useUser();
+  const [tab, setTab] = useState<"all" | "active" | "archived">("all");
+  const [options, setOptions] = useState<OptionData[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch options data when component mounts
+  useEffect(() => {
+    const fetchOptions = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/options", {
+          headers: {
+            "request.user.id": user?.id || "",
+          },
+        });
+        
+        if (!res.ok) {
+          throw new Error("Failed to fetch options");
+        }
+        
+        const data = await res.json();
+        setOptions(data.data || []);
+      } catch (error) {
+        console.error("Error fetching options:", error);
+        setError(error instanceof Error ? error.message : "An unknown error occurred");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOptions();
+  }, [user]);
+
+  // Filter options based on selected tab
+  const filteredOptions = useMemo(() => {
+    if (tab === "all") return options;
+    return options.filter((option) => 
+      tab === "active" 
+        ? option.status === "Active" 
+        : option.status === "Archived"
+    );
+  }, [options, tab]);
+
+  // Transform API data to match the table structure
+  const rowData = useMemo(() => {
+    return filteredOptions.map((option) => ({
+      id: option.id,
+      iconUrl: option.option_icon,
+      name: option.option_name,
+      placeholder: option.placeholder,
+      type: option.input_type,
+      status: option.status,
+      values: option.values,
+    }));
+  }, [filteredOptions]);
+
   const columnDefs = useMemo<ColDef[]>(
     () => [
       {
         headerName: "",
         checkboxSelection: true,
         width: 40,
-        pinned: "left" as const,
+        pinned: "left",
         headerCheckboxSelection: true,
         suppressMenu: true,
         suppressMovable: true,
@@ -352,15 +331,20 @@ const OptionsPage = () => {
           className="ag-theme-alpine"
           style={{ width: "100%", background: "white" }}
         >
-          <AgGridReact
-            rowData={optionsData}
-            columnDefs={columnDefs}
-            domLayout="autoHeight"
-            headerHeight={48}
-            // rowHeight={56} // REMOVE this line to allow dynamic row height
-            rowSelection="multiple"
-            gridOptions={gridOptions}
-          />
+          {loading ? (
+            <div className="p-4 text-center">Loading options...</div>
+          ) : error ? (
+            <div className="p-4 text-center text-red-500">Error: {error}</div>
+          ) : (
+            <AgGridReact
+              rowData={rowData}
+              columnDefs={columnDefs}
+              domLayout="autoHeight"
+              headerHeight={48}
+              rowSelection="multiple"
+              gridOptions={gridOptions}
+            />
+          )}
         </div>
       </div>
     </>
