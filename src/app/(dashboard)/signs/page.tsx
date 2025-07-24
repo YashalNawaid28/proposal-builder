@@ -19,6 +19,7 @@ import {
 import { DetailCellRenderer } from "@/components/ui/detailCellRenderer";
 import { IAccount } from "@/lib/interfaces";
 import Image from "next/image";
+import { ChevronRight } from "lucide-react";
 import "ag-grid-enterprise";
 
 ModuleRegistry.registerModules([
@@ -69,20 +70,52 @@ const accountData: IAccount[] = [
 
 const columnDefs: ColDef<IAccount>[] = [
   {
+    headerName: '',
+    width: 50,
+    suppressMovable: true,
+    resizable: false,
+    sortable: false,
+    cellClass: 'ag-center-text',
+    suppressHeaderMenuButton: true,
+    suppressHeaderFilterButton: true,
+    menuTabs: [],
+    cellRenderer: (params: ICellRendererParams<IAccount, unknown>) => {
+      const isExpanded = params.node.expanded;
+      return (
+        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+            onClick={e => {
+              e.stopPropagation();
+              params.node.setExpanded(!params.node.expanded);
+            }}
+            aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
+          >
+            <span style={{ display: 'inline-block', transition: 'transform 0.2s', transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}>
+              <ChevronRight size={20} />
+            </span>
+          </button>
+        </div>
+      );
+    },
+  },
+  {
     headerName: "Sign Image",
     field: "signImage",
     cellRenderer: (params: ICellRendererParams<IAccount, string>) => (
-      <div className="flex items-center justify-center h-full w-full">
-        <Image
-          src={params.value ?? ""}
-          alt="Sign Image"
-          width={40}
-          height={40}
-          className="rounded"
-        />
+      <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Image
+            src={params.value ?? ""}
+            alt="Sign Image"
+            width={40}
+            height={40}
+            className="rounded"
+          />
+        </div>
       </div>
     ),
-    width: 80,
+    width: 150,
     suppressMovable: true,
     resizable: false,
     cellClass: "ag-center-text",
@@ -94,7 +127,9 @@ const columnDefs: ColDef<IAccount>[] = [
     headerName: "Sign Name",
     field: "signName",
     cellRenderer: (params: ICellRendererParams<IAccount, string>) => (
-      <span className="font-semibold">{params.value ?? ""}</span>
+      <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <span className="font-semibold">{params.value ?? ""}</span>
+      </div>
     ),
     flex: 1,
     cellClass: "ag-center-text",
@@ -110,14 +145,21 @@ const columnDefs: ColDef<IAccount>[] = [
     suppressHeaderMenuButton: true,
     suppressHeaderFilterButton: true,
     menuTabs: [],
+    cellRenderer: (params: ICellRendererParams<IAccount, string>) => (
+      <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        {params.value ?? ""}
+      </div>
+    ),
   },
   {
     headerName: "Status",
     field: "status",
     cellRenderer: (params: ICellRendererParams<IAccount, string>) => (
-      <span className="bg-green-100 text-green-700 px-3 py-1 rounded text-xs font-medium">
-        {params.value ?? ""}
-      </span>
+      <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <span className="bg-green-100 text-green-700 px-3 py-1 rounded text-xs font-medium">
+          {params.value ?? ""}
+        </span>
+      </div>
     ),
     flex: 1,
     cellClass: "ag-center-text",
@@ -133,6 +175,11 @@ const columnDefs: ColDef<IAccount>[] = [
     suppressHeaderMenuButton: true,
     suppressHeaderFilterButton: true,
     menuTabs: [],
+    cellRenderer: (params: ICellRendererParams<IAccount, string>) => (
+      <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        {params.value ?? ""}
+      </div>
+    ),
   },
 ];
 
@@ -158,10 +205,8 @@ const gridOptions = {
     params.api.sizeColumnsToFit();
     params.api.forEachNode((node) => node.setExpanded(node.id === "1"));
   },
-  onRowClicked: (event: RowClickedEvent<IAccount>) => {
-    if (event.node.master) {
-      event.node.setExpanded(!event.node.expanded);
-    }
+  onRowClicked: () => {
+    // Do nothing
   },
   getRowStyle: () => ({ backgroundColor: "#F9F9FB" }),
   getRowClass: () => "custom-row-background",
@@ -185,11 +230,12 @@ const SignsPage = () => {
         .ag-row-selected, .ag-row-hover {
           background: white !important;
         }
-        .ag-center-text {
+        .ag-theme-alpine .ag-center-text {
           display: flex !important;
           align-items: center !important;
           justify-content: center !important;
           text-align: center !important;
+          width: 100%;
           height: 100%;
         }
         .ag-header-cell-label {
