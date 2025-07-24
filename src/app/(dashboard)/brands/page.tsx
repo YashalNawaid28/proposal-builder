@@ -1,53 +1,172 @@
 "use client";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { AgGridReact } from "ag-grid-react";
-import { ColDef } from "ag-grid-community";
+import { ColDef, ICellRendererParams } from "ag-grid-community";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import Image from "next/image";
 import { ModuleRegistry, AllCommunityModule } from "ag-grid-community";
+import { useUser } from "@stackframe/stack";
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-const rowData = [
-  {
-    brandImage: "/images/daves-hot-chicken.png",
-    brandName: "Dave's Hot Chicken",
-    proposalLabel: "DHCP",
-    signs: 10,
-    services: 0,
-    status: "Active",
-    dateAdded: "Aug 1st, 2025",
-  },
-];
+// Define interfaces for our data structures
+interface BrandData {
+  id: string;
+  user_id: string;
+  brand_image: string;
+  brand_name: string;
+  proposal_label: string;
+  signs_count: number;
+  services_number: number;
+  status: string;
+  created_at: string;
+}
 
-const StatusCell = () => (
-  <span className="bg-green-100 text-green-700 px-3 py-1 rounded text-xs font-medium">
-    Active
-  </span>
-);
+interface BrandRowData {
+  id: string;
+  brandImage: string;
+  brandName: string;
+  proposalLabel: string;
+  signs: number;
+  services: number;
+  status: string;
+  dateAdded: string;
+}
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const BrandImageCell = (params: any) => (
-  <div className="flex items-center justify-center h-full w-full">
-    <Image
-      src={params.value}
-      alt="Brand Logo"
-      width={40}
-      height={40}
-      className="rounded-full"
-    />
-  </div>
-);
+// StatusCell component that handles different statuses
+const StatusCell = (params: ICellRendererParams) => {
+  const status = params.value as string;
+  let bgColor = "bg-green-100";
+  let textColor = "text-green-700";
+
+  if (status === "Draft") {
+    bgColor = "bg-yellow-100";
+    textColor = "text-yellow-700";
+  } else if (status === "Archived") {
+    bgColor = "bg-gray-100";
+    textColor = "text-gray-700";
+  }
+
+  return (
+    <span className={`${bgColor} ${textColor} px-3 py-1 rounded text-xs font-medium`}>
+      {status}
+    </span>
+  );
+};
+
+// Brand image cell renderer
+const BrandImageCell = (params: ICellRendererParams) => {
+  const [imgError, setImgError] = useState(false);
+  
+  // Return a simple colored div with initials if image fails to load
+  if (imgError) {
+    const brandName = params.data?.brandName || "Brand";
+    const initials = brandName.split(" ")
+      .map(word => word[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2);
+      
+    return (
+      <div className="flex items-center justify-center h-full w-full">
+        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-sm font-medium">
+          {initials}
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="flex items-center justify-center h-full w-full">
+      <Image
+        src={params.value as string}
+        alt="Brand Logo"
+        width={40}
+        height={40}
+        className="rounded-full"
+        unoptimized={true} // Bypass domain verification
+        onError={() => setImgError(true)}
+      />
+    </div>
+  );
+};
+
+// Format date function
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
 
 const BrandsPage = () => {
-  const [tab, setTab] = useState("all");
+  const user = useUser();
+  const [tab, setTab] = useState<"all" | "active" | "archived">("all");
+  const [brands, setBrands] = useState<BrandData[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch brands data when component mounts
+  useEffect(() => {
+    const fetchBrands = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/brands", {
+          headers: {
+            "request.user.id": user?.id || "",
+          },
+        });
+        
+        if (!res.ok) {
+          throw new Error("Failed to fetch brands");
+        }
+        
+        const data = await res.json();
+        setBrands(data.data || []);
+      } catch (error) {
+        console.error("Error fetching brands:", error);
+        setError(error instanceof Error ? error.message : "An unknown error occurred");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBrands();
+  }, [user]);
+
+  // Filter brands based on selected tab
+  const filteredBrands = useMemo(() => {
+    if (tab === "all") return brands;
+    return brands.filter((brand) => 
+      tab === "active" 
+        ? brand.status === "Active" 
+        : brand.status === "Archived"
+    );
+  }, [brands, tab]);
+
+  // Transform API data to match the table structure
+  const rowData = useMemo(() => {
+    return filteredBrands.map((brand) => ({
+      id: brand.id,
+      brandImage: brand.brand_image,
+      brandName: brand.brand_name,
+      proposalLabel: brand.proposal_label,
+      signs: brand.signs_count,
+      services: brand.services_number,
+      status: brand.status,
+      dateAdded: formatDate(brand.created_at),
+    }));
+  }, [filteredBrands]);
+
   const columnDefs = useMemo<ColDef[]>(
     () => [
       {
         headerName: "",
         checkboxSelection: true,
         width: 40,
-        pinned: "left" as const,
+        pinned: "left",
         headerCheckboxSelection: true,
         suppressMenu: true,
         suppressMovable: true,
@@ -68,9 +187,8 @@ const BrandsPage = () => {
       {
         headerName: "Brand Name",
         field: "brandName",
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        cellRenderer: (params: any) => (
-          <span className="font-semibold">{params.value}</span>
+        cellRenderer: (params: ICellRendererParams) => (
+          <span className="font-semibold">{params.value as string}</span>
         ),
         flex: 1,
         cellClass: "ag-center-text",
@@ -84,16 +202,14 @@ const BrandsPage = () => {
       {
         headerName: "Signs",
         field: "signs",
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        valueFormatter: (p: any) => `${p.value} Signs`,
+        valueFormatter: (p: { value: number }) => `${p.value} Signs`,
         flex: 1,
         cellClass: "ag-center-text",
       },
       {
         headerName: "Services",
         field: "services",
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        valueFormatter: (p: any) => `${p.value} Services`,
+        valueFormatter: (p: { value: number }) => `${p.value} Services`,
         flex: 1,
         cellClass: "ag-center-text",
       },
@@ -214,15 +330,21 @@ const BrandsPage = () => {
           className="ag-theme-alpine"
           style={{ width: "100%", background: "white" }}
         >
-          <AgGridReact
-            rowData={rowData}
-            columnDefs={columnDefs}
-            domLayout="autoHeight"
-            headerHeight={48}
-            rowHeight={56}
-            rowSelection="multiple"
-            gridOptions={gridOptions}
-          />
+          {loading ? (
+            <div className="p-4 text-center">Loading brands...</div>
+          ) : error ? (
+            <div className="p-4 text-center text-red-500">Error: {error}</div>
+          ) : (
+            <AgGridReact
+              rowData={rowData}
+              columnDefs={columnDefs}
+              domLayout="autoHeight"
+              headerHeight={48}
+              rowHeight={56}
+              rowSelection="multiple"
+              gridOptions={gridOptions}
+            />
+          )}
         </div>
       </div>
     </>
