@@ -2,7 +2,7 @@
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
-import { ModuleRegistry, ClientSideRowModelModule } from "ag-grid-community";
+import { ModuleRegistry, ClientSideRowModelModule, ColDef, ICellRendererParams, FirstDataRenderedEvent, RowClickedEvent } from "ag-grid-community";
 import {
   MasterDetailModule,
   ColumnsToolPanelModule,
@@ -10,7 +10,8 @@ import {
   ContextMenuModule,
 } from "ag-grid-enterprise";
 import { DetailCellRenderer } from "@/components/ui/detailCellRenderer";
-import { IAccount } from "@/lib/interfaces";
+import { IAccount, ISignOption, ISignDetail } from "@/lib/interfaces";
+import Image from "next/image";
 import "ag-grid-enterprise";
 
 ModuleRegistry.registerModules([
@@ -24,51 +25,81 @@ ModuleRegistry.registerModules([
 // Sample data for master/detail
 const accountData: IAccount[] = [
   {
-    name: "Nora Thomas",
-    account: "177000",
-    calls: 24,
-    minutes: 25.65,
-    callDetails: [
-      {
-        callId: "177000-001",
-        direction: "Inbound",
-        duration: 36,
-        subject: "Follow-up call",
-        date: "2025-07-23T00:00:00.000Z",
-        status: "In Progress",
-      },
-      // ... more call details
+    signImage: "/daves-hot-chicken-logo.png",
+    signName: "Channel Letters",
+    signDescription:
+      "(Letter Size) (Raceway-Mounted Option) (Color) (Fabrication Type) Channel Letters (w/ Behind-The-Wall Option)",
+    status: "Active",
+    dateAdded: "Aug 1st, 2025",
+    signOptions: [
+      { label: "Raceway", type: "Dropdown", checked: true },
+      { label: "Raceway Size", type: "User Input", checked: true },
+      { label: "Color", type: "Dropdown", checked: true },
+      { label: "Fabrication Type", type: "Dropdown", checked: true },
+    ],
+    details: [
+      { size: '12"', signPrice: "$3,520.00", installPrice: "$1,970.00", signBudget: "$1,936.00", installBudget: "$1,083.00", raceway: "$600.00" },
+      { size: '13"', signPrice: "$3,520.00", installPrice: "$1,970.00", signBudget: "$1,936.00", installBudget: "$1,083.00", raceway: "$600.00" },
+      // ... more rows as needed
     ],
   },
   // ... more accounts
 ];
 
+const columnDefs: ColDef<IAccount>[] = [
+  {
+    headerName: "Sign Image",
+    field: "signImage",
+    cellRenderer: (params: ICellRendererParams<IAccount, string>) => (
+      <div className="flex items-center justify-center h-full w-full">
+        <Image src={params.value ?? ""} alt="Sign Image" width={40} height={40} className="rounded" />
+      </div>
+    ),
+    width: 80,
+    suppressMovable: true,
+    resizable: false,
+    cellClass: "ag-center-text",
+  },
+  {
+    headerName: "Sign Name",
+    field: "signName",
+    cellRenderer: (params: ICellRendererParams<IAccount, string>) => <span className="font-semibold">{params.value ?? ""}</span>,
+    flex: 1,
+    cellClass: "ag-center-text",
+  },
+  {
+    headerName: "Sign Description",
+    field: "signDescription",
+    flex: 3,
+    cellClass: "ag-sign-description-cell ag-center-text",
+  },
+  {
+    headerName: "Status",
+    field: "status",
+    cellRenderer: (params: ICellRendererParams<IAccount, string>) => (
+      <span className="bg-green-100 text-green-700 px-3 py-1 rounded text-xs font-medium">{params.value ?? ""}</span>
+    ),
+    flex: 1,
+    cellClass: "ag-center-text",
+  },
+  {
+    headerName: "Date Added",
+    field: "dateAdded",
+    flex: 1,
+    cellClass: "ag-center-text",
+  },
+];
+
 const gridOptions = {
   masterDetail: true,
   detailCellRenderer: DetailCellRenderer,
-  detailRowHeight: 300,
+  detailRowHeight: 450, // Increased to fit grid and options block
   detailRowAutoHeight: false,
   detailCellRendererParams: {
     suppressCount: true,
     template: '<div class="ag-details-row ag-details-grid"></div>',
   },
-  columnDefs: [
-    {
-      field: "name",
-      cellRenderer: "agGroupCellRenderer",
-      minWidth: 200,
-      flex: 1,
-    },
-    { field: "account", minWidth: 150, flex: 1 },
-    { field: "calls", minWidth: 100, width: 120, type: "numericColumn" },
-    {
-      field: "minutes",
-      valueFormatter: (params) => `${params.value}m`,
-      minWidth: 120,
-      width: 150,
-      type: "numericColumn",
-    },
-  ],
+  columnDefs,
   defaultColDef: {
     sortable: true,
     filter: true,
@@ -77,12 +108,11 @@ const gridOptions = {
   embedFullWidthRows: true,
   suppressColumnVirtualisation: true,
   animateRows: true,
-  rowSelection: "single",
-  onFirstDataRendered: (params) => {
+  onFirstDataRendered: (params: FirstDataRenderedEvent<IAccount>) => {
     params.api.sizeColumnsToFit();
     params.api.forEachNode((node) => node.setExpanded(node.id === "1"));
   },
-  onRowClicked: (event) => {
+  onRowClicked: (event: RowClickedEvent<IAccount>) => {
     if (event.node.master) {
       event.node.setExpanded(!event.node.expanded);
     }
@@ -223,6 +253,7 @@ const SignsPage = () => {
             domLayout="autoHeight"
             headerHeight={48}
             rowHeight={56}
+            rowSelection="single"
           />
         </div>
       </div>
