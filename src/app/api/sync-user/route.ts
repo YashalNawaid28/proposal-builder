@@ -13,15 +13,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user already exists
     const { data: existingUser, error: fetchError } = await supabase
       .from('users')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('id', user.id)
       .single();
 
     if (fetchError && fetchError.code !== 'PGRST116') {
-      // PGRST116 is "not found" error, which is expected if user doesn't exist
       console.error('Error fetching user:', fetchError);
       return NextResponse.json(
         { error: 'Failed to check user existence' },
@@ -37,7 +35,7 @@ export async function POST(request: NextRequest) {
           last_active_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
-        .eq('user_id', user.id);
+        .eq('id', user.id);
 
       if (updateError) {
         console.error('Error updating user:', updateError);
@@ -55,7 +53,6 @@ export async function POST(request: NextRequest) {
       // User doesn't exist, create new user
       const newUser = {
         id: user.id, // Using user.id as the primary key
-        user_id: user.id,
         display_name: user.name || user.displayName || 'Unknown User',
         email: user.email || null,
         avatar_url: user.imageUrl || user.avatar || null,
@@ -63,6 +60,7 @@ export async function POST(request: NextRequest) {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
+      
 
       const { data: createdUser, error: insertError } = await supabase
         .from('users')
