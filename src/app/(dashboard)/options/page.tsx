@@ -71,7 +71,7 @@ const IconCell = (params: ICellRendererParams) => {
   if (imgError || !params.data.iconUrl) {
     const optionName = params.data.name || "Option";
     const initials = optionName.split(" ")
-      .map(word => word[0])
+      .map((word : any) => word[0])
       .join("")
       .toUpperCase()
       .substring(0, 2);

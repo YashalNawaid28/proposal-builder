@@ -62,7 +62,7 @@ const BrandImageCell = (params: ICellRendererParams) => {
   if (imgError) {
     const brandName = params.data?.brandName || "Brand";
     const initials = brandName.split(" ")
-      .map(word => word[0])
+      .map((word : any) => word[0])
       .join("")
       .toUpperCase()
       .substring(0, 2);
