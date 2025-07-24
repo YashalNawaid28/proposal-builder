@@ -21,16 +21,6 @@ interface OptionData {
   values: string[];
 }
 
-interface OptionRowData {
-  id: string;
-  iconUrl: string;
-  name: string;
-  placeholder: string;
-  type: string;
-  status: string;
-  values: string[];
-}
-
 const StatusCell = (params: ICellRendererParams) => {
   const status = params.value as string;
   let bgColor = "bg-green-100";
@@ -45,7 +35,9 @@ const StatusCell = (params: ICellRendererParams) => {
   }
 
   return (
-    <span className={`${bgColor} ${textColor} px-3 py-1 rounded text-xs font-medium`}>
+    <span
+      className={`${bgColor} ${textColor} px-3 py-1 rounded text-xs font-medium`}
+    >
       {status}
     </span>
   );
@@ -66,16 +58,17 @@ const ValuesCell = (params: ICellRendererParams) => (
 
 const IconCell = (params: ICellRendererParams) => {
   const [imgError, setImgError] = useState(false);
-  
+
   // If image failed to load, show initials based on option name
   if (imgError || !params.data.iconUrl) {
     const optionName = params.data.name || "Option";
-    const initials = optionName.split(" ")
-      .map((word : any) => word[0])
+    const initials = optionName
+      .split(" ")
+      .map((word: string) => word[0])
       .join("")
       .toUpperCase()
       .substring(0, 2);
-      
+
     return (
       <div className="flex items-center justify-center h-full w-full">
         <div className="w-8 h-8 rounded bg-gray-200 flex items-center justify-center text-gray-600 text-xs font-medium">
@@ -84,7 +77,7 @@ const IconCell = (params: ICellRendererParams) => {
       </div>
     );
   }
-  
+
   return (
     <div className="flex items-center justify-center h-full w-full">
       <Image
@@ -125,16 +118,18 @@ const OptionsPage = () => {
             "request.user.id": user?.id || "",
           },
         });
-        
+
         if (!res.ok) {
           throw new Error("Failed to fetch options");
         }
-        
+
         const data = await res.json();
         setOptions(data.data || []);
       } catch (error) {
         console.error("Error fetching options:", error);
-        setError(error instanceof Error ? error.message : "An unknown error occurred");
+        setError(
+          error instanceof Error ? error.message : "An unknown error occurred"
+        );
       } finally {
         setLoading(false);
       }
@@ -146,9 +141,9 @@ const OptionsPage = () => {
   // Filter options based on selected tab
   const filteredOptions = useMemo(() => {
     if (tab === "all") return options;
-    return options.filter((option) => 
-      tab === "active" 
-        ? option.status === "Active" 
+    return options.filter((option) =>
+      tab === "active"
+        ? option.status === "Active"
         : option.status === "Archived"
     );
   }, [options, tab]);
@@ -183,11 +178,10 @@ const OptionsPage = () => {
       {
         headerName: "Options Icon",
         field: "iconUrl",
-        width: 60,
+        width: 140,
         suppressMenu: true,
         suppressMovable: true,
         resizable: false,
-        flex: 0.5,
         cellRenderer: IconCell,
         cellClass: "ag-center-text",
       },
@@ -281,6 +275,10 @@ const OptionsPage = () => {
           padding-left: 16px !important;
           padding-right: 16px !important;
         }
+        /* Add 12px left margin to the header checkbox wrapper for visual centering */
+        .ag-header-select-all .ag-checkbox-input-wrapper {
+          margin-left: 12px !important;
+        }
       `}</style>
       <div>
         <h1 className="text-2xl font-semibold mb-4 px-4 mt-4">Options</h1>
@@ -341,6 +339,7 @@ const OptionsPage = () => {
               columnDefs={columnDefs}
               domLayout="autoHeight"
               headerHeight={48}
+              rowHeight={56}
               rowSelection="multiple"
               gridOptions={gridOptions}
             />
