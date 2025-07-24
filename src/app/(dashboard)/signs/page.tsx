@@ -2,7 +2,14 @@
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
-import { ModuleRegistry, ClientSideRowModelModule, ColDef, ICellRendererParams, FirstDataRenderedEvent, RowClickedEvent } from "ag-grid-community";
+import {
+  ModuleRegistry,
+  ClientSideRowModelModule,
+  ColDef,
+  ICellRendererParams,
+  FirstDataRenderedEvent,
+  RowClickedEvent,
+} from "ag-grid-community";
 import {
   MasterDetailModule,
   ColumnsToolPanelModule,
@@ -10,7 +17,7 @@ import {
   ContextMenuModule,
 } from "ag-grid-enterprise";
 import { DetailCellRenderer } from "@/components/ui/detailCellRenderer";
-import { IAccount, ISignOption, ISignDetail } from "@/lib/interfaces";
+import { IAccount } from "@/lib/interfaces";
 import Image from "next/image";
 import "ag-grid-enterprise";
 
@@ -38,8 +45,22 @@ const accountData: IAccount[] = [
       { label: "Fabrication Type", type: "Dropdown", checked: true },
     ],
     details: [
-      { size: '12"', signPrice: "$3,520.00", installPrice: "$1,970.00", signBudget: "$1,936.00", installBudget: "$1,083.00", raceway: "$600.00" },
-      { size: '13"', signPrice: "$3,520.00", installPrice: "$1,970.00", signBudget: "$1,936.00", installBudget: "$1,083.00", raceway: "$600.00" },
+      {
+        size: '12"',
+        signPrice: "$3,520.00",
+        installPrice: "$1,970.00",
+        signBudget: "$1,936.00",
+        installBudget: "$1,083.00",
+        raceway: "$600.00",
+      },
+      {
+        size: '13"',
+        signPrice: "$3,520.00",
+        installPrice: "$1,970.00",
+        signBudget: "$1,936.00",
+        installBudget: "$1,083.00",
+        raceway: "$600.00",
+      },
       // ... more rows as needed
     ],
   },
@@ -52,7 +73,13 @@ const columnDefs: ColDef<IAccount>[] = [
     field: "signImage",
     cellRenderer: (params: ICellRendererParams<IAccount, string>) => (
       <div className="flex items-center justify-center h-full w-full">
-        <Image src={params.value ?? ""} alt="Sign Image" width={40} height={40} className="rounded" />
+        <Image
+          src={params.value ?? ""}
+          alt="Sign Image"
+          width={40}
+          height={40}
+          className="rounded"
+        />
       </div>
     ),
     width: 80,
@@ -63,7 +90,9 @@ const columnDefs: ColDef<IAccount>[] = [
   {
     headerName: "Sign Name",
     field: "signName",
-    cellRenderer: (params: ICellRendererParams<IAccount, string>) => <span className="font-semibold">{params.value ?? ""}</span>,
+    cellRenderer: (params: ICellRendererParams<IAccount, string>) => (
+      <span className="font-semibold">{params.value ?? ""}</span>
+    ),
     flex: 1,
     cellClass: "ag-center-text",
   },
@@ -77,7 +106,9 @@ const columnDefs: ColDef<IAccount>[] = [
     headerName: "Status",
     field: "status",
     cellRenderer: (params: ICellRendererParams<IAccount, string>) => (
-      <span className="bg-green-100 text-green-700 px-3 py-1 rounded text-xs font-medium">{params.value ?? ""}</span>
+      <span className="bg-green-100 text-green-700 px-3 py-1 rounded text-xs font-medium">
+        {params.value ?? ""}
+      </span>
     ),
     flex: 1,
     cellClass: "ag-center-text",

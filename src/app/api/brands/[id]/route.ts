@@ -1,80 +1,113 @@
-// app/api/brands/[id]/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '../../../../lib/supabase';
-import { setUserIdSessionVar } from '../../../../lib/supabase';
+import { NextRequest, NextResponse } from "next/server";
+import {
+  getServerSupabase,
+  setUserIdSessionVar,
+} from "../../../../lib/supabase";
 
-// GET a single brand by ID
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest) {
   try {
-    const userId = request.headers.get('x-user-id');
+    const userId = request.headers.get("x-user-id");
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const supabase = getServerSupabase();
     await setUserIdSessionVar(supabase, userId);
-    const id = params.id;
+    const url = new URL(request.url);
+    const id = url.pathname.split("/").pop();
     const { data, error } = await supabase
-      .from('brands')
-      .select('*')
-      .eq('id', id)
-      .eq('user_id', userId)
+      .from("brands")
+      .select("*")
+      .eq("id", id)
+      .eq("user_id", userId)
       .single();
     if (error || !data) {
-      return NextResponse.json({ error: error?.message || 'Brand not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: error?.message || "Brand not found" },
+        { status: 404 }
+      );
     }
     return NextResponse.json({ data });
   } catch (error) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    console.error(error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }
 
 // PATCH a brand
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest) {
   try {
-    const userId = request.headers.get('x-user-id');
+    const userId = request.headers.get("x-user-id");
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const id = params.id;
+    const supabase = getServerSupabase();
+    const url = new URL(request.url);
+    const id = url.pathname.split("/").pop();
     const formData = await request.formData();
-    const updateData: any = {};
-    if (formData.has('brand_name')) updateData.brand_name = formData.get('brand_name');
-    if (formData.has('proposal_label')) updateData.proposal_label = formData.get('proposal_label');
-    if (formData.has('services_number')) updateData.services_number = parseInt(formData.get('services_number') as string);
-    if (formData.has('status')) updateData.status = formData.get('status');
+    const updateData: Record<string, string | number> = {};
+    if (formData.has("brand_name")) {
+      const value = formData.get("brand_name");
+      if (typeof value === "string") updateData.brand_name = value;
+    }
+    if (formData.has("proposal_label")) {
+      const value = formData.get("proposal_label");
+      if (typeof value === "string") updateData.proposal_label = value;
+    }
+    if (formData.has("services_number")) {
+      const value = formData.get("services_number");
+      if (typeof value === "string") updateData.services_number = parseInt(value);
+    }
+    if (formData.has("status")) {
+      const value = formData.get("status");
+      if (typeof value === "string") updateData.status = value;
+    }
     // (Image upload logic omitted for brevity)
     const { data, error } = await supabase
-      .from('brands')
+      .from("brands")
       .update(updateData)
-      .eq('id', id)
-      .eq('user_id', userId)
+      .eq("id", id)
+      .eq("user_id", userId)
       .select();
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
     return NextResponse.json({ data });
   } catch (error) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    console.error(error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }
 
 // DELETE a brand
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest) {
   try {
-    const userId = request.headers.get('x-user-id');
+    const userId = request.headers.get("x-user-id");
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const id = params.id;
+    const supabase = getServerSupabase();
+    const url = new URL(request.url);
+    const id = url.pathname.split("/").pop();
     const { error } = await supabase
-      .from('brands')
+      .from("brands")
       .delete()
-      .eq('id', id)
-      .eq('user_id', userId);
+      .eq("id", id)
+      .eq("user_id", userId);
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
     return NextResponse.json({ success: true });
   } catch (error) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    console.error(error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }

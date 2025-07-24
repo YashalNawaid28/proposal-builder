@@ -1,37 +1,49 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSupabase, setUserIdSessionVar } from '@/lib/supabase';
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSupabase, setUserIdSessionVar } from "@/lib/supabase";
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = request.headers.get('request.user.id');
+    const userId = request.headers.get("request.user.id");
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const supabase = getServerSupabase();
     await setUserIdSessionVar(supabase, userId);
 
     const { searchParams } = new URL(request.url);
-    const signId = searchParams.get('sign_id');
+    const signId = searchParams.get("sign_id");
 
     if (!signId) {
-      return NextResponse.json({ error: 'Missing sign_id in query' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing sign_id in query" },
+        { status: 400 }
+      );
     }
 
     const { data: signData, error: signError } = await supabase
-      .from('signs')
-      .select('id, brand:brands(user_id)')
-      .eq('id', signId)
+      .from("signs")
+      .select("id, brand:brands(user_id)")
+      .eq("id", signId)
       .single();
 
-    if (signError || !signData || signData.brand?.user_id !== userId) {
-      return NextResponse.json({ error: 'Sign not found or access denied' }, { status: 403 });
+    if (
+      signError ||
+      !signData ||
+      !Array.isArray(signData.brand) ||
+      !signData.brand[0] ||
+      signData.brand[0].user_id !== userId
+    ) {
+      return NextResponse.json(
+        { error: "Sign not found or access denied" },
+        { status: 403 }
+      );
     }
 
     const { data, error } = await supabase
-      .from('options')
-      .select('*')
-      .eq('sign_id', signId);
+      .from("options")
+      .select("*")
+      .eq("sign_id", signId);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
@@ -39,6 +51,10 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ data });
   } catch (error) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    console.error(error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }

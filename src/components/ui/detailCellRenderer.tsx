@@ -1,11 +1,18 @@
-import React, { useEffect, useRef } from "react";
+import React, { useRef } from "react";
 import { AgGridReact } from "ag-grid-react";
-import { GridApi, GridOptions, ColDef, ICellRendererParams } from "ag-grid-community";
+import {
+  GridApi,
+  GridOptions,
+  ColDef,
+  ICellRendererParams,
+} from "ag-grid-community";
 import { ISignDetail, IAccount, ISignOption } from "@/lib/interfaces";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 
-export const DetailCellRenderer = (props: ICellRendererParams<IAccount, unknown>) => {
+export const DetailCellRenderer = (
+  props: ICellRendererParams<IAccount, unknown>
+) => {
   const gridRef = useRef<GridApi<ISignDetail> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -21,13 +28,17 @@ export const DetailCellRenderer = (props: ICellRendererParams<IAccount, unknown>
       headerName: "Sign Options",
       cellRenderer: () => (
         <div className="flex flex-col gap-1">
-          {(props.data?.signOptions ?? []).map((opt: ISignOption, idx: number) => (
-            <div key={idx} className="flex items-center gap-2">
-              <span>{opt.label}</span>
-              <span className="text-xs text-gray-400">{opt.type}</span>
-              {opt.checked && <span className="text-green-500">&#10003;</span>}
-            </div>
-          ))}
+          {(props.data?.signOptions ?? []).map(
+            (opt: ISignOption, idx: number) => (
+              <div key={idx} className="flex items-center gap-2">
+                <span>{opt.label}</span>
+                <span className="text-xs text-gray-400">{opt.type}</span>
+                {opt.checked && (
+                  <span className="text-green-500">&#10003;</span>
+                )}
+              </div>
+            )
+          )}
         </div>
       ),
       flex: 2,
@@ -40,13 +51,15 @@ export const DetailCellRenderer = (props: ICellRendererParams<IAccount, unknown>
     <div className="flex flex-col gap-1 p-4 border-t border-gray-200 bg-[#F9F9FB]">
       <div className="font-semibold mb-2">Sign Options</div>
       <div className="flex flex-col gap-1">
-        {(props.data?.signOptions ?? []).map((opt: ISignOption, idx: number) => (
-          <div key={idx} className="flex items-center gap-2">
-            <span>{opt.label}</span>
-            <span className="text-xs text-gray-400">{opt.type}</span>
-            {opt.checked && <span className="text-green-500">&#10003;</span>}
-          </div>
-        ))}
+        {(props.data?.signOptions ?? []).map(
+          (opt: ISignOption, idx: number) => (
+            <div key={idx} className="flex items-center gap-2">
+              <span>{opt.label}</span>
+              <span className="text-xs text-gray-400">{opt.type}</span>
+              {opt.checked && <span className="text-green-500">&#10003;</span>}
+            </div>
+          )
+        )}
       </div>
     </div>
   );
@@ -66,7 +79,7 @@ export const DetailCellRenderer = (props: ICellRendererParams<IAccount, unknown>
     animateRows: true,
     enableRangeSelection: true,
     pagination: false,
-    onGridReady: params => {
+    onGridReady: (params) => {
       gridRef.current = params.api;
       params.api.sizeColumnsToFit();
     },
@@ -75,16 +88,30 @@ export const DetailCellRenderer = (props: ICellRendererParams<IAccount, unknown>
   return (
     <div
       className="detail-cell-renderer"
-      style={{ width: "100%", height: "100%", margin: 0, padding: 0, background: "#F9F9FB", boxSizing: "border-box" }}
+      style={{
+        width: "100%",
+        height: "100%",
+        margin: 0,
+        padding: 0,
+        background: "#F9F9FB",
+        boxSizing: "border-box",
+      }}
     >
       <div
         className="detail-grid-container ag-theme-alpine"
         ref={containerRef}
-        style={{ width: "100%", height: "100%", margin: 0, padding: 0, background: "#F9F9FB", boxSizing: "border-box" }}
+        style={{
+          width: "100%",
+          height: "100%",
+          margin: 0,
+          padding: 0,
+          background: "#F9F9FB",
+          boxSizing: "border-box",
+        }}
       >
         <AgGridReact<ISignDetail> {...detailGridOptions} />
         {renderSignOptionsBlock()}
       </div>
     </div>
   );
-}; 
+};

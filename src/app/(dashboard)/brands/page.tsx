@@ -22,17 +22,6 @@ interface BrandData {
   created_at: string;
 }
 
-interface BrandRowData {
-  id: string;
-  brandImage: string;
-  brandName: string;
-  proposalLabel: string;
-  signs: number;
-  services: number;
-  status: string;
-  dateAdded: string;
-}
-
 // StatusCell component that handles different statuses
 const StatusCell = (params: ICellRendererParams) => {
   const status = params.value as string;
@@ -62,7 +51,7 @@ const BrandImageCell = (params: ICellRendererParams) => {
   if (imgError) {
     const brandName = params.data?.brandName || "Brand";
     const initials = brandName.split(" ")
-      .map((word : any) => word[0])
+      .map((word: string) => word[0])
       .join("")
       .toUpperCase()
       .substring(0, 2);
@@ -279,6 +268,21 @@ const BrandsPage = () => {
           justify-content: center !important;
           height: 100%;
           width: 100%;
+        }
+        .ag-icon-center {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          width: 100% !important;
+          height: 100% !important;
+        }
+        .ag-theme-alpine .ag-cell, .ag-theme-alpine .ag-header-cell {
+          padding-left: 16px !important;
+          padding-right: 16px !important;
+        }
+        /* Add 12px left margin to the header checkbox wrapper for visual centering */
+        .ag-header-select-all .ag-checkbox-input-wrapper {
+          margin-left: 12px !important;
         }
       `}</style>
       <div>

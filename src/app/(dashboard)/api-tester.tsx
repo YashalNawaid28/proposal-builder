@@ -8,7 +8,7 @@ const endpoints = [
 ];
 
 export default function ApiTester() {
-  const [results, setResults] = useState<Record<string, any>>({});
+  const [results, setResults] = useState<Record<string, unknown>>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const user = useUser();
 
