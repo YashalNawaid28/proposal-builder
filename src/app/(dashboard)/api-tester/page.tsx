@@ -13,6 +13,7 @@ export default function ApiTester() {
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [signId, setSignId] = useState("");
   const [brandId, setBrandId] = useState("");
+  const [pricingSignId, setPricingSignId] = useState('');
   const user = useUser();
 
   const callApi = async (
@@ -65,6 +66,26 @@ export default function ApiTester() {
       const res = await fetch(`/api/signs/get-by-brandId?brand_id=${brandId}`, {
         headers: {
           "request.user.id": user?.id || "",
+        },
+      });
+      const data = await res.json();
+      setResults((prev) => ({ ...prev, [name]: data }));
+    } catch (e) {
+      setResults((prev) => ({ ...prev, [name]: { error: String(e) } }));
+    } finally {
+      setLoading((prev) => ({ ...prev, [name]: false }));
+    }
+  };
+
+ 
+
+  const callGetPricingBySignId = async () => {
+    const name = 'Get Sign Pricing by SignId';
+    setLoading((prev) => ({ ...prev, [name]: true }));
+    try {
+      const res = await fetch(`/api/sign-pricing/get-by-signId?sign_id=${pricingSignId}`, {
+        headers: {
+          'request.user.id': user?.id || '',
         },
       });
       const data = await res.json();
@@ -143,6 +164,48 @@ export default function ApiTester() {
             {results["Get Options by SignId"]
               ? JSON.stringify(results["Get Options by SignId"], null, 2)
               : ""}
+          </pre>
+        </li>
+
+        {/* GET SIGN PRICING BY SIGN ID */}
+        <li style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <input
+              type="text"
+              placeholder="Enter sign_id for pricing"
+              value={pricingSignId}
+              onChange={(e) => setPricingSignId(e.target.value)}
+              style={{ padding: 6, flex: 1 }}
+            />
+            <button onClick={callGetPricingBySignId} disabled={loading['Get Sign Pricing by SignId']}>
+              {loading['Get Sign Pricing by SignId'] ? 'Loading...' : 'Get Sign Pricing by SignId'}
+            </button>
+          </div>
+          <pre style={{ background: '#f4f4f4', padding: 8, marginTop: 8 }}>
+            {results['Get Sign Pricing by SignId']
+              ? JSON.stringify(results['Get Sign Pricing by SignId'], null, 2)
+              : ''}
+          </pre>
+        </li>
+
+        {/* GET SIGN PRICING BY SIGN ID */}
+        <li style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <input
+              type="text"
+              placeholder="Enter sign_id for pricing"
+              value={pricingSignId}
+              onChange={(e) => setPricingSignId(e.target.value)}
+              style={{ padding: 6, flex: 1 }}
+            />
+            <button onClick={callGetPricingBySignId} disabled={loading['Get Sign Pricing by SignId']}>
+              {loading['Get Sign Pricing by SignId'] ? 'Loading...' : 'Get Sign Pricing by SignId'}
+            </button>
+          </div>
+          <pre style={{ background: '#f4f4f4', padding: 8, marginTop: 8 }}>
+            {results['Get Sign Pricing by SignId']
+              ? JSON.stringify(results['Get Sign Pricing by SignId'], null, 2)
+              : ''}
           </pre>
         </li>
       </ul>
