@@ -67,7 +67,7 @@ const accountData: IAccount[] = [
 const columnDefs: ColDef<IAccount>[] = [
   {
     headerName: "",
-    width: 200,
+    width: 50,
     suppressMovable: true,
     resizable: false,
     sortable: false,
@@ -133,7 +133,7 @@ const columnDefs: ColDef<IAccount>[] = [
             height: "100%",
             display: "flex",
             alignItems: "center",
-            justifyContent: "center",
+            justifyContent: "flex-start",
           }}
         >
           <Image
@@ -153,6 +153,7 @@ const columnDefs: ColDef<IAccount>[] = [
     suppressHeaderMenuButton: true,
     suppressHeaderFilterButton: true,
     menuTabs: [],
+    headerClass: "ag-header-left-align",
   },
   {
     headerName: "Sign Name",
@@ -164,7 +165,7 @@ const columnDefs: ColDef<IAccount>[] = [
           height: "100%",
           display: "flex",
           alignItems: "center",
-          justifyContent: "center",
+          justifyContent: "flex-start",
         }}
       >
         <span className="font-semibold">{params.value ?? ""}</span>
@@ -175,12 +176,14 @@ const columnDefs: ColDef<IAccount>[] = [
     suppressHeaderMenuButton: true,
     suppressHeaderFilterButton: true,
     menuTabs: [],
+    headerClass: "ag-header-left-align",
   },
   {
     headerName: "Sign Description",
     field: "signDescription",
     flex: 3,
     cellClass: "ag-sign-description-cell ag-center-text",
+    headerClass: "ag-header-left-align",
     suppressHeaderMenuButton: true,
     suppressHeaderFilterButton: true,
     menuTabs: [],
@@ -191,7 +194,7 @@ const columnDefs: ColDef<IAccount>[] = [
           height: "100%",
           display: "flex",
           alignItems: "center",
-          justifyContent: "center",
+          justifyContent: "flex-start",
         }}
       >
         {params.value ?? ""}
@@ -360,7 +363,7 @@ const SignsPage = () => {
             gridOptions={gridOptions}
             domLayout="autoHeight"
             headerHeight={48}
-            rowHeight={56}
+            rowHeight={72}
             rowSelection="single"
           />
         </div>
