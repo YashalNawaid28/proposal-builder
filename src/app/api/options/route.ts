@@ -3,13 +3,7 @@ import { getServerSupabase, setUserIdSessionVar } from "@/lib/supabase";
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = request.headers.get("request.user.id");
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const supabase = getServerSupabase();
-    await setUserIdSessionVar(supabase, userId); // ✅ Set session var for RLS
 
     const formData = await request.formData();
     const sign_id = formData.get("sign_id") as string;
