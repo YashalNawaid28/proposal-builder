@@ -17,9 +17,9 @@ import {
 } from "ag-grid-enterprise";
 import { DetailCellRenderer } from "@/components/ui/detailCellRenderer";
 import { IAccount } from "@/lib/interfaces";
-import Image from "next/image";
 import { ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
+import type { BrandData } from "../brands/page";
 
 ModuleRegistry.registerModules([
   ClientSideRowModelModule,
@@ -37,7 +37,11 @@ const columnDefs: ColDef<IAccount>[] = [
     resizable: false,
     sortable: false,
     headerClass: "ag-center-text",
-    cellStyle: { display: "flex", alignItems: "center", justifyContent: "center" },
+    cellStyle: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+    },
     suppressHeaderMenuButton: true,
     suppressHeaderFilterButton: true,
     menuTabs: [],
@@ -88,41 +92,38 @@ const columnDefs: ColDef<IAccount>[] = [
         style={{
           width: "100%",
           height: "100%",
+          padding: "0.5rem",
+          wordBreak: "break-word",
+          whiteSpace: "pre-line",
+          fontSize: "14px",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
         }}
       >
-        <div
+        <img
+          src={params.value ?? "/daves-hot-chicken-logo.png"}
+          alt="Sign Image"
           style={{
-            width: "100%",
-            height: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "flex-start",
+            width: "50px",
+            height: "50px",
+            borderRadius: "4px",
           }}
-        >
-          <img
-            src={params.value ?? "/daves-hot-chicken-logo.png"}
-            alt="Sign Image"
-            style={{
-              width: "40px", 
-              height: "40px",
-              borderRadius: "4px"
-            }}
-          />
-        </div>
+        />
       </div>
     ),
     width: 150,
     suppressMovable: true,
     resizable: false,
-    headerClass: "ag-center-text",
-    cellStyle: { display: "flex", alignItems: "center", justifyContent: "center" },
+    headerClass: "ag-header-left-align",
+    cellStyle: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+    },
     suppressHeaderMenuButton: true,
     suppressHeaderFilterButton: true,
     menuTabs: [],
-    headerClass: "ag-header-left-align",
   },
   {
     headerName: "Sign Name",
@@ -132,21 +133,28 @@ const columnDefs: ColDef<IAccount>[] = [
         style={{
           width: "100%",
           height: "100%",
+          padding: "0.5rem",
+          wordBreak: "break-word",
+          whiteSpace: "pre-line",
+          fontSize: "14px",
           display: "flex",
           alignItems: "center",
-          justifyContent: "flex-start",
+          justifyContent: "start",
         }}
       >
         <span className="font-semibold">{params.value ?? ""}</span>
       </div>
     ),
     flex: 1,
-    headerClass: "ag-center-text",
-    cellStyle: { display: "flex", alignItems: "center", justifyContent: "center" },
+    headerClass: "ag-header-left-align",
+    cellStyle: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "start",
+    },
     suppressHeaderMenuButton: true,
     suppressHeaderFilterButton: true,
     menuTabs: [],
-    headerClass: "ag-header-left-align",
   },
   {
     headerName: "Sign Description",
@@ -162,9 +170,13 @@ const columnDefs: ColDef<IAccount>[] = [
         style={{
           width: "100%",
           height: "100%",
+          padding: "0.5rem",
+          wordBreak: "break-word",
+          whiteSpace: "pre-line",
+          fontSize: "14px",
           display: "flex",
           alignItems: "center",
-          justifyContent: "flex-start",
+          justifyContent: "start",
         }}
       >
         {params.value ?? ""}
@@ -182,16 +194,21 @@ const columnDefs: ColDef<IAccount>[] = [
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          fontSize: "14px",
         }}
       >
-        <span className="bg-green-100 text-green-700 px-3 py-1 rounded text-xs font-medium">
+        <span className="bg-green-50 font-semibold text-green-600 px-3 py-1 rounded text-[14px]">
           {params.value ?? ""}
         </span>
       </div>
     ),
-    flex: 1,
+    flex: 0.75,
     headerClass: "ag-center-text",
-    cellStyle: { display: "flex", alignItems: "center", justifyContent: "center" },
+    cellStyle: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+    },
     suppressHeaderMenuButton: true,
     suppressHeaderFilterButton: true,
     menuTabs: [],
@@ -199,9 +216,13 @@ const columnDefs: ColDef<IAccount>[] = [
   {
     headerName: "Date Added",
     field: "dateAdded",
-    flex: 1,
+    flex: 0.75,
     headerClass: "ag-center-text",
-    cellStyle: { display: "flex", alignItems: "center", justifyContent: "center" },
+    cellStyle: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+    },
     suppressHeaderMenuButton: true,
     suppressHeaderFilterButton: true,
     menuTabs: [],
@@ -213,6 +234,7 @@ const columnDefs: ColDef<IAccount>[] = [
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          fontSize: "14px",
         }}
       >
         {params.value ?? ""}
@@ -232,21 +254,23 @@ const SignsPage = () => {
     const fetchSigns = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/signs');
-        
+        const response = await fetch("/api/signs");
+
         if (!response.ok) {
           throw new Error(`API request failed with status: ${response.status}`);
         }
-        
+
         const responseData = await response.json();
-        
+
         // Check if data property exists in the response
         if (!responseData.data || !Array.isArray(responseData.data)) {
-          throw new Error('Invalid API response format');
+          throw new Error("Invalid API response format");
         }
-        
+
         // Extract only brand names from the data
-        const brandNames = responseData.data.map((brand : any) => brand.brand_name);
+        const brandNames = responseData.data.map(
+          (brand: BrandData) => brand.brand_name
+        );
         if (brandNames.length > 0) {
           setBrands(brandNames);
           // Keep current tab if it exists in the new data, otherwise switch to first brand
@@ -254,57 +278,98 @@ const SignsPage = () => {
             setTab(brandNames[0]);
           }
         }
-        
+
         // Find the selected brand
-        const selectedBrand = responseData.data.find((brand : any) => brand.brand_name === tab);
-        
+        const selectedBrand = responseData.data.find(
+          (brand: BrandData) => brand.brand_name === tab
+        );
+
         if (!selectedBrand || !selectedBrand.signs) {
           setSignData([]);
           return;
         }
-        
+
+        // Define types for sign and pricing if not already imported
+        type SignPricing = {
+          size?: string;
+          sign_price?: number;
+          install_price?: number;
+          sign_budget?: number;
+          install_budget?: number;
+          raceway?: number;
+        };
+        type SignOptionRaw = {
+          option_name?: string;
+          input_type?: string;
+        };
+        type SignRaw = {
+          sign_image?: string;
+          sign_name?: string;
+          sign_description?: string;
+          status?: string;
+          created_at: string;
+          sign_pricing?: SignPricing[];
+          options?: SignOptionRaw[];
+        };
+
         // Transform API data to match the expected format
-        const transformedData = selectedBrand.signs.map((sign : any) => {
-          // Format date to match expected format (e.g., "Aug 1st, 2025")
-          const createdDate = new Date(sign.created_at);
-          const formattedDate = createdDate.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric'
-          });
-          
-          // Transform sign_pricing to match the expected details format
-          const details = sign.sign_pricing && Array.isArray(sign.sign_pricing) 
-            ? sign.sign_pricing.map((pricing : any) => ({
-                size: pricing.size || '',
-                signPrice: pricing.sign_price ? `$${pricing.sign_price.toLocaleString()}` : '$0.00',
-                installPrice: pricing.install_price ? `$${pricing.install_price.toLocaleString()}` : '$0.00',
-                signBudget: pricing.sign_budget ? `$${pricing.sign_budget.toLocaleString()}` : '$0.00',
-                installBudget: pricing.install_budget ? `$${pricing.install_budget.toLocaleString()}` : '$0.00',
-                raceway: pricing.raceway ? `$${pricing.raceway.toLocaleString()}` : '$0.00',
-              }))
-            : [];
-          
-          // Extract just the option_name and input_type from each option
-          const signOptions = sign.options && Array.isArray(sign.options)
-            ? sign.options.map((option : any) => ({
-                label: option.option_name || '',
-                type: option.input_type || 'Dropdown',
-                checked: true // Assuming all options are checked by default
-              }))
-            : [];
-          
-          return {
-            signImage: sign.sign_image || "/daves-hot-chicken-logo.png",
-            signName: sign.sign_name || "Unnamed Sign",
-            signDescription: sign.sign_description || "",
-            status: sign.status || "Active",
-            dateAdded: formattedDate,
-            signOptions: signOptions,
-            details: details,
-          };
-        });
-        
+        const transformedData = (selectedBrand.signs as SignRaw[]).map(
+          (sign) => {
+            // Format date to match expected format (e.g., "Aug 1st, 2025")
+            const createdDate = new Date(sign.created_at);
+            const formattedDate = createdDate.toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            });
+
+            // Transform sign_pricing to match the expected details format
+            const details =
+              sign.sign_pricing && Array.isArray(sign.sign_pricing)
+                ? sign.sign_pricing.map((pricing) => ({
+                    size: pricing.size || "",
+                    signPrice: pricing.sign_price
+                      ? `$${pricing.sign_price.toLocaleString()}`
+                      : "$0.00",
+                    installPrice: pricing.install_price
+                      ? `$${pricing.install_price.toLocaleString()}`
+                      : "$0.00",
+                    signBudget: pricing.sign_budget
+                      ? `$${pricing.sign_budget.toLocaleString()}`
+                      : "$0.00",
+                    installBudget: pricing.install_budget
+                      ? `$${pricing.install_budget.toLocaleString()}`
+                      : "$0.00",
+                    raceway: pricing.raceway
+                      ? `$${pricing.raceway.toLocaleString()}`
+                      : "$0.00",
+                  }))
+                : [];
+
+            // Extract just the option_name and input_type from each option
+            const signOptions =
+              sign.options && Array.isArray(sign.options)
+                ? sign.options.map((option) => ({
+                    label: option.option_name || "",
+                    type:
+                      (option.input_type as "Dropdown" | "User Input") ||
+                      "Dropdown",
+                    checked: true, // Assuming all options are checked by default
+                  }))
+                : [];
+
+            return {
+              signImage: sign.sign_image || "/daves-hot-chicken-logo.png",
+              signName: sign.sign_name || "Unnamed Sign",
+              signDescription: sign.sign_description || "",
+              status: (sign.status as "Active" | "Inactive") || "Active",
+              dateAdded: formattedDate,
+              signOptions: signOptions,
+              details: details,
+            };
+          }
+        );
+
         setSignData(transformedData);
         setError(null);
       } catch (err) {
@@ -331,13 +396,14 @@ const SignsPage = () => {
     columnDefs,
     defaultColDef: {
       sortable: true,
-      resizable: true,
+      resizable: false, // Disable resizing
+      suppressMovable: true, // Disable reordering
     },
     embedFullWidthRows: true,
     suppressColumnVirtualisation: true,
     animateRows: true,
     onFirstDataRendered: (params: FirstDataRenderedEvent<IAccount>) => {
-      params.api.sizeColumnsToFit();
+      // params.api.sizeColumnsToFit(); // Removed to disable auto column width adjustment
       if (params.api.getDisplayedRowCount() > 0) {
         params.api.getDisplayedRowAtIndex(0)?.setExpanded(true);
       }
@@ -417,9 +483,7 @@ const SignsPage = () => {
                   : "bg-transparent text-black"
               }`}
               style={
-                tab === brand
-                  ? {}
-                  : { borderBottom: "none", borderRadius: 0 }
+                tab === brand ? {} : { borderBottom: "none", borderRadius: 0 }
               }
               onClick={() => setTab(brand)}
             >

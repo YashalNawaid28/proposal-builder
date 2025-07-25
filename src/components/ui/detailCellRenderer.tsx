@@ -18,13 +18,22 @@ export const DetailCellRenderer = (
     {
       field: "size",
       headerName: "Size",
-      flex: 2,
+      flex: 1,
       cellClass: "ag-center-text",
       suppressHeaderMenuButton: true,
       suppressHeaderFilterButton: true,
       menuTabs: [],
       cellRenderer: (params: ICellRendererParams<ISignDetail, string>) => (
-        <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "12px 0",
+          }}
+        >
           {params.value ?? ""}
         </div>
       ),
@@ -38,7 +47,16 @@ export const DetailCellRenderer = (
       suppressHeaderFilterButton: true,
       menuTabs: [],
       cellRenderer: (params: ICellRendererParams<ISignDetail, string>) => (
-        <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "12px 0",
+          }}
+        >
           {params.value ?? ""}
         </div>
       ),
@@ -52,7 +70,16 @@ export const DetailCellRenderer = (
       suppressHeaderFilterButton: true,
       menuTabs: [],
       cellRenderer: (params: ICellRendererParams<ISignDetail, string>) => (
-        <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "12px 0",
+          }}
+        >
           {params.value ?? ""}
         </div>
       ),
@@ -66,7 +93,16 @@ export const DetailCellRenderer = (
       suppressHeaderFilterButton: true,
       menuTabs: [],
       cellRenderer: (params: ICellRendererParams<ISignDetail, string>) => (
-        <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "12px 0",
+          }}
+        >
           {params.value ?? ""}
         </div>
       ),
@@ -80,7 +116,16 @@ export const DetailCellRenderer = (
       suppressHeaderFilterButton: true,
       menuTabs: [],
       cellRenderer: (params: ICellRendererParams<ISignDetail, string>) => (
-        <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "12px 0",
+          }}
+        >
           {params.value ?? ""}
         </div>
       ),
@@ -94,7 +139,16 @@ export const DetailCellRenderer = (
       suppressHeaderFilterButton: true,
       menuTabs: [],
       cellRenderer: (params: ICellRendererParams<ISignDetail, string>) => (
-        <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "12px 0",
+          }}
+        >
           {params.value ?? ""}
         </div>
       ),
@@ -110,46 +164,6 @@ export const DetailCellRenderer = (
     return <span style={{ fontSize: 20, marginRight: 8 }}>📄</span>;
   };
 
-  // Columns for the Sign Options custom grid
-  const signOptionsColumnDefs: ColDef<ISignOption>[] = [
-    {
-      field: "label",
-      headerName: "Sign Options",
-      flex: 1,
-      minWidth: 180,
-      cellRenderer: (params: ICellRendererParams<ISignOption, string>) => (
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          {getOptionIcon(params.data?.type || "")}
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <span style={{ fontWeight: 600 }}>{params.data?.label}</span>
-            <span style={{ fontSize: 12, color: "#6B7280" }}>
-              {params.data?.type}
-            </span>
-          </div>
-        </div>
-      ),
-      cellClass: "ag-center-text",
-      suppressHeaderMenuButton: true,
-      suppressHeaderFilterButton: true,
-      menuTabs: [],
-    },
-    {
-      field: "checked",
-      headerName: "",
-      width: 40,
-      cellRenderer: (params: ICellRendererParams<ISignOption, boolean>) =>
-        params.value ? (
-          <span style={{ color: "#22c55e", fontWeight: 700, fontSize: 22 }}>
-            &#10003;
-          </span>
-        ) : null,
-      cellClass: "ag-center-text",
-      suppressHeaderMenuButton: true,
-      suppressHeaderFilterButton: true,
-      menuTabs: [],
-    },
-  ];
-
   const detailGridOptions: GridOptions<ISignDetail> = {
     columnDefs: detailColumnDefs,
     rowData: props.data?.details ?? [],
@@ -160,7 +174,7 @@ export const DetailCellRenderer = (
     suppressHorizontalScroll: false,
     suppressColumnVirtualisation: true,
     headerHeight: 40,
-    rowHeight: 35,
+    rowHeight: 48, // Increased row height
     animateRows: true,
     enableRangeSelection: true,
     pagination: false,
@@ -180,6 +194,9 @@ export const DetailCellRenderer = (
           display: flex !important;
           align-items: center !important;
           justify-content: center !important;
+        }
+        .detail-cell-renderer .ag-row, .detail-cell-renderer .ag-center-cols-container .ag-row {
+          background-color: #f3f4f6 !important;
         }
         .ag-header-cell:not(:last-child), .ag-cell:not(:last-child) {
           border-right: 1px solid #d1d5db !important; /* Tailwind border-gray-300 */
@@ -250,7 +267,7 @@ export const DetailCellRenderer = (
             >
               <AgGridReact<ISignDetail>
                 {...detailGridOptions}
-                getRowStyle={() => ({ background: '#f3f4f6' })}
+                getRowStyle={() => ({ background: "#f3f4f6" })}
               />
             </div>
           </div>

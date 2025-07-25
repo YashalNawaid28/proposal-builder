@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSupabase, setUserIdSessionVar } from "@/lib/supabase";
+import { getServerSupabase } from "@/lib/supabase";
 
 export async function POST(request: NextRequest) {
   try {
@@ -53,7 +53,6 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    
     const supabase = getServerSupabase();
 
     const { searchParams } = new URL(request.url);

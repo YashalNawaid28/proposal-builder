@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ data });
   } catch (err) {
+    console.error('Error fetching sign pricing:', err);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
