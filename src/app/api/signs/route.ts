@@ -3,13 +3,9 @@ import { getServerSupabase, setUserIdSessionVar } from "@/lib/supabase";
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = request.headers.get("request.user.id");
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     const supabase = getServerSupabase();
-    await setUserIdSessionVar(supabase, userId); // ✅ enable session variable for RLS
+
 
     const formData = await request.formData();
     const brand_id = formData.get("brand_id") as string;
@@ -44,32 +40,41 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = request.headers.get("request.user.id");
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const supabase = getServerSupabase();
-    await setUserIdSessionVar(supabase, userId); // ✅ enable session variable for RLS
 
-    const { searchParams } = new URL(request.url);
-    const brand_id = searchParams.get("brand_id");
-
-    let query = supabase.from("signs").select("*");
-
-    if (brand_id) {
-      query = query.eq("brand_id", brand_id);
-    }
-
-    const { data, error } = await query;
+    const { data, error } = await supabase
+      .from("brands")
+      .select(`
+        *,
+        signs (
+          *,
+          sign_pricing (*),
+          options (*)
+        )
+      `);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ data });
+    // 👇 Reorder signs for each brand
+    const PINNED_SIGN_ID = "0368b19e-4b92-4c2f-afe9-0b4e2d5b2c69";
+
+    const reordered = data.map((brand: any) => {
+      if (!brand.signs || !Array.isArray(brand.signs)) return brand;
+
+      const pinned = brand.signs.find((s: any) => s.id === PINNED_SIGN_ID);
+      const others = brand.signs.filter((s: any) => s.id !== PINNED_SIGN_ID);
+
+      return {
+        ...brand,
+        signs: pinned ? [pinned, ...others] : others
+      };
+    });
+
+    return NextResponse.json({ data: reordered }, { status: 200 });
   } catch (error) {
-    console.error("GET /signs error:", error);
+    console.error("GET /brands error:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }

@@ -53,13 +53,8 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = request.headers.get("request.user.id");
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
+    
     const supabase = getServerSupabase();
-    await setUserIdSessionVar(supabase, userId); // ✅ Set session var for RLS
 
     const { searchParams } = new URL(request.url);
     const sign_id = searchParams.get("sign_id");
