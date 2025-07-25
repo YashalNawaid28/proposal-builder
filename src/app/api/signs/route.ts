@@ -3,13 +3,9 @@ import { getServerSupabase, setUserIdSessionVar } from "@/lib/supabase";
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = request.headers.get("request.user.id");
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     const supabase = getServerSupabase();
-    await setUserIdSessionVar(supabase, userId); // ✅ enable session variable for RLS
+
 
     const formData = await request.formData();
     const brand_id = formData.get("brand_id") as string;
@@ -44,13 +40,9 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = request.headers.get("request.user.id");
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    
 
     const supabase = getServerSupabase();
-    await setUserIdSessionVar(supabase, userId); // ✅ enable session variable for RLS
 
     const { searchParams } = new URL(request.url);
     const brand_id = searchParams.get("brand_id");
