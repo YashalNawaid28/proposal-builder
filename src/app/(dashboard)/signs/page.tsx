@@ -8,7 +8,6 @@ import {
   ColDef,
   ICellRendererParams,
   FirstDataRenderedEvent,
-  RowClickedEvent,
 } from "ag-grid-community";
 import {
   MasterDetailModule,
@@ -20,7 +19,7 @@ import { DetailCellRenderer } from "@/components/ui/detailCellRenderer";
 import { IAccount } from "@/lib/interfaces";
 import Image from "next/image";
 import { ChevronRight } from "lucide-react";
-import "ag-grid-enterprise";
+import { useState } from "react";
 
 ModuleRegistry.registerModules([
   ClientSideRowModelModule,
@@ -30,7 +29,6 @@ ModuleRegistry.registerModules([
   ContextMenuModule,
 ]);
 
-// Sample data for master/detail
 const accountData: IAccount[] = [
   {
     signImage: "/daves-hot-chicken-logo.png",
@@ -62,36 +60,53 @@ const accountData: IAccount[] = [
         installBudget: "$1,083.00",
         raceway: "$600.00",
       },
-      // ... more rows as needed
     ],
   },
-  // ... more accounts
 ];
 
 const columnDefs: ColDef<IAccount>[] = [
   {
-    headerName: '',
-    width: 50,
+    headerName: "",
+    width: 200,
     suppressMovable: true,
     resizable: false,
     sortable: false,
-    cellClass: 'ag-center-text',
+    cellClass: "ag-center-text",
     suppressHeaderMenuButton: true,
     suppressHeaderFilterButton: true,
     menuTabs: [],
     cellRenderer: (params: ICellRendererParams<IAccount, unknown>) => {
       const isExpanded = params.node.expanded;
       return (
-        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
           <button
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-            onClick={e => {
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: 0,
+            }}
+            onClick={(e) => {
               e.stopPropagation();
               params.node.setExpanded(!params.node.expanded);
             }}
-            aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
+            aria-label={isExpanded ? "Collapse details" : "Expand details"}
           >
-            <span style={{ display: 'inline-block', transition: 'transform 0.2s', transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}>
+            <span
+              style={{
+                display: "inline-block",
+                transition: "transform 0.2s",
+                transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)",
+              }}
+            >
               <ChevronRight size={20} />
             </span>
           </button>
@@ -103,8 +118,24 @@ const columnDefs: ColDef<IAccount>[] = [
     headerName: "Sign Image",
     field: "signImage",
     cellRenderer: (params: ICellRendererParams<IAccount, string>) => (
-      <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
           <Image
             src={params.value ?? ""}
             alt="Sign Image"
@@ -127,7 +158,15 @@ const columnDefs: ColDef<IAccount>[] = [
     headerName: "Sign Name",
     field: "signName",
     cellRenderer: (params: ICellRendererParams<IAccount, string>) => (
-      <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         <span className="font-semibold">{params.value ?? ""}</span>
       </div>
     ),
@@ -146,7 +185,15 @@ const columnDefs: ColDef<IAccount>[] = [
     suppressHeaderFilterButton: true,
     menuTabs: [],
     cellRenderer: (params: ICellRendererParams<IAccount, string>) => (
-      <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         {params.value ?? ""}
       </div>
     ),
@@ -155,7 +202,15 @@ const columnDefs: ColDef<IAccount>[] = [
     headerName: "Status",
     field: "status",
     cellRenderer: (params: ICellRendererParams<IAccount, string>) => (
-      <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         <span className="bg-green-100 text-green-700 px-3 py-1 rounded text-xs font-medium">
           {params.value ?? ""}
         </span>
@@ -176,7 +231,15 @@ const columnDefs: ColDef<IAccount>[] = [
     suppressHeaderFilterButton: true,
     menuTabs: [],
     cellRenderer: (params: ICellRendererParams<IAccount, string>) => (
-      <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         {params.value ?? ""}
       </div>
     ),
@@ -186,7 +249,7 @@ const columnDefs: ColDef<IAccount>[] = [
 const gridOptions = {
   masterDetail: true,
   detailCellRenderer: DetailCellRenderer,
-  detailRowHeight: 450, // Increased to fit grid and options block
+  detailRowHeight: 450,
   detailRowAutoHeight: false,
   detailCellRendererParams: {
     suppressCount: true,
@@ -196,7 +259,6 @@ const gridOptions = {
   defaultColDef: {
     sortable: true,
     resizable: true,
-    // no filter, no suppressMenu
   },
   embedFullWidthRows: true,
   suppressColumnVirtualisation: true,
@@ -205,14 +267,13 @@ const gridOptions = {
     params.api.sizeColumnsToFit();
     params.api.forEachNode((node) => node.setExpanded(node.id === "1"));
   },
-  onRowClicked: () => {
-    // Do nothing
-  },
+  onRowClicked: () => {},
   getRowStyle: () => ({ backgroundColor: "#F9F9FB" }),
   getRowClass: () => "custom-row-background",
 };
 
 const SignsPage = () => {
+  const [tab, setTab] = useState("Dave's Hot Chicken");
   return (
     <>
       <style>{`
@@ -273,6 +334,23 @@ const SignsPage = () => {
       `}</style>
       <div>
         <h1 className="text-2xl font-semibold mb-4 px-4 mt-4">Signs</h1>
+        <div className="flex gap-2 px-4">
+          <button
+            className={`px-4 py-2 font-semibold transition-colors duration-150 ${
+              tab === "Dave's Hot Chicken"
+                ? "bg-black text-white rounded-t-md"
+                : "bg-transparent text-black"
+            }`}
+            style={
+              tab === "Dave's Hot Chicken"
+                ? {}
+                : { borderBottom: "none", borderRadius: 0 }
+            }
+            onClick={() => setTab("Dave's Hot Chicken")}
+          >
+            Dave&apos;s Hot Chicken
+          </button>
+        </div>
         <div
           className="ag-theme-alpine"
           style={{ width: "100%", background: "white" }}
