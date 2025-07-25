@@ -77,8 +77,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   isActive={isActive}
                   className={`w-full flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
                     isActive
-                      ? "bg-gray-700 text-white"
-                      : "hover:bg-gray-800/60 text-white"
+                      ? "bg-gray-800 text-white"
+                      : "hover:bg-gray-900/60 text-white"
                   }`}
                 >
                   <Link href={link.href} className="w-full flex items-center">
@@ -93,7 +93,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           })}
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter className="mt-auto bg-black px-4 pb-4">
+      <SidebarFooter className="mt-auto bg-black dark text-sm px-4 pb-4">
         <UserButton showUserInfo={true} />
       </SidebarFooter>
     </Sidebar>

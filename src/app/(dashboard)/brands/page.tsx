@@ -1,16 +1,20 @@
 "use client";
 import React, { useMemo, useState, useEffect } from "react";
 import { AgGridReact } from "ag-grid-react";
-import { ColDef, ICellRendererParams } from "ag-grid-community";
+import {
+  ColDef,
+  ICellRendererParams,
+  ModuleRegistry,
+  AllCommunityModule,
+} from "ag-grid-community";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import Image from "next/image";
-import { ModuleRegistry, AllCommunityModule } from "ag-grid-community";
 import { useUser } from "@stackframe/stack";
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 // Define interfaces for our data structures
-interface BrandData {
+export interface BrandData {
   id: string;
   user_id: string;
   brand_image: string;
@@ -37,7 +41,9 @@ const StatusCell = (params: ICellRendererParams) => {
   }
 
   return (
-    <span className={`${bgColor} ${textColor} px-3 py-1 rounded text-xs font-medium`}>
+    <span
+      className={`${bgColor} ${textColor} px-3 py-1 rounded text-xs font-medium`}
+    >
       {status}
     </span>
   );
@@ -46,16 +52,17 @@ const StatusCell = (params: ICellRendererParams) => {
 // Brand image cell renderer
 const BrandImageCell = (params: ICellRendererParams) => {
   const [imgError, setImgError] = useState(false);
-  
+
   // Return a simple colored div with initials if image fails to load
   if (imgError) {
     const brandName = params.data?.brandName || "Brand";
-    const initials = brandName.split(" ")
+    const initials = brandName
+      .split(" ")
       .map((word: string) => word[0])
       .join("")
       .toUpperCase()
       .substring(0, 2);
-      
+
     return (
       <div className="flex items-center justify-center h-full w-full">
         <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-sm font-medium">
@@ -64,7 +71,7 @@ const BrandImageCell = (params: ICellRendererParams) => {
       </div>
     );
   }
-  
+
   return (
     <div className="flex items-center justify-center h-full w-full">
       <Image
@@ -101,26 +108,25 @@ const BrandsPage = () => {
   useEffect(() => {
     const fetchBrands = async () => {
       setLoading(true);
-      console.log("user id " , user)
+      console.log("user id ", user);
       try {
         const res = await fetch("/api/brands", {
           headers: {
             "request.user.id": user?.id || "",
-            
           },
         });
 
-        
-        
         if (!res.ok) {
           throw new Error("Failed to fetch brands");
         }
-        
+
         const data = await res.json();
         setBrands(data.data || []);
       } catch (error) {
         console.error("Error fetching brands:", error);
-        setError(error instanceof Error ? error.message : "An unknown error occurred");
+        setError(
+          error instanceof Error ? error.message : "An unknown error occurred"
+        );
       } finally {
         setLoading(false);
       }
@@ -132,10 +138,8 @@ const BrandsPage = () => {
   // Filter brands based on selected tab
   const filteredBrands = useMemo(() => {
     if (tab === "all") return brands;
-    return brands.filter((brand) => 
-      tab === "active" 
-        ? brand.status === "Active" 
-        : brand.status === "Archived"
+    return brands.filter((brand) =>
+      tab === "active" ? brand.status === "Active" : brand.status === "Archived"
     );
   }, [brands, tab]);
 

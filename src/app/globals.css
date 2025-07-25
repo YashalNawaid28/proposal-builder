@@ -112,6 +112,33 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+.ag-header-left-align,
+.ag-header-left-align .ag-header-cell-label {
+  justify-content: flex-start !important;
+  text-align: left !important;
+  display: flex !important;
+  align-items: center;
+}
+
+.ag-sign-description-cell {
+  padding: 0.5rem 1rem;
+  white-space: pre-line;
+  word-break: break-word;
+}
+
+.stack-scope {
+  color: rgb(226, 226, 226) !important;
+}
+
+.user-email {
+  color: #a1a1aa !important; /* Tailwind zinc-400 */
+}
+
+.stack-scope.text-zinc-600,
+.stack-scope.dark\:text-zinc-400 {
+  color: #a1a1aa !important; /* Tailwind zinc-400 */
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
