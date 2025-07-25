@@ -126,17 +126,9 @@
   word-break: break-word;
 }
 
-.stack-scope {
-  color: rgb(226, 226, 226) !important;
-}
-
-.user-email {
-  color: #a1a1aa !important; /* Tailwind zinc-400 */
-}
-
-.stack-scope.text-zinc-600,
-.stack-scope.dark\:text-zinc-400 {
-  color: #a1a1aa !important; /* Tailwind zinc-400 */
+button[aria-haspopup="menu"].stack-scope,
+button[aria-haspopup="menu"].stack-scope .stack-scope {
+  color: white !important;
 }
 
 @layer base {

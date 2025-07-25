@@ -93,7 +93,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           })}
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter className="mt-auto bg-black dark text-sm px-4 pb-4">
+      <SidebarFooter className="mt-auto bg-black text-sm px-4 pb-4">
         <UserButton showUserInfo={true} />
       </SidebarFooter>
     </Sidebar>
