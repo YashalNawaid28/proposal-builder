@@ -180,7 +180,7 @@ const SignsPage = () => {
           <button
             key={brand}
             className={
-              "text-[20px] text-white bg-black rounded-t-lg px-3 py-2 ml-6"
+              "text-[16px] text-white bg-black rounded-t-lg px-3 py-2 ml-6"
             }
             onClick={() => setTab(brand)}
           >
