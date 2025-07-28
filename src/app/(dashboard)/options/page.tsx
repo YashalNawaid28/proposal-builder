@@ -1,16 +1,10 @@
 "use client";
 import React, { useMemo, useState, useEffect } from "react";
-import { AgGridReact } from "ag-grid-react";
-import { ColDef, ICellRendererParams } from "ag-grid-community";
-import "ag-grid-community/styles/ag-grid.css";
-import "ag-grid-community/styles/ag-theme-alpine.css";
-import { ModuleRegistry, AllCommunityModule } from "ag-grid-community";
 import Image from "next/image";
 import { useUser } from "@stackframe/stack";
-ModuleRegistry.registerModules([AllCommunityModule]);
 
 // Define interfaces for our data structures
-interface OptionData {
+export interface OptionData {
   id: string;
   sign_id: string;
   option_icon: string;
@@ -21,10 +15,21 @@ interface OptionData {
   values: string[];
 }
 
-const StatusCell = (params: ICellRendererParams) => {
-  const status = params.value as string;
-  let bgColor = "bg-green-100";
-  let textColor = "text-green-700";
+// Simplified row data structure for the table
+interface RowData {
+  id: string;
+  iconUrl: string;
+  name: string;
+  placeholder: string;
+  type: string;
+  status: string;
+  values: string[];
+}
+
+// StatusCell component that handles different statuses
+const StatusCell = ({ status }: { status: string }) => {
+  let bgColor = "bg-[#17B26A1A]";
+  let textColor = "text-[#17B26A]";
 
   if (status === "Draft") {
     bgColor = "bg-yellow-100";
@@ -36,32 +41,25 @@ const StatusCell = (params: ICellRendererParams) => {
 
   return (
     <span
-      className={`${bgColor} ${textColor} px-3 py-1 rounded text-xs font-medium`}
+      className={`${bgColor} ${textColor} h-[24px] font-semibold px-3 py-1 rounded text-[14px]`}
     >
       {status}
     </span>
   );
 };
 
-const ValuesCell = (params: ICellRendererParams) => (
-  <div className="flex flex-wrap justify-start">
-    {(params.value as string[]).map((val: string, idx: number) => (
-      <span
-        key={idx}
-        className="bg-gray-100 px-2 py-1 rounded text-xs font-medium border border-gray-300 mx-1 my-1"
-      >
-        {val}
-      </span>
-    ))}
-  </div>
-);
-
-const IconCell = (params: ICellRendererParams) => {
+// Option icon cell renderer
+const OptionIconCell = ({
+  src,
+  optionName,
+}: {
+  src: string;
+  optionName: string;
+}) => {
   const [imgError, setImgError] = useState(false);
 
-  // If image failed to load, show initials based on option name
-  if (imgError || !params.data.iconUrl) {
-    const optionName = params.data.name || "Option";
+  // Return a simple colored div with initials if image fails to load
+  if (imgError || !src) {
     const initials = optionName
       .split(" ")
       .map((word: string) => word[0])
@@ -70,36 +68,35 @@ const IconCell = (params: ICellRendererParams) => {
       .substring(0, 2);
 
     return (
-      <div className="flex items-center justify-center h-full w-full">
-        <div className="w-8 h-8 rounded bg-gray-200 flex items-center justify-center text-gray-600 text-xs font-medium">
-          {initials}
-        </div>
+      <div className="flex items-center justify-center h-10 w-10 rounded-full bg-gray-200 text-gray-600 text-sm font-medium">
+        {initials}
       </div>
     );
   }
 
   return (
-    <div className="flex items-center justify-center h-full w-full">
-      <Image
-        src={params.data.iconUrl}
-        alt={params.data.name + " icon"}
-        width={32}
-        height={32}
-        className="rounded"
-        unoptimized={true} // Bypass domain verification
-        onError={() => setImgError(true)}
-      />
-    </div>
+    <img
+      src={src}
+      alt={`${optionName} Icon`}
+      className="object-contain"
+      onError={() => setImgError(true)}
+    />
   );
 };
 
-// Custom header style
-const gridOptions = {
-  suppressRowClickSelection: true,
-  suppressCellSelection: true,
-  headerHeight: 48,
-  getHeaderClass: () => "custom-ag-header",
-};
+// Values cell renderer
+const ValuesCell = ({ values }: { values: string[] }) => (
+  <div className="flex flex-wrap justify-start gap-1">
+    {values.map((val: string, idx: number) => (
+      <span
+        key={idx}
+        className="bg-gray-100 px-2 py-1 rounded text-xs font-medium border border-gray-300"
+      >
+        {val}
+      </span>
+    ))}
+  </div>
+);
 
 const OptionsPage = () => {
   const user = useUser();
@@ -107,16 +104,17 @@ const OptionsPage = () => {
   const [options, setOptions] = useState<OptionData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedRows, setSelectedRows] = useState<string[]>([]);
 
-  // Fetch options data when component mounts
+  // Fetch options data when component mounts or user changes
   useEffect(() => {
     const fetchOptions = async () => {
+      if (!user) return; // Don't fetch if user is not available
       setLoading(true);
+      setError(null);
       try {
         const res = await fetch("/api/options", {
-          headers: {
-            "request.user.id": user?.id || "",
-          },
+          headers: { "request.user.id": user.id },
         });
 
         if (!res.ok) {
@@ -138,18 +136,18 @@ const OptionsPage = () => {
     fetchOptions();
   }, [user]);
 
-  // Filter options based on selected tab
+  // Filter options based on the selected tab
   const filteredOptions = useMemo(() => {
     if (tab === "all") return options;
     return options.filter((option) =>
       tab === "active"
-        ? option.status === "Active"
+        ? option.status === "Active" || option.status === "Draft"
         : option.status === "Archived"
     );
   }, [options, tab]);
 
   // Transform API data to match the table structure
-  const rowData = useMemo(() => {
+  const rowData: RowData[] = useMemo(() => {
     return filteredOptions.map((option) => ({
       id: option.id,
       iconUrl: option.option_icon,
@@ -161,192 +159,133 @@ const OptionsPage = () => {
     }));
   }, [filteredOptions]);
 
-  const columnDefs = useMemo<ColDef[]>(
-    () => [
-      {
-        headerName: "",
-        checkboxSelection: true,
-        width: 40,
-        pinned: "left",
-        headerCheckboxSelection: true,
-        suppressMenu: true,
-        suppressMovable: true,
-        suppressSizeToFit: true,
-        resizable: false,
-        cellClass: "ag-center-text",
-      },
-      {
-        headerName: "Options Icon",
-        field: "iconUrl",
-        width: 140,
-        suppressMenu: true,
-        suppressMovable: true,
-        resizable: false,
-        cellRenderer: IconCell,
-        cellClass: "ag-center-text",
-      },
-      {
-        headerName: "Option Name",
-        field: "name",
-        flex: 1.5,
-        cellClass: "ag-center-text font-semibold",
-      },
-      {
-        headerName: "Placeholder",
-        field: "placeholder",
-        flex: 1.2,
-        cellClass: "ag-center-text",
-      },
-      {
-        headerName: "Type",
-        field: "type",
-        flex: 1,
-        cellClass: "ag-center-text",
-      },
-      {
-        headerName: "Status",
-        field: "status",
-        cellRenderer: StatusCell,
-        flex: 1,
-        cellClass: "ag-center-text",
-      },
-      {
-        headerName: "Values",
-        field: "values",
-        cellRenderer: ValuesCell,
-        flex: 2,
-        cellClass: "ag-center-text",
-        autoHeight: true, // allow this column to expand vertically
-      },
-    ],
-    []
-  );
+  // --- Selection Handlers ---
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedRows(rowData.map((row) => row.id));
+    } else {
+      setSelectedRows([]);
+    }
+  };
+
+  const handleRowSelect = (id: string) => {
+    setSelectedRows((prev) =>
+      prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
+    );
+  };
+
+  const isAllSelected =
+    rowData.length > 0 && selectedRows.length === rowData.length;
+
+  const renderTable = () => {
+    if (loading) {
+      return <div className="p-4 text-center">Loading options...</div>;
+    }
+    if (error) {
+      return <div className="p-4 text-center text-red-500">Error: {error}</div>;
+    }
+    if (rowData.length === 0) {
+      return <div className="p-4 text-center">No options found.</div>;
+    }
+
+    return (
+      <div className="overflow-x-auto">
+        <table className="min-w-full border-collapse">
+          <thead className="bg-[#F9F9FB] font-semibold">
+            <tr className="border-b border-[#DEE1EA] h-[50px] font-semibold text-[14px]">
+              <th className="w-16 border-r border-[#DEE1EA]">
+                <div className="flex items-center justify-center">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 border-[#DEE1EA] text-gray-400"
+                    onChange={handleSelectAll}
+                    checked={isAllSelected}
+                  />
+                </div>
+              </th>
+              <th className="p-4 text-center text-[12px] font-semibold border-r border-[#DEE1EA] w-32">
+                Options Icon
+              </th>
+              <th className="p-4 text-center text-[12px] font-semibold border-r border-[#DEE1EA] text-base w-48">
+                Option Name
+              </th>
+              <th className="p-4 text-center text-[12px] font-semibold border-r border-[#DEE1EA] w-56">
+                Placeholder
+              </th>
+              <th className="p-4 text-center text-[12px] font-semibold border-r border-[#DEE1EA] w-32">
+                Type
+              </th>
+              <th className="p-4 text-center text-[12px] font-semibold border-r border-[#DEE1EA] w-32">
+                Status
+              </th>
+              <th className="p-4 text-left text-[12px] font-semibold text-base flex-1">
+                Values
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {rowData.map((row) => (
+              <tr key={row.id} className="hover:bg-gray-50 h-20 text-[14px]">
+                <td className="p-4 text-center border-r border-[#DEE1EA]">
+                  <div className="flex items-center justify-center">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 border-[#DEE1EA] text-gray-400"
+                      checked={selectedRows.includes(row.id)}
+                      onChange={() => handleRowSelect(row.id)}
+                    />
+                  </div>
+                </td>
+                <td className="border-r border-[#DEE1EA] flex items-center justify-center h-20 w-32">
+                  <div className="flex items-center justify-center">
+                    <OptionIconCell src={row.iconUrl} optionName={row.name} />
+                  </div>
+                </td>
+                <td className="p-4 font-semibold border-r border-[#DEE1EA] text-[14px] w-48 text-center">
+                  {row.name}
+                </td>
+                <td className="p-4 border-r text-center border-[#DEE1EA] text-[14px] w-56">
+                  {row.placeholder}
+                </td>
+                <td className="p-4 border-r border-[#DEE1EA] text-center text-[14px] w-32">
+                  {row.type}
+                </td>
+                <td className="p-4 border-r border-[#DEE1EA] text-center w-32">
+                  <StatusCell status={row.status} />
+                </td>
+                <td className="p-4 text-left text-[14px] flex-1">
+                  <ValuesCell values={row.values} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
 
   return (
-    <>
-      <style>{`
-        .custom-ag-header, .ag-header, .ag-header-cell, .ag-header-row {
-          background-color: #f3f4f6 !important; /* Tailwind bg-gray-100 */
-          color: #111827 !important;
-          font-weight: 600;
-          display: flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-        }
-        .ag-header-cell:not(:last-child), .ag-cell:not(:last-child) {
-          border-right: 1px solid #d1d5db !important; /* Tailwind border-gray-300 */
-        }
-        .ag-row-selected, .ag-row-hover {
-          background: white !important;
-        }
-        .ag-center-text {
-          display: flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          text-align: center !important;
-          height: 100%;
-        }
-        .ag-header-cell-label {
-          display: flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          width: 100%;
-          height: 100%;
-          text-align: center !important;
-        }
-        /* Center checkboxes in header and data cells for the first column */
-        .ag-header-cell[col-id=""] .ag-header-cell-label,
-        .ag-cell[col-id=""] {
-          display: flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          height: 100%;
-          width: 100%;
-        }
-        .ag-icon-center {
-          display: flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          width: 100% !important;
-          height: 100% !important;
-        }
-        /* Force padding on all ag-cell elements */
-        .ag-theme-alpine .ag-cell, .ag-theme-alpine .ag-header-cell {
-          padding-left: 16px !important;
-          padding-right: 16px !important;
-        }
-        /* Add 12px left margin to the header checkbox wrapper for visual centering */
-        .ag-header-select-all .ag-checkbox-input-wrapper {
-          margin-left: 12px !important;
-        }
-      `}</style>
-      <div>
-        <h1 className="text-2xl font-semibold mb-4 px-4 mt-4">Options</h1>
-        <div className="flex gap-2 px-4">
+    <div className="bg-white">
+      <h1 className="text-2xl font-semibold p-5">Options</h1>
+      <div className="flex ml-6">
+        {(["all", "active", "archived"] as const).map((tabName) => (
           <button
-            className={`px-4 py-2 font-semibold transition-colors duration-150 ${
-              tab === "all"
-                ? "bg-black text-white rounded-t-md"
-                : "bg-transparent text-black"
+            key={tabName}
+            className={`rounded-t-lg px-4 cursor-pointer py-2 ${
+              tab === tabName
+                ? "text-white text-[16px] font-semibold bg-black"
+                : "text-[14px] text-[#60646C]"
             }`}
-            style={
-              tab === "all" ? {} : { borderBottom: "none", borderRadius: 0 }
-            }
-            onClick={() => setTab("all")}
+            onClick={() => setTab(tabName)}
           >
-            All
+            {tabName.charAt(0).toUpperCase() + tabName.slice(1)}
           </button>
-          <button
-            className={`px-4 py-2 font-semibold transition-colors duration-150 ${
-              tab === "active"
-                ? "bg-black text-white rounded-t-md"
-                : "bg-transparent text-black"
-            }`}
-            style={
-              tab === "active" ? {} : { borderBottom: "none", borderRadius: 0 }
-            }
-            onClick={() => setTab("active")}
-          >
-            Active
-          </button>
-          <button
-            className={`px-4 py-2 font-semibold transition-colors duration-150 ${
-              tab === "archived"
-                ? "bg-black text-white rounded-t-md"
-                : "bg-transparent text-black"
-            }`}
-            style={
-              tab === "archived"
-                ? {}
-                : { borderBottom: "none", borderRadius: 0 }
-            }
-            onClick={() => setTab("archived")}
-          >
-            Archived
-          </button>
-        </div>
-        <div
-          className="ag-theme-alpine"
-          style={{ width: "100%", background: "white" }}
-        >
-          {loading ? (
-            <div className="p-4 text-center">Loading options...</div>
-          ) : error ? (
-            <div className="p-4 text-center text-red-500">Error: {error}</div>
-          ) : (
-            <AgGridReact
-              rowData={rowData}
-              columnDefs={columnDefs}
-              domLayout="autoHeight"
-              headerHeight={48}
-              rowHeight={56}
-              rowSelection="multiple"
-              gridOptions={gridOptions}
-            />
-          )}
-        </div>
+        ))}
       </div>
-    </>
+      <div className="border border-[#DEE1EA] rounded-lg overflow-hidden">
+        <div>{renderTable()}</div>
+      </div>
+    </div>
   );
 };
 
