@@ -1,10 +1,6 @@
 "use client";
 import * as React from "react";
-import {
-  IconBuildingStore,
-  IconSignLeft,
-  IconSettings,
-} from "@tabler/icons-react";
+import { Signpost, Settings, Home, Users, Grid3X3 } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -21,19 +17,40 @@ import { usePathname } from "next/navigation";
 
 const navLinks = [
   {
+    title: "Home",
+    icon: Home,
+    href: "/",
+  },
+];
+
+const brandLinks = [
+  {
+    title: "Dave's Hot Chicken",
+    icon: "/images/chicken.png",
+    href: "/brands/daves-hot-chicken",
+  },
+];
+
+const adminLinks = [
+  {
     title: "Brands",
-    icon: IconBuildingStore,
+    icon: Grid3X3,
     href: "/brands",
   },
   {
     title: "Signs",
-    icon: IconSignLeft,
+    icon: Signpost,
     href: "/signs",
   },
   {
     title: "Options",
-    icon: IconSettings,
+    icon: Settings,
     href: "/options",
+  },
+  {
+    title: "Users",
+    icon: Users,
+    href: "/users",
   },
 ];
 
@@ -51,7 +68,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       }
       {...props}
     >
-      <SidebarHeader className="flex flex-col bg-black items-center gap-4 pt-8 pb-4">
+      <SidebarHeader className="flex flex-col bg-black items-center gap-4 pt-8 pb-12">
         {/* Logo and Branding */}
         <Image
           width={230}
@@ -61,15 +78,72 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         />
       </SidebarHeader>
       <SidebarContent className="flex flex-col bg-black gap-2 px-4">
-        {/* Section Title */}
-        <div className="text-sm text-gray-400 mb-2 mt-2">Admin</div>
-        {/* Navigation Links */}
+        {/* Main Navigation */}
         <SidebarMenu className="w-full">
-          {navLinks.map((link, idx) => {
-            const isActive =
-              pathname === link.href ||
-              (idx === 0 &&
-                (pathname === "/dashboard" || pathname === "/brands"));
+          {navLinks.map((link) => {
+            const isActive = pathname === link.href;
+            return (
+              <SidebarMenuItem key={link.title}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive}
+                  className={`w-full flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+                    isActive
+                      ? "bg-gray-800 text-white"
+                      : "hover:bg-gray-900/60 text-white"
+                  }`}
+                >
+                  <Link href={link.href} className="w-full flex items-center">
+                    <link.icon className="w-5 h-5" />
+                    <span className="ml-2 text-sm font-medium">
+                      {link.title}
+                    </span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
+        </SidebarMenu>
+
+        {/* Brands Section */}
+        <div className="text-sm text-gray-400 mb-2 mt-4">Brands</div>
+        <SidebarMenu className="w-full">
+          {brandLinks.map((link) => {
+            const isActive = pathname === link.href;
+            return (
+              <SidebarMenuItem key={link.title}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive}
+                  className={`w-full flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+                    isActive
+                      ? "bg-gray-800 text-white"
+                      : "hover:bg-gray-900/60 text-white"
+                  }`}
+                >
+                  <Link href={link.href} className="w-full flex items-center">
+                    <Image
+                      src={link.icon}
+                      alt={link.title}
+                      width={20}
+                      height={20}
+                      className="w-5 h-5"
+                    />
+                    <span className="ml-2 text-sm font-medium">
+                      {link.title}
+                    </span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
+        </SidebarMenu>
+
+        {/* Admin Section */}
+        <div className="text-sm text-gray-400 mb-2 mt-4">Admin</div>
+        <SidebarMenu className="w-full">
+          {adminLinks.map((link) => {
+            const isActive = pathname === link.href;
             return (
               <SidebarMenuItem key={link.title}>
                 <SidebarMenuButton
