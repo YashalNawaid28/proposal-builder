@@ -331,7 +331,7 @@ const SignsPage = () => {
                               </div>
                               {/* Right Side: Sign Options */}
                               <div className="w-80 lg:w-96 xl:w-[500px] flex-shrink-0">
-                                <h3 className="font-semibold pl-6 text-[16px] my-3">
+                                <h3 className="font-semibold pl-6 text-[16px] my-4">
                                   Sign Options
                                 </h3>
                                 <div className="space-y-3 p-6 w-full">
