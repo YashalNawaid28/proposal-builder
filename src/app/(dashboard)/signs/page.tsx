@@ -154,11 +154,7 @@ const SignsPage = () => {
         );
 
         setSignData(transformedData);
-        if (transformedData.length > 0) {
-          setExpandedRow(transformedData[0].signName);
-        } else {
-          setExpandedRow(null);
-        }
+        setExpandedRow(null);
         setError(null);
       } catch (err) {
         console.error("Error fetching signs:", err);
@@ -211,19 +207,19 @@ const SignsPage = () => {
                         className="h-4 w-4 border-[#DEE1EA]"
                       />
                     </th>
-                    <th className="p-3 text-left font-semibold w-52 border-r border-[#DEE1EA] text-base">
+                    <th className="p-4 text-left font-semibold w-52 border-r border-[#DEE1EA] text-base">
                       Sign Image
                     </th>
-                    <th className="p-3 text-left font-semibold min-w-[200px] border-r border-[#DEE1EA] text-base">
+                    <th className="p-4 text-left font-semibold min-w-[200px] border-r border-[#DEE1EA] text-base">
                       Sign Name
                     </th>
-                    <th className="p-3 text-left font-semibold min-w-[350px] border-r border-[#DEE1EA] text-base">
+                    <th className="p-4 text-left font-semibold min-w-[350px] border-r border-[#DEE1EA] text-base">
                       Sign Description
                     </th>
-                    <th className="p-3 text-center font-semibold w-64 border-r border-[#DEE1EA] text-base">
+                    <th className="p-4 text-center font-semibold w-64 border-r border-[#DEE1EA] text-base">
                       Status
                     </th>
-                    <th className="p-3 text-center font-semibold w-64 text-base">
+                    <th className="p-4 text-center font-semibold w-64 text-base">
                       Date Added
                     </th>
                   </tr>
@@ -233,7 +229,7 @@ const SignsPage = () => {
                     <Fragment key={sign.signName}>
                       {/* Main Row */}
                       <tr className="hover:bg-gray-50 h-20">
-                        <td className="p-3 text-center border-r border-[#DEE1EA]">
+                        <td className="p-4 text-center border-r border-[#DEE1EA]">
                           <button
                             onClick={() => handleRowToggle(sign.signName)}
                           >
@@ -247,25 +243,25 @@ const SignsPage = () => {
                             />
                           </button>
                         </td>
-                        <td className="p-3 border-r border-[#DEE1EA] flex items-center justify-center h-20">
+                        <td className=" border-r border-[#DEE1EA] flex items-center justify-center h-20">
                           <img
                             src={sign.signImage}
-                            alt={sign.signName}
-                            className="h-10 w-auto object-contain"
+                            alt=""
+                            className="object-contain"
                           />
                         </td>
-                        <td className="p-3 font-semibold border-r border-[#DEE1EA] text-[18px]">
+                        <td className="p-4 font-semibold border-r border-[#DEE1EA] text-[14px]">
                           {sign.signName}
                         </td>
-                        <td className="p-3 border-r border-[#DEE1EA] text-[15px]">
+                        <td className="p-4 border-r border-[#DEE1EA] text-[12px]">
                           {sign.signDescription}
                         </td>
-                        <td className="p-3 border-r border-[#DEE1EA] text-center">
+                        <td className="p-4 border-r border-[#DEE1EA] text-center">
                           <span className="bg-[#17B26A1A] text-[#17B26A] h-[24px] font-semibold px-3 py-1 rounded text-[14px]">
                             {sign.status}
                           </span>
                         </td>
-                        <td className="p-3 text-center text-[18px]">
+                        <td className="p-4 text-center text-[14px]">
                           {sign.dateAdded}
                         </td>
                       </tr>
@@ -278,7 +274,7 @@ const SignsPage = () => {
                               <div className="flex-1 border-r border-[#DEE1EA] min-w-0">
                                 <table className="min-w-full text-sm border-collapse">
                                   <thead>
-                                    <tr className="border-b text-[16px] border-[#DEE1EA] h-[45px]">
+                                    <tr className="border-b text-[13px] border-[#DEE1EA] h-[45px]">
                                       {[
                                         "Size",
                                         "Sign Price",
@@ -289,7 +285,7 @@ const SignsPage = () => {
                                       ].map((header, index) => (
                                         <th
                                           key={header}
-                                          className={`p-3 text-center font-semibold text-black text-base ${
+                                          className={`p-4 text-center font-semibold text-black text-base ${
                                             index < 5
                                               ? "border-r border-[#DEE1EA]"
                                               : ""
@@ -304,28 +300,28 @@ const SignsPage = () => {
                                     {sign.details.map((detail, index) => (
                                       <tr
                                         key={index}
-                                        className={`h-[45px] text-[18px] ${
+                                        className={`h-[45px] text-[14px] ${
                                           index === sign.details.length - 1
                                             ? "border-b border-[#DEE1EA]"
                                             : ""
                                         }`}
                                       >
-                                        <td className="p-3 font-medium border-r border-[#DEE1EA] text-center">
+                                        <td className="p-4 font-medium border-r border-[#DEE1EA] text-center">
                                           {detail.size}
                                         </td>
-                                        <td className="p-3 border-r border-[#DEE1EA] text-center w-24">
+                                        <td className="p-4 border-r border-[#DEE1EA] text-center w-24">
                                           {detail.signPrice}
                                         </td>
-                                        <td className="p-3 border-r border-[#DEE1EA] text-center w-24">
+                                        <td className="p-4 border-r border-[#DEE1EA] text-center w-24">
                                           {detail.installPrice}
                                         </td>
-                                        <td className="p-3 border-r border-[#DEE1EA] text-center w-24">
+                                        <td className="p-4 border-r border-[#DEE1EA] text-center w-24">
                                           {detail.signBudget}
                                         </td>
-                                        <td className="p-3 border-r border-[#DEE1EA] text-center w-24">
+                                        <td className="p-4 border-r border-[#DEE1EA] text-center w-24">
                                           {detail.installBudget}
                                         </td>
-                                        <td className="p-3 text-center w-20">
+                                        <td className="p-4 text-center w-20">
                                           {detail.raceway}
                                         </td>
                                       </tr>
@@ -349,10 +345,10 @@ const SignsPage = () => {
                                           option.label.split(" ")[0]
                                         ] || optionIcons.default}
                                         <div className="-space-y-0.5 min-w-0 flex-1">
-                                          <div className="font-semibold text-[18px] truncate">
+                                          <div className="font-semibold text-[16px] truncate">
                                             {option.label}
                                           </div>
-                                          <div className="text-[17px] truncate">
+                                          <div className="text-[14px] truncate">
                                             {option.type}
                                           </div>
                                         </div>

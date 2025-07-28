@@ -1,25 +1,17 @@
 import { UserSyncProvider } from "../../components/user-sync-provider";
-import { AppSidebar } from "@/components/app-sidebar";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { CustomSidebar } from "@/components/custom-sidebar";
 
 export default function MainLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
     <UserSyncProvider>
-      <SidebarProvider
-        style={
-          {
-            "--sidebar-width": "calc(var(--spacing) * 72)",
-            "--header-height": "calc(var(--spacing) * 12)",
-          } as React.CSSProperties
-        }
-      >
-        <AppSidebar variant="inset" />
-        <div className="flex-1">{children}</div>
-      </SidebarProvider>
+      <div className="flex h-screen">
+        <CustomSidebar />
+        <div className="flex-1 overflow-auto">{children}</div>
+      </div>
     </UserSyncProvider>
   );
 }
