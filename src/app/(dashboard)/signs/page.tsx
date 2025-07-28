@@ -1,247 +1,46 @@
 "use client";
-import { AgGridReact } from "ag-grid-react";
-import "ag-grid-community/styles/ag-grid.css";
-import "ag-grid-community/styles/ag-theme-alpine.css";
+import { useState, useEffect, Fragment } from "react";
 import {
-  ModuleRegistry,
-  ClientSideRowModelModule,
-  ColDef,
-  ICellRendererParams,
-  FirstDataRenderedEvent,
-} from "ag-grid-community";
-import {
-  MasterDetailModule,
-  ColumnsToolPanelModule,
-  ColumnMenuModule,
-  ContextMenuModule,
-} from "ag-grid-enterprise";
-import { DetailCellRenderer } from "@/components/ui/detailCellRenderer";
-import { IAccount } from "@/lib/interfaces";
-import { ChevronRight } from "lucide-react";
-import { useState, useEffect } from "react";
+  ChevronRight,
+  Droplet,
+  LayoutTemplate,
+  Scan,
+  Type,
+} from "lucide-react";
 import type { BrandData } from "../brands/page";
+import { IAccount } from "@/lib/interfaces";
+import Image from "next/image";
 
-ModuleRegistry.registerModules([
-  ClientSideRowModelModule,
-  MasterDetailModule,
-  ColumnsToolPanelModule,
-  ColumnMenuModule,
-  ContextMenuModule,
-]);
+// Helper to format currency
+const formatCurrency = (value: string | number | undefined | null) => {
+  if (value === null || value === undefined) return "$0.00";
+  const num =
+    typeof value === "string"
+      ? parseFloat(value.replace(/[^0-9.-]+/g, ""))
+      : value;
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(num);
+};
 
-const columnDefs: ColDef<IAccount>[] = [
-  {
-    headerName: "",
-    width: 50,
-    suppressMovable: true,
-    resizable: false,
-    sortable: false,
-    headerClass: "ag-center-text",
-    cellStyle: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    suppressHeaderMenuButton: true,
-    suppressHeaderFilterButton: true,
-    menuTabs: [],
-    cellRenderer: (params: ICellRendererParams<IAccount, unknown>) => {
-      const isExpanded = params.node.expanded;
-      return (
-        <div
-          style={{
-            width: "100%",
-            height: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <button
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              padding: 0,
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              params.node.setExpanded(!params.node.expanded);
-            }}
-            aria-label={isExpanded ? "Collapse details" : "Expand details"}
-          >
-            <span
-              style={{
-                display: "inline-block",
-                transition: "transform 0.2s",
-                transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)",
-              }}
-            >
-              <ChevronRight size={20} />
-            </span>
-          </button>
-        </div>
-      );
-    },
-  },
-  {
-    headerName: "Sign Image",
-    field: "signImage",
-    cellRenderer: (params: ICellRendererParams<IAccount, string>) => (
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          padding: "0.5rem",
-          wordBreak: "break-word",
-          whiteSpace: "pre-line",
-          fontSize: "14px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <img
-          src={params.value ?? "/daves-hot-chicken-logo.png"}
-          alt="Sign Image"
-          style={{
-            width: "50px",
-            height: "50px",
-            borderRadius: "4px",
-          }}
-        />
-      </div>
-    ),
-    width: 150,
-    suppressMovable: true,
-    resizable: false,
-    headerClass: "ag-header-left-align",
-    cellStyle: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    suppressHeaderMenuButton: true,
-    suppressHeaderFilterButton: true,
-    menuTabs: [],
-  },
-  {
-    headerName: "Sign Name",
-    field: "signName",
-    cellRenderer: (params: ICellRendererParams<IAccount, string>) => (
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          padding: "0.5rem",
-          wordBreak: "break-word",
-          whiteSpace: "pre-line",
-          fontSize: "14px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "start",
-        }}
-      >
-        <span className="font-semibold">{params.value ?? ""}</span>
-      </div>
-    ),
-    flex: 1,
-    headerClass: "ag-header-left-align",
-    cellStyle: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "start",
-    },
-    suppressHeaderMenuButton: true,
-    suppressHeaderFilterButton: true,
-    menuTabs: [],
-  },
-  {
-    headerName: "Sign Description",
-    field: "signDescription",
-    flex: 3,
-    cellClass: "ag-sign-description-cell ag-center-text",
-    headerClass: "ag-header-left-align",
-    suppressHeaderMenuButton: true,
-    suppressHeaderFilterButton: true,
-    menuTabs: [],
-    cellRenderer: (params: ICellRendererParams<IAccount, string>) => (
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          padding: "0.5rem",
-          wordBreak: "break-word",
-          whiteSpace: "pre-line",
-          fontSize: "14px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "start",
-        }}
-      >
-        {params.value ?? ""}
-      </div>
-    ),
-  },
-  {
-    headerName: "Status",
-    field: "status",
-    cellRenderer: (params: ICellRendererParams<IAccount, string>) => (
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: "14px",
-        }}
-      >
-        <span className="bg-green-50 font-semibold text-green-600 px-3 py-1 rounded text-[14px]">
-          {params.value ?? ""}
-        </span>
-      </div>
-    ),
-    flex: 0.75,
-    headerClass: "ag-center-text",
-    cellStyle: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    suppressHeaderMenuButton: true,
-    suppressHeaderFilterButton: true,
-    menuTabs: [],
-  },
-  {
-    headerName: "Date Added",
-    field: "dateAdded",
-    flex: 0.75,
-    headerClass: "ag-center-text",
-    cellStyle: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    suppressHeaderMenuButton: true,
-    suppressHeaderFilterButton: true,
-    menuTabs: [],
-    cellRenderer: (params: ICellRendererParams<IAccount, string>) => (
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: "14px",
-        }}
-      >
-        {params.value ?? ""}
-      </div>
-    ),
-  },
-];
+// A map for dynamic icons in the "Sign Options" section
+const optionIcons: { [key: string]: React.ReactNode } = {
+  default: <Scan size={20} />,
+  Raceway: <LayoutTemplate size={20} />,
+  Color: <Droplet size={20} />,
+  Fabrication: <Type size={20} />,
+};
+
+// Helper function to get column width class
+const getColumnWidth = (index: number): string => {
+  if (index === 0) return "w-[77px]";
+  if (index === 1) return "w-24";
+  if (index === 2) return "w-24";
+  if (index === 3) return "w-24";
+  if (index === 4) return "w-24";
+  return "w-[77px]";
+};
 
 const SignsPage = () => {
   const [tab, setTab] = useState("Dave's Hot Chicken");
@@ -249,6 +48,7 @@ const SignsPage = () => {
   const [signData, setSignData] = useState<IAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchSigns = async () => {
@@ -259,37 +59,31 @@ const SignsPage = () => {
         if (!response.ok) {
           throw new Error(`API request failed with status: ${response.status}`);
         }
-
         const responseData = await response.json();
 
-        // Check if data property exists in the response
         if (!responseData.data || !Array.isArray(responseData.data)) {
           throw new Error("Invalid API response format");
         }
 
-        // Extract only brand names from the data
         const brandNames = responseData.data.map(
           (brand: BrandData) => brand.brand_name
         );
         if (brandNames.length > 0) {
           setBrands(brandNames);
-          // Keep current tab if it exists in the new data, otherwise switch to first brand
           if (!brandNames.includes(tab)) {
             setTab(brandNames[0]);
           }
         }
 
-        // Find the selected brand
         const selectedBrand = responseData.data.find(
           (brand: BrandData) => brand.brand_name === tab
         );
 
-        if (!selectedBrand || !selectedBrand.signs) {
+        if (!selectedBrand?.signs) {
           setSignData([]);
           return;
         }
 
-        // Define types for sign and pricing if not already imported
         type SignPricing = {
           size?: string;
           sign_price?: number;
@@ -312,41 +106,30 @@ const SignsPage = () => {
           options?: SignOptionRaw[];
         };
 
-        // Transform API data to match the expected format
         const transformedData = (selectedBrand.signs as SignRaw[]).map(
           (sign) => {
-            // Format date to match expected format (e.g., "Aug 1st, 2025")
             const createdDate = new Date(sign.created_at);
-            const formattedDate = createdDate.toLocaleDateString("en-US", {
+            const day = createdDate.getDate();
+            const suffix =
+              ["th", "st", "nd", "rd"][((day % 100) - 20) % 10] ||
+              ["th", "st", "nd", "rd"][day % 10] ||
+              "th";
+            const formattedDate = `${createdDate.toLocaleDateString("en-US", {
               month: "short",
-              day: "numeric",
-              year: "numeric",
-            });
+            })} ${day}${suffix}, ${createdDate.getFullYear()}`;
 
-            // Transform sign_pricing to match the expected details format
             const details =
               sign.sign_pricing && Array.isArray(sign.sign_pricing)
                 ? sign.sign_pricing.map((pricing) => ({
                     size: pricing.size || "",
-                    signPrice: pricing.sign_price
-                      ? `$${pricing.sign_price.toLocaleString()}`
-                      : "$0.00",
-                    installPrice: pricing.install_price
-                      ? `$${pricing.install_price.toLocaleString()}`
-                      : "$0.00",
-                    signBudget: pricing.sign_budget
-                      ? `$${pricing.sign_budget.toLocaleString()}`
-                      : "$0.00",
-                    installBudget: pricing.install_budget
-                      ? `$${pricing.install_budget.toLocaleString()}`
-                      : "$0.00",
-                    raceway: pricing.raceway
-                      ? `$${pricing.raceway.toLocaleString()}`
-                      : "$0.00",
+                    signPrice: formatCurrency(pricing.sign_price),
+                    installPrice: formatCurrency(pricing.install_price),
+                    signBudget: formatCurrency(pricing.sign_budget),
+                    installBudget: formatCurrency(pricing.install_budget),
+                    raceway: formatCurrency(pricing.raceway),
                   }))
                 : [];
 
-            // Extract just the option_name and input_type from each option
             const signOptions =
               sign.options && Array.isArray(sign.options)
                 ? sign.options.map((option) => ({
@@ -354,7 +137,7 @@ const SignsPage = () => {
                     type:
                       (option.input_type as "Dropdown" | "User Input") ||
                       "Dropdown",
-                    checked: true, // Assuming all options are checked by default
+                    checked: true,
                   }))
                 : [];
 
@@ -371,6 +154,11 @@ const SignsPage = () => {
         );
 
         setSignData(transformedData);
+        if (transformedData.length > 0) {
+          setExpandedRow(transformedData[0].signName);
+        } else {
+          setExpandedRow(null);
+        }
         setError(null);
       } catch (err) {
         console.error("Error fetching signs:", err);
@@ -382,138 +170,218 @@ const SignsPage = () => {
     };
 
     fetchSigns();
-  }, [tab]); // Refetch data when tab changes
+  }, [tab]);
 
-  const gridOptions = {
-    masterDetail: true,
-    detailCellRenderer: DetailCellRenderer,
-    detailRowHeight: 450,
-    detailRowAutoHeight: false,
-    detailCellRendererParams: {
-      suppressCount: true,
-      template: '<div class="ag-details-row ag-details-grid"></div>',
-    },
-    columnDefs,
-    defaultColDef: {
-      sortable: true,
-      resizable: false, // Disable resizing
-      suppressMovable: true, // Disable reordering
-    },
-    embedFullWidthRows: true,
-    suppressColumnVirtualisation: true,
-    animateRows: true,
-    onFirstDataRendered: (params: FirstDataRenderedEvent<IAccount>) => {
-      // params.api.sizeColumnsToFit(); // Removed to disable auto column width adjustment
-      if (params.api.getDisplayedRowCount() > 0) {
-        params.api.getDisplayedRowAtIndex(0)?.setExpanded(true);
-      }
-    },
-    onRowClicked: () => {},
-    getRowStyle: () => ({ backgroundColor: "#F9F9FB" }),
-    getRowClass: () => "custom-row-background",
+  const handleRowToggle = (signName: string) => {
+    setExpandedRow(expandedRow === signName ? null : signName);
   };
 
   return (
-    <>
-      <style>{`
-        .custom-ag-header, .ag-header, .ag-header-cell, .ag-header-row {
-          background-color: #f3f4f6 !important; /* Tailwind bg-gray-100 */
-          color: #111827 !important;
-          font-weight: 600;
-          display: flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-        }
-        .ag-header-cell:not(:last-child), .ag-cell:not(:last-child) {
-          border-right: 1px solid #d1d5db !important; /* Tailwind border-gray-300 */
-        }
-        .ag-row-selected, .ag-row-hover {
-          background: white !important;
-        }
-        .ag-theme-alpine .ag-center-text {
-          display: flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          text-align: center !important;
-          width: 100%;
-          height: 100%;
-        }
-        .ag-header-cell-label {
-          display: flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          width: 100%;
-          height: 100%;
-          text-align: center !important;
-        }
-        /* Center checkboxes in header and data cells for the first column */
-        .ag-header-cell[col-id=""] .ag-header-cell-label,
-        .ag-cell[col-id=""] {
-          display: flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          height: 100%;
-          width: 100%;
-        }
-        .ag-icon-center {
-          display: flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          width: 100% !important;
-          height: 100% !important;
-        }
-        .ag-theme-alpine .ag-cell, .ag-theme-alpine .ag-header-cell {
-          padding-left: 16px !important;
-          padding-right: 16px !important;
-        }
-        /* Add 12px left margin to the header checkbox wrapper for visual centering */
-        .ag-header-select-all .ag-checkbox-input-wrapper {
-          margin-left: 12px !important;
-        }
-      `}</style>
-      <div>
-        <h1 className="text-2xl font-semibold mb-4 px-4 mt-4">Signs</h1>
-        <div className="flex gap-2 px-4">
-          {brands.map((brand) => (
-            <button
-              key={brand}
-              className={`px-4 py-2 font-semibold transition-colors duration-150 ${
-                tab === brand
-                  ? "bg-black text-white rounded-t-md"
-                  : "bg-transparent text-black"
-              }`}
-              style={
-                tab === brand ? {} : { borderBottom: "none", borderRadius: 0 }
-              }
-              onClick={() => setTab(brand)}
-            >
-              {brand}
-            </button>
-          ))}
-        </div>
-        <div
-          className="ag-theme-alpine"
-          style={{ width: "100%", background: "white" }}
-        >
-          {loading ? (
-            <div className="flex justify-center items-center p-8">
-              <div className="animate-pulse">Loading sign data...</div>
-            </div>
-          ) : error ? (
-            <div className="text-red-500 p-8 text-center">{error}</div>
-          ) : (
-            <AgGridReact
-              rowData={signData}
-              gridOptions={gridOptions}
-              domLayout="autoHeight"
-              headerHeight={48}
-              rowHeight={56}
-              rowSelection="single"
-            />
-          )}
-        </div>
+    <div className="bg-white">
+      <h1 className="text-2xl font-bold p-5">Signs</h1>
+      <div className="flex">
+        {brands.map((brand) => (
+          <button
+            key={brand}
+            className={
+              "text-[20px] text-white bg-black rounded-t-lg px-3 py-2 ml-6"
+            }
+            onClick={() => setTab(brand)}
+          >
+            {brand}
+          </button>
+        ))}
       </div>
-    </>
+      <div className="border border-[#DEE1EA] rounded-lg overflow-hidden">
+        {(() => {
+          if (loading) {
+            return <div className="p-8 text-center">Loading sign data...</div>;
+          }
+          if (error) {
+            return <div className="p-8 text-center text-red-500">{error}</div>;
+          }
+          return (
+            <div className="overflow-x-auto">
+              <table className="min-w-full border-collapse">
+                <thead className="bg-[#F9F9FB] text-base font-semibold">
+                  <tr className="border-b border-[#DEE1EA] h-[50px]">
+                    <th className="w-12 border-r border-[#DEE1EA]">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 border-[#DEE1EA]"
+                      />
+                    </th>
+                    <th className="p-3 text-left font-semibold w-52 border-r border-[#DEE1EA] text-base">
+                      Sign Image
+                    </th>
+                    <th className="p-3 text-left font-semibold min-w-[200px] border-r border-[#DEE1EA] text-base">
+                      Sign Name
+                    </th>
+                    <th className="p-3 text-left font-semibold min-w-[350px] border-r border-[#DEE1EA] text-base">
+                      Sign Description
+                    </th>
+                    <th className="p-3 text-center font-semibold w-64 border-r border-[#DEE1EA] text-base">
+                      Status
+                    </th>
+                    <th className="p-3 text-center font-semibold w-64 text-base">
+                      Date Added
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {signData.map((sign) => (
+                    <Fragment key={sign.signName}>
+                      {/* Main Row */}
+                      <tr className="hover:bg-gray-50 h-20">
+                        <td className="p-3 text-center border-r border-[#DEE1EA]">
+                          <button
+                            onClick={() => handleRowToggle(sign.signName)}
+                          >
+                            <ChevronRight
+                              size={20}
+                              className={`transition-transform duration-200 ${
+                                expandedRow === sign.signName
+                                  ? "rotate-90"
+                                  : "rotate-0"
+                              }`}
+                            />
+                          </button>
+                        </td>
+                        <td className="p-3 border-r border-[#DEE1EA] flex items-center justify-center h-20">
+                          <img
+                            src={sign.signImage}
+                            alt={sign.signName}
+                            className="h-10 w-auto object-contain"
+                          />
+                        </td>
+                        <td className="p-3 font-semibold border-r border-[#DEE1EA] text-[18px]">
+                          {sign.signName}
+                        </td>
+                        <td className="p-3 border-r border-[#DEE1EA] text-[15px]">
+                          {sign.signDescription}
+                        </td>
+                        <td className="p-3 border-r border-[#DEE1EA] text-center">
+                          <span className="bg-[#17B26A1A] text-[#17B26A] h-[24px] font-semibold px-3 py-1 rounded text-[14px]">
+                            {sign.status}
+                          </span>
+                        </td>
+                        <td className="p-3 text-center text-[18px]">
+                          {sign.dateAdded}
+                        </td>
+                      </tr>
+                      {/* Expanded Detail Row */}
+                      {expandedRow === sign.signName && (
+                        <tr className="bg-white">
+                          <td colSpan={7} className="p-0">
+                            <div className="flex bg-[#F9F9FB]">
+                              {/* Left Side: Pricing Table */}
+                              <div className="flex-1 border-r border-[#DEE1EA] min-w-0">
+                                <table className="min-w-full text-sm border-collapse">
+                                  <thead>
+                                    <tr className="border-b text-[16px] border-[#DEE1EA] h-[45px]">
+                                      {[
+                                        "Size",
+                                        "Sign Price",
+                                        "Install Price",
+                                        "Sign Budget",
+                                        "Install Budget",
+                                        "Raceway",
+                                      ].map((header, index) => (
+                                        <th
+                                          key={header}
+                                          className={`p-3 text-center font-semibold text-black text-base ${
+                                            index < 5
+                                              ? "border-r border-[#DEE1EA]"
+                                              : ""
+                                          } ${getColumnWidth(index)}`}
+                                        >
+                                          {header}
+                                        </th>
+                                      ))}
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-gray-200">
+                                    {sign.details.map((detail, index) => (
+                                      <tr
+                                        key={index}
+                                        className={`h-[45px] text-[18px] ${
+                                          index === sign.details.length - 1
+                                            ? "border-b border-[#DEE1EA]"
+                                            : ""
+                                        }`}
+                                      >
+                                        <td className="p-3 font-medium border-r border-[#DEE1EA] text-center">
+                                          {detail.size}
+                                        </td>
+                                        <td className="p-3 border-r border-[#DEE1EA] text-center w-24">
+                                          {detail.signPrice}
+                                        </td>
+                                        <td className="p-3 border-r border-[#DEE1EA] text-center w-24">
+                                          {detail.installPrice}
+                                        </td>
+                                        <td className="p-3 border-r border-[#DEE1EA] text-center w-24">
+                                          {detail.signBudget}
+                                        </td>
+                                        <td className="p-3 border-r border-[#DEE1EA] text-center w-24">
+                                          {detail.installBudget}
+                                        </td>
+                                        <td className="p-3 text-center w-20">
+                                          {detail.raceway}
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                              {/* Right Side: Sign Options */}
+                              <div className="w-80 lg:w-96 xl:w-[500px] flex-shrink-0">
+                                <h3 className="font-semibold pl-6 text-[16px] my-3">
+                                  Sign Options
+                                </h3>
+                                <div className="space-y-3 p-6 w-full">
+                                  {sign.signOptions.map((option, index) => (
+                                    <div
+                                      key={index}
+                                      className="flex items-center justify-between p-2"
+                                    >
+                                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                                        {optionIcons[
+                                          option.label.split(" ")[0]
+                                        ] || optionIcons.default}
+                                        <div className="-space-y-0.5 min-w-0 flex-1">
+                                          <div className="font-semibold text-[18px] truncate">
+                                            {option.label}
+                                          </div>
+                                          <div className="text-[17px] truncate">
+                                            {option.type}
+                                          </div>
+                                        </div>
+                                      </div>
+                                      {option.checked && (
+                                        <Image
+                                          src="/images/Tick.svg"
+                                          alt=""
+                                          width={30}
+                                          height={30}
+                                        />
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          );
+        })()}
+      </div>
+    </div>
   );
 };
 

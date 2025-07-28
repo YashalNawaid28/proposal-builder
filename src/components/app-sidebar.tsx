@@ -1,6 +1,5 @@
 "use client";
-import * as React from "react";
-import { Signpost, Settings, Home, Users, Grid3X3 } from "lucide-react";
+import { Users, Grid2x2, ListTodo, Tag, House } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -18,7 +17,7 @@ import { usePathname } from "next/navigation";
 const navLinks = [
   {
     title: "Home",
-    icon: Home,
+    icon: House,
     href: "/",
   },
 ];
@@ -34,17 +33,17 @@ const brandLinks = [
 const adminLinks = [
   {
     title: "Brands",
-    icon: Grid3X3,
+    icon: Grid2x2,
     href: "/brands",
   },
   {
     title: "Signs",
-    icon: Signpost,
+    icon: ListTodo,
     href: "/signs",
   },
   {
     title: "Options",
-    icon: Settings,
+    icon: Tag,
     href: "/options",
   },
   {
@@ -59,7 +58,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar
       collapsible="offcanvas"
-      className="bg-black text-white"
+      className="bg-black text-white w-64"
       style={
         {
           "--sidebar-accent": "#374151",
@@ -71,7 +70,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader className="flex flex-col bg-black items-center gap-4 pt-8 pb-12">
         {/* Logo and Branding */}
         <Image
-          width={230}
+          width={225}
           height={64}
           src="/images/logo.svg"
           alt="Visible Graphics Logo"
@@ -95,7 +94,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 >
                   <Link href={link.href} className="w-full flex items-center">
                     <link.icon className="w-5 h-5" />
-                    <span className="ml-2 text-sm font-medium">
+                    <span className="ml-2 text-[14px] font-medium">
                       {link.title}
                     </span>
                   </Link>
@@ -106,7 +105,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
 
         {/* Brands Section */}
-        <div className="text-sm text-gray-400 mb-2 mt-4">Brands</div>
+        <div className="text-[14px] text-gray-400 mb-2 mt-4 px-4">Brands</div>
         <SidebarMenu className="w-full">
           {brandLinks.map((link) => {
             const isActive = pathname === link.href;
@@ -129,7 +128,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       height={20}
                       className="w-5 h-5"
                     />
-                    <span className="ml-2 text-sm font-medium">
+                    <span className="ml-2 text-[14px] font-medium">
                       {link.title}
                     </span>
                   </Link>
@@ -140,7 +139,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
 
         {/* Admin Section */}
-        <div className="text-sm text-gray-400 mb-2 mt-4">Admin</div>
+        <div className="text-[14px] text-gray-400 mb-2 mt-4 px-4">Admin</div>
         <SidebarMenu className="w-full">
           {adminLinks.map((link) => {
             const isActive = pathname === link.href;
@@ -156,8 +155,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   }`}
                 >
                   <Link href={link.href} className="w-full flex items-center">
-                    <link.icon className="w-5 h-5" />
-                    <span className="ml-2 text-sm font-medium">
+                    <link.icon
+                      className={`w-5 h-5 ${
+                        link.title === "Options" ? "rotate-[135deg]" : ""
+                      }`}
+                    />
+                    <span className="ml-2 text-[14px] font-medium">
                       {link.title}
                     </span>
                   </Link>
@@ -167,7 +170,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           })}
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter className="mt-auto bg-black text-sm px-4 pb-4">
+      <SidebarFooter className="mt-auto bg-black text-[14px] px-4 pb-4">
         <UserButton showUserInfo={true} />
       </SidebarFooter>
     </Sidebar>
