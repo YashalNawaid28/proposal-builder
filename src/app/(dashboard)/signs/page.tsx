@@ -245,7 +245,7 @@ const SignsPage = () => {
                           </button>
                         </td>
                         <td className=" border-r border-[#DEE1EA] flex items-center justify-center h-20">
-                          {sign.signImage && sign.signImage !== "/daves-hot-chicken-logo.png" ? (
+                          {sign.signImage ? (
                             <img
                               src={sign.signImage}
                               alt=""
