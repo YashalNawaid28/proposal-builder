@@ -143,7 +143,7 @@ const SignsPage = () => {
                 : [];
 
             return {
-              signImage: sign.sign_image || "/daves-hot-chicken-logo.png",
+              signImage: sign.sign_image || "",
               signName: sign.sign_name || "Unnamed Sign",
               signDescription: sign.sign_description || "",
               status: (sign.status as "Active" | "Inactive") || "Active",
@@ -245,14 +245,16 @@ const SignsPage = () => {
                           </button>
                         </td>
                         <td className=" border-r border-[#DEE1EA] flex items-center justify-center h-20">
-                          {sign.signImage ? (
+                          {sign.signImage &&
+                          sign.signImage !== "" &&
+                          sign.signImage !== "/daves-hot-chicken-logo.png" ? (
                             <img
                               src={sign.signImage}
                               alt=""
                               className="object-contain"
                             />
                           ) : (
-                            <ImagePlus size={40} className="text-gray-400" />
+                            <ImagePlus size={40} className="text-[#60646C]" />
                           )}
                         </td>
                         <td className="p-4 font-semibold border-r border-[#DEE1EA] text-[14px]">
