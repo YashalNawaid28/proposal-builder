@@ -6,6 +6,7 @@ import {
   LayoutTemplate,
   Scan,
   Type,
+  ImagePlus,
 } from "lucide-react";
 import type { BrandData } from "../brands/page";
 import { IAccount } from "@/lib/interfaces";
@@ -244,11 +245,15 @@ const SignsPage = () => {
                           </button>
                         </td>
                         <td className=" border-r border-[#DEE1EA] flex items-center justify-center h-20">
-                          <img
-                            src={sign.signImage}
-                            alt=""
-                            className="object-contain"
-                          />
+                          {sign.signImage && sign.signImage !== "/daves-hot-chicken-logo.png" ? (
+                            <img
+                              src={sign.signImage}
+                              alt=""
+                              className="object-contain"
+                            />
+                          ) : (
+                            <ImagePlus size={40} className="text-gray-400" />
+                          )}
                         </td>
                         <td className="p-4 font-semibold border-r border-[#DEE1EA] text-[14px]">
                           {sign.signName}
