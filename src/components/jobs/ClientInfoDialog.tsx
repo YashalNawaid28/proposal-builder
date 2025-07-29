@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { NewClientForm } from "./NewClientForm";
+import { NewClientForm } from "@/components/jobs/NewClientForm";
 
 interface ClientInfoDialogProps {
   isOpen: boolean;
@@ -18,7 +18,6 @@ interface ClientInfoDialogProps {
   onComplete: () => void;
   clientData: any;
   setClientData: (data: any) => void;
-  onAddNewClient: () => void;
 }
 
 export const ClientInfoDialog = ({
@@ -27,7 +26,6 @@ export const ClientInfoDialog = ({
   onComplete,
   clientData,
   setClientData,
-  onAddNewClient,
 }: ClientInfoDialogProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClient, setSelectedClient] = useState("");

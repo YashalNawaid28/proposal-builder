@@ -1,14 +1,15 @@
 "use client";
-import { useState, useEffect } from "react";
-import { ArrowLeft, Plus, Download, MapPin, User } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, Plus, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { JobInfoDialog } from "./components/JobInfoDialog";
-import { ClientInfoDialog } from "./components/ClientInfoDialog";
+import { JobInfoDialog } from "@/components/jobs/JobInfoDialog";
+import { ClientInfoDialog } from "@/components/jobs/ClientInfoDialog";
+import Link from "next/link";
 
 export default function AddJobPage() {
-  const [currentStep, setCurrentStep] = useState<
-    "jobInfo" | "clientInfo" | null
-  >(null);
+  const [jobInfoOpen, setJobInfoOpen] = useState(false);
+  const [clientInfoOpen, setClientInfoOpen] = useState(false);
+  const [selectedTab, setSelectedTab] = useState("All");
   const [jobData, setJobData] = useState<{
     jobName?: string;
     jobNumber?: string;
@@ -23,24 +24,12 @@ export default function AddJobPage() {
     clientPhone?: string;
   }>({});
 
-  // Automatically open the Job Info dialog when the page loads
-  useEffect(() => {
-    setCurrentStep("jobInfo");
-  }, []);
-
-  const handleNewJob = () => {
-    setCurrentStep("jobInfo");
+  const handleJobInfoSave = () => {
+    setJobInfoOpen(false);
   };
 
-  const handleJobInfoNext = () => {
-    setCurrentStep("clientInfo");
-  };
-
-  const handleClientInfoComplete = () => {
-    // Handle job creation
-    console.log("Job created:", { jobData, clientData });
-    setCurrentStep(null);
-    // Redirect or show success message
+  const handleClientInfoSave = () => {
+    setClientInfoOpen(false);
   };
 
   const hasJobData = Object.keys(jobData).length > 0;
@@ -49,280 +38,274 @@ export default function AddJobPage() {
   return (
     <div className="bg-white min-h-screen">
       {/* Header */}
-      <div className="border-b border-gray-200 p-6">
+      <div className="py-5 px-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="text-gray-500">
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div>
-              <h1 className="text-2xl font-semibold text-gray-900">New Job</h1>
-              <p className="text-sm text-gray-500">Create a new job order</p>
-            </div>
+          <div className="flex gap-3">
+            <Link href="/jobs">
+              <ArrowLeft className="size-4 mt-1" />
+            </Link>
+            <section>
+              <h1 className="text-[16px] font-semibold">
+                Dave&apos;s Hot Chicken - Coasteal Way (14039R)
+              </h1>
+              <div className="text-sm text-[#60646C] flex items-center gap-2">
+                <span className="font-semibold">Last Updated:</span>
+                Jun 13th, 10:07 am
+                <div className="size-2 bg-gray-300 rounded-full" />
+                <span className="font-semibold">Version:</span> 1.0
+              </div>
+            </section>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" className="text-gray-700 border-gray-300">
-              <Download className="w-4 h-4 mr-2" />
+          <section className="flex items-center text-[16px] text-[#60646C] gap-2 font-semibold">
+            <button className="bg-[#F9F9FB] h-10 flex items-center justify-center px-3 gap-2 border border-[#E0E0E0] rounded-md">
+              <Plus className="size-4" />
+              New Version
+            </button>
+            <button className="h-10 bg-black flex items-center text-white justify-center px-3 gap-2 rounded-md">
               Download
-            </Button>
-            <Button
-              className="bg-blue-600 hover:bg-blue-700"
-              onClick={handleNewJob}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              New Job
-            </Button>
-          </div>
+              <ChevronDown className="size-4" />
+            </button>
+          </section>
         </div>
       </div>
-
-      {/* Main Content Area */}
       <div className="flex">
-        {/* Left Sidebar */}
-        <div className="w-64 border-r border-gray-200 p-6 space-y-6">
-          <div className="space-y-2">
-            <h2 className="text-lg font-semibold text-gray-900">Job Details</h2>
-            <ul className="space-y-1">
-              <li>
-                <a
-                  href="#"
-                  className="block px-3 py-2 rounded-md text-blue-600 bg-blue-50 font-medium"
-                >
-                  All
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="block px-3 py-2 rounded-md text-gray-700 hover:bg-gray-50"
-                >
-                  Budget
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="block px-3 py-2 rounded-md text-gray-700 hover:bg-gray-50"
-                >
-                  Pricing
-                </a>
-              </li>
-            </ul>
-          </div>
-          <div className="space-y-2">
-            <h2 className="text-lg font-semibold text-gray-900">Sections</h2>
-            <ul className="space-y-1">
-              <li>
-                <a
-                  href="#"
-                  className="block px-3 py-2 rounded-md text-gray-700 hover:bg-gray-50"
-                >
-                  Signs
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="block px-3 py-2 rounded-md text-gray-700 hover:bg-gray-50"
-                >
-                  Attachments
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="block px-3 py-2 rounded-md text-gray-700 hover:bg-gray-50"
-                >
-                  Notes
-                </a>
-              </li>
-            </ul>
-          </div>
-        </div>
-
         {/* Main Content */}
-        <div className="flex-1 p-6">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-semibold text-gray-900">Signs</h2>
-                <Button
-                  variant="outline"
-                  className="text-gray-700 border-gray-300"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Sign
-                </Button>
+        <div className="flex-1">
+          {/* Tabs */}
+          <div className="ml-10 border-b border-[#EAEBEE]">
+            <div className="flex space-x-6 text-[14px] h-11 text-[#60646C] font-semibold">
+              <button
+                onClick={() => setSelectedTab("All")}
+                className={`pb-2 border-b-2 transition-colors ${
+                  selectedTab === "All"
+                    ? "border-black text-black font-semibold"
+                    : "border-transparent text-[#60646C] hover:text-gray-700"
+                }`}
+              >
+                All
+              </button>
+              <button
+                onClick={() => setSelectedTab("Budget")}
+                className={`pb-2 border-b-2 transition-colors ${
+                  selectedTab === "Budget"
+                    ? "border-black text-black font-semibold"
+                    : "border-transparent text-[#60646C] hover:text-gray-700"
+                }`}
+              >
+                Budget
+              </button>
+              <button
+                onClick={() => setSelectedTab("Pricing")}
+                className={`pb-2 border-b-2 transition-colors ${
+                  selectedTab === "Pricing"
+                    ? "border-black text-black font-semibold"
+                    : "border-transparent text-[#60646C] hover:text-gray-700"
+                }`}
+              >
+                Pricing
+              </button>
+            </div>
+          </div>
+          <section className="flex">
+            {/* Table */}
+            <div className="border-l flex-1 border-r border-b border-[#EAEBEE] overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-[#F9F9FB]">
+                  <tr className="border-b border-[#EAEBEE]">
+                    <th className="text-left p-4 text-xs font-semibold w-16">
+                      Qty
+                    </th>
+                    <th className="text-left p-4 text-xs font-semibold w-32">
+                      Sign
+                    </th>
+                    <th className="text-left p-4 text-xs font-semibold w-96">
+                      Description
+                    </th>
+                    <th className="text-left p-4 text-xs font-semibold w-32">
+                      Sign Price
+                    </th>
+                    <th className="text-left p-4 text-xs font-semibold w-32">
+                      Install Price
+                    </th>
+                    <th className="text-left p-4 text-xs font-semibold w-32">
+                      Sign Budget
+                    </th>
+                    <th className="text-left p-4 text-xs font-semibold w-32">
+                      Install Budget
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {/* Empty State */}
+                  <tr className="border-b border-[#EAEBEE]">
+                    <td colSpan={7} className="p-12">
+                      <div className="flex flex-col items-center justify-center text-center">
+                        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                          Add your first sign.
+                        </h3>
+                        <p className="text-gray-500 mb-6 max-w-md">
+                          You&apos;ll use this section to add all the signs
+                          needed for this proposal.
+                        </p>
+                        <Button className="bg-black hover:bg-gray-800">
+                          <Plus className="w-4 h-4 mr-2" />
+                          Add Sign/Service
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            {/* Right Sidebar */}
+            <div className="w-[360px]border-l border-gray-200 p-6 space-y-6">
+              {/* Job Info Section */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Job Info
+                  </h2>
+                  <button
+                    onClick={() => setJobInfoOpen(true)}
+                    className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    Edit
+                  </button>
+                </div>
+                {hasJobData ? (
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Brand</p>
+                      <p className="text-gray-900">
+                        {jobData.brand || "Dave&apos;s Hot Chicken"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">
+                        Location
+                      </p>
+                      <p className="text-gray-900">
+                        {jobData.jobLocation ||
+                          "100 Coastal Way, Chesapeake, VA 23320, USA"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">
+                        Created
+                      </p>
+                      <p className="text-gray-900">Jul 13th, 2025</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">
+                        Creator
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-gray-300 rounded-full"></div>
+                        <span className="text-gray-900">John Doe</span>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">PM</p>
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-gray-300 rounded-full"></div>
+                        <span className="text-gray-900">Jane Smith</span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 text-center">
+                    <p className="text-sm text-gray-500">
+                      No job information added yet.
+                    </p>
+                    <button
+                      onClick={() => setJobInfoOpen(true)}
+                      className="text-sm text-blue-600 hover:text-blue-700 font-medium mt-2"
+                    >
+                      Add Job Info
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Client Info Section */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Client Info
+                  </h2>
+                  <button
+                    onClick={() => setClientInfoOpen(true)}
+                    className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    Edit
+                  </button>
+                </div>
+                {hasClientData ? (
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">
+                        Client
+                      </p>
+                      <p className="text-gray-900">
+                        {clientData.clientName || "WKS Restaurant Group"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">
+                        Location
+                      </p>
+                      <p className="text-gray-900">
+                        {clientData.clientLocation ||
+                          "5856 Corporation Ave. ste 200 Cypress, CA 90630"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">
+                        Contact
+                      </p>
+                      <p className="text-gray-900">
+                        {clientData.clientContact || "Becca Meussner"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Phone</p>
+                      <p className="text-gray-900">
+                        {clientData.clientPhone || "310.318.3100"}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 text-center">
+                    <p className="text-sm text-gray-500">
+                      No client information added yet.
+                    </p>
+                    <button
+                      onClick={() => setClientInfoOpen(true)}
+                      className="text-sm text-blue-600 hover:text-blue-700 font-medium mt-2"
+                    >
+                      Add Client Info
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
-            <div className="p-6">
-              {/* Empty State for Signs */}
-              <div className="flex flex-col items-center justify-center py-20 text-center">
-                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                  <Plus className="w-8 h-8 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Add your first sign.
-                </h3>
-                <p className="text-gray-500 max-w-md">
-                  You haven&apos;t added any signs to this job yet. Click
-                  &quot;Add Sign&quot; to get started.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Sidebar */}
-        <div className="w-80 border-l border-gray-200 p-6 space-y-6">
-          {/* Job Info Section */}
-          <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-gray-900">Job Info</h2>
-            {hasJobData ? (
-              <>
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <p className="text-sm font-medium text-gray-700">Job Name</p>
-                  <p className="text-gray-900">
-                    {jobData.jobName || "New Job Order"}
-                  </p>
-                </div>
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <p className="text-sm font-medium text-gray-700">
-                    Job Number
-                  </p>
-                  <p className="text-gray-900">
-                    {jobData.jobNumber || "#JOB-001"}
-                  </p>
-                </div>
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <p className="text-sm font-medium text-gray-700">
-                    Job Location
-                  </p>
-                  <p className="text-gray-900">
-                    {jobData.jobLocation || "123 Main St, Anytown, USA"}
-                  </p>
-                </div>
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <p className="text-sm font-medium text-gray-700">Brand</p>
-                  <p className="text-gray-900">
-                    {jobData.brand || "Dave&apos;s Hot Chicken"}
-                  </p>
-                </div>
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <p className="text-sm font-medium text-gray-700">Manager</p>
-                  <p className="text-gray-900">
-                    {jobData.manager || "John Doe"}
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  className="w-full text-gray-700 border-gray-300"
-                  onClick={() => setCurrentStep("jobInfo")}
-                >
-                  Edit Job Info
-                </Button>
-              </>
-            ) : (
-              <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 text-center">
-                <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <MapPin className="w-8 h-8 text-gray-500" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2 underline">
-                  Add Your Job Info
-                </h3>
-                <Button
-                  variant="outline"
-                  className="w-full text-gray-700 border-gray-300 mt-4"
-                  onClick={() => setCurrentStep("jobInfo")}
-                >
-                  Add Job Info
-                </Button>
-              </div>
-            )}
-          </div>
-
-          {/* Client Info Section */}
-          <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-gray-900">Client Info</h2>
-            {hasClientData ? (
-              <>
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <p className="text-sm font-medium text-gray-700">
-                    Client Name
-                  </p>
-                  <p className="text-gray-900">
-                    {clientData.clientName || "Acme Corp"}
-                  </p>
-                </div>
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <p className="text-sm font-medium text-gray-700">
-                    Client Location
-                  </p>
-                  <p className="text-gray-900">
-                    {clientData.clientLocation || "456 Oak Ave, Anytown, USA"}
-                  </p>
-                </div>
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <p className="text-sm font-medium text-gray-700">
-                    Contact Person
-                  </p>
-                  <p className="text-gray-900">
-                    {clientData.clientContact || "Jane Smith"}
-                  </p>
-                </div>
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <p className="text-sm font-medium text-gray-700">
-                    Phone Number
-                  </p>
-                  <p className="text-gray-900">
-                    {clientData.clientPhone || "(555) 123-4567"}
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  className="w-full text-gray-700 border-gray-300"
-                  onClick={() => setCurrentStep("clientInfo")}
-                >
-                  Edit Client Info
-                </Button>
-              </>
-            ) : (
-              <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 text-center">
-                <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <User className="w-8 h-8 text-gray-500" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2 underline">
-                  Add Client
-                </h3>
-                <Button
-                  variant="outline"
-                  className="w-full text-gray-700 border-gray-300 mt-4"
-                  onClick={() => setCurrentStep("clientInfo")}
-                >
-                  Add Client
-                </Button>
-              </div>
-            )}
-          </div>
+          </section>
         </div>
       </div>
-
       {/* Dialogs */}
       <JobInfoDialog
-        isOpen={currentStep === "jobInfo"}
-        onClose={() => setCurrentStep(null)}
-        onNext={handleJobInfoNext}
+        isOpen={jobInfoOpen}
+        onClose={() => setJobInfoOpen(false)}
+        onNext={handleJobInfoSave}
         jobData={jobData}
         setJobData={setJobData}
       />
-
       <ClientInfoDialog
-        isOpen={currentStep === "clientInfo"}
-        onClose={() => setCurrentStep(null)}
-        onComplete={handleClientInfoComplete}
+        isOpen={clientInfoOpen}
+        onClose={() => setClientInfoOpen(false)}
+        onComplete={handleClientInfoSave}
         clientData={clientData}
         setClientData={setClientData}
-        onAddNewClient={() => {}}
       />
     </div>
   );
