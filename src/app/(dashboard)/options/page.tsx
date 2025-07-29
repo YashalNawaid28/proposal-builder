@@ -187,7 +187,6 @@ const OptionsPage = () => {
     if (rowData.length === 0) {
       return <div className="p-4 text-center">No options found.</div>;
     }
-
     return (
       <div className="overflow-x-auto">
         <table className="min-w-full border-collapse">
@@ -218,15 +217,18 @@ const OptionsPage = () => {
               <th className="p-4 text-center text-[12px] font-semibold border-r border-[#DEE1EA] w-32">
                 Status
               </th>
-              <th className="p-4 text-left text-[12px] font-semibold text-base flex-1">
+              <th className="p-4 text-center text-[12px] font-semibold text-base flex-1">
                 Values
               </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
             {rowData.map((row) => (
-              <tr key={row.id} className="hover:bg-gray-50 h-20 text-[14px]">
-                <td className="p-4 text-center border-r border-[#DEE1EA]">
+              <tr
+                key={row.id}
+                className="hover:bg-gray-50 min-h-10 h-full text-[14px]"
+              >
+                <td className="p-4 text-center border-r border-[#DEE1EA] align-middle">
                   <div className="flex items-center justify-center">
                     <input
                       type="checkbox"
@@ -236,24 +238,24 @@ const OptionsPage = () => {
                     />
                   </div>
                 </td>
-                <td className="border-r border-[#DEE1EA] flex items-center justify-center h-20 w-32">
-                  <div className="flex items-center justify-center">
+                <td className="border-r border-[#DEE1EA] align-middle w-32">
+                  <div className="flex items-center justify-center h-full">
                     <OptionIconCell src={row.iconUrl} optionName={row.name} />
                   </div>
                 </td>
-                <td className="p-4 font-semibold border-r border-[#DEE1EA] text-[14px] w-48 text-center">
+                <td className="p-4 font-semibold border-r border-[#DEE1EA] text-[14px] w-48 text-center align-middle">
                   {row.name}
                 </td>
-                <td className="p-4 border-r text-center border-[#DEE1EA] text-[14px] w-56">
+                <td className="p-4 border-r text-center border-[#DEE1EA] text-[14px] w-56 align-middle">
                   {row.placeholder}
                 </td>
-                <td className="p-4 border-r border-[#DEE1EA] text-center text-[14px] w-32">
+                <td className="p-4 border-r border-[#DEE1EA] text-center text-[14px] w-32 align-middle">
                   {row.type}
                 </td>
-                <td className="p-4 border-r border-[#DEE1EA] text-center w-32">
+                <td className="p-4 border-r border-[#DEE1EA] text-center w-32 align-middle">
                   <StatusCell status={row.status} />
                 </td>
-                <td className="p-4 text-left text-[14px] flex-1">
+                <td className="p-4 text-center text-[14px] flex-1 align-middle">
                   <ValuesCell values={row.values} />
                 </td>
               </tr>
@@ -271,7 +273,7 @@ const OptionsPage = () => {
         {(["all", "active", "archived"] as const).map((tabName) => (
           <button
             key={tabName}
-            className={`rounded-t-lg px-4 cursor-pointer py-2 ${
+            className={`rounded-t-md text-[16px] h-10 px-4 cursor-pointer py-2 ${
               tab === tabName
                 ? "text-white text-[16px] font-semibold bg-black"
                 : "text-[14px] text-[#60646C]"
@@ -282,7 +284,7 @@ const OptionsPage = () => {
           </button>
         ))}
       </div>
-      <div className="border border-[#DEE1EA] rounded-lg overflow-hidden">
+      <div className="border border-[#DEE1EA] overflow-hidden">
         <div>{renderTable()}</div>
       </div>
     </div>
