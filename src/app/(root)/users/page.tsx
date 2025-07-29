@@ -1,5 +1,5 @@
 "use client";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 
 // Define interfaces for our data structures
 export interface UserData {
@@ -29,10 +29,11 @@ interface RowData {
 
 // StatusCell component that handles different statuses
 const StatusCell = ({ status }: { status: string }) => {
+  const safeStatus = status || "Active";
   let bgColor = "bg-[#17B26A1A]";
   let textColor = "text-[#17B26A]";
 
-  if (status === "Disabled") {
+  if (safeStatus === "Disabled" || safeStatus === "Inactive") {
     bgColor = "bg-gray-100";
     textColor = "text-gray-700";
   }
@@ -41,7 +42,7 @@ const StatusCell = ({ status }: { status: string }) => {
     <span
       className={`${bgColor} ${textColor} h-[24px] font-semibold px-3 py-1 rounded text-[14px]`}
     >
-      {status}
+      {safeStatus}
     </span>
   );
 };
@@ -56,8 +57,8 @@ const UserImageCell = ({
 }) => {
   const [imgError, setImgError] = useState(false);
 
-  // Return a simple colored div with initials if image fails to load
-  if (imgError || !src) {
+  // Always show initials if no image URL or if image failed to load
+  if (!src || src.trim() === "" || imgError) {
     const initials = userName
       .split(" ")
       .map((word: string) => word[0])
@@ -91,74 +92,88 @@ const UserNameCell = ({
   email: string;
 }) => (
   <div className="flex flex-col items-start">
-    <span className="font-semibold text-[14px]">{userName}</span>
-    <span className="text-[12px] text-gray-500">{email}</span>
+    <span className="font-semibold text-[14px]">
+      {userName || "Unknown User"}
+    </span>
+    <span className="text-[12px] text-gray-500">
+      {email || "No email provided"}
+    </span>
   </div>
 );
 
 const UsersPage = () => {
   const [tab, setTab] = useState<"all" | "active" | "disabled">("all");
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const [users, setUsers] = useState<UserData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Dummy data for users
-  const dummyUsers: UserData[] = [
-    {
-      id: "1",
-      user_image:
-        "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face",
-      user_name: "Jeannette Diaz",
-      email: "Jeannette@visiblegraphics.com",
-      job_title: "Office Supervisor",
-      status: "Active",
-      role: "Employee",
-      jobs: 0,
-      date_added: "Aug 1st, 2025",
-    },
-    {
-      id: "2",
-      user_image:
-        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face",
-      user_name: "Mary Del Rio",
-      email: "Mary@visiblegraphics.com",
-      job_title: "Project Coordinator",
-      status: "Active",
-      role: "Employee",
-      jobs: 0,
-      date_added: "Aug 1st, 2025",
-    },
-    {
-      id: "3",
-      user_image:
-        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
-      user_name: "John Smith",
-      email: "john@visiblegraphics.com",
-      job_title: "Design Manager",
-      status: "Active",
-      role: "Manager",
-      jobs: 5,
-      date_added: "Jul 15th, 2025",
-    },
-    {
-      id: "4",
-      user_image:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face",
-      user_name: "David Wilson",
-      email: "david@visiblegraphics.com",
-      job_title: "Senior Designer",
-      status: "Disabled",
-      role: "Employee",
-      jobs: 2,
-      date_added: "Jun 20th, 2025",
-    },
-  ];
+  // Fetch users from API
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch("/api/users");
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch users");
+        }
+
+        const result = await response.json();
+
+        if (result.error) {
+          throw new Error(result.error);
+        }
+
+        // Transform the data to match our UserData interface with safe fallbacks
+        const transformedUsers: UserData[] = (result.data || []).map(
+          (user: any) => ({
+            id: user?.id || `user-${Math.random().toString(36).substr(2, 9)}`,
+            user_image:
+              user?.user_image || user?.avatar_url || user?.profile_image || "",
+            user_name:
+              user?.user_name ||
+              user?.full_name ||
+              user?.name ||
+              user?.display_name ||
+              "Unknown User",
+            email: user?.email || user?.email_address || "",
+            job_title:
+              user?.job_title || user?.title || user?.position || "Employee",
+            status: user?.status || "Active",
+            role: user?.role || user?.user_role || "Employee",
+            jobs: typeof user?.jobs === "number" ? user.jobs : 0,
+            date_added:
+              user?.date_added ||
+              (user?.created_at
+                ? new Date(user.created_at).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  })
+                : "Unknown"),
+          })
+        );
+
+        setUsers(transformedUsers);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+        console.error("Error fetching users:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
 
   // Filter users based on the selected tab
   const filteredUsers = useMemo(() => {
-    if (tab === "all") return dummyUsers;
-    return dummyUsers.filter((user) =>
+    if (tab === "all") return users;
+    return users.filter((user) =>
       tab === "active" ? user.status === "Active" : user.status === "Disabled"
     );
-  }, [tab]);
+  }, [users, tab]);
 
   // Transform API data to match the table structure
   const rowData: RowData[] = useMemo(() => {
@@ -194,6 +209,29 @@ const UsersPage = () => {
     rowData.length > 0 && selectedRows.length === rowData.length;
 
   const renderTable = () => {
+    if (loading) {
+      return (
+        <div className="p-4 text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading users...</p>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="p-4 text-center">
+          <p className="text-red-600">Error: {error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Retry
+          </button>
+        </div>
+      );
+    }
+
     if (rowData.length === 0) {
       return <div className="p-4 text-center">No users found.</div>;
     }
@@ -261,18 +299,20 @@ const UsersPage = () => {
                   <UserNameCell userName={row.userName} email={row.email} />
                 </td>
                 <td className="p-4 text-center border-r border-[#DEE1EA] text-[14px]">
-                  {row.jobTitle}
+                  {row.jobTitle || "Employee"}
                 </td>
                 <td className="p-4 text-center border-r border-[#DEE1EA]">
                   <StatusCell status={row.status} />
                 </td>
                 <td className="p-4 text-center border-r border-[#DEE1EA] text-[14px]">
-                  {row.role}
+                  {row.role || "Employee"}
                 </td>
                 <td className="p-4 text-center border-r border-[#DEE1EA] text-[14px]">
-                  {row.jobs} Jobs
+                  {row.jobs || 0} Jobs
                 </td>
-                <td className="p-4 text-center text-[14px]">{row.dateAdded}</td>
+                <td className="p-4 text-center text-[14px]">
+                  {row.dateAdded || "Unknown"}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -293,7 +333,7 @@ const UsersPage = () => {
         {(["all", "active", "disabled"] as const).map((tabName) => (
           <button
             key={tabName}
-            className={`rounded-t-lg px-4 cursor-pointer py-2 ${
+            className={`rounded-t-md text-[16px] h-10 px-4 cursor-pointer py-2 ${
               tab === tabName
                 ? "text-white text-[16px] font-semibold bg-black"
                 : "text-[14px] text-[#60646C]"

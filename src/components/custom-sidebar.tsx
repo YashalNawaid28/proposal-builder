@@ -4,7 +4,6 @@ import Image from "next/image";
 import { UserButton } from "@stackframe/stack";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
 
 const navLinks = [
   {
@@ -55,23 +54,19 @@ export function CustomSidebar({
   style,
 }: Readonly<CustomSidebarProps>) {
   const pathname = usePathname();
-  const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
     <div
-      className={`bg-black text-white w-64 h-screen flex flex-col transition-all duration-300 ${
-        isCollapsed ? "w-16" : "w-64"
-      } ${className}`}
+      className={`bg-black text-white w-64 h-screen flex flex-col ${className}`}
       style={style}
     >
       {/* Header */}
       <div className="flex flex-col bg-black items-center gap-4 pt-8 pb-12">
         <Image
-          width={225}
+          width={210}
           height={64}
           src="/images/logo.svg"
           alt="Visible Graphics Logo"
-          className={isCollapsed ? "w-12 h-12" : ""}
         />
       </div>
 
@@ -82,21 +77,19 @@ export function CustomSidebar({
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
-              <div key={link.title} className="mb-1">
+              <div key={link.title} className="">
                 <Link
                   href={link.href}
-                  className={`w-full flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+                  className={`w-full flex items-center gap-2 px-4 py-1 h-8 rounded-md transition-colors ${
                     isActive
                       ? "bg-gray-800 text-white"
                       : "hover:bg-gray-900/60 text-white"
                   }`}
                 >
                   <link.icon className="w-5 h-5" />
-                  {!isCollapsed && (
-                    <span className="ml-2 text-[14px] font-medium">
-                      {link.title}
-                    </span>
-                  )}
+                  <span className="ml-1 text-[14px] font-medium">
+                    {link.title}
+                  </span>
                 </Link>
               </div>
             );
@@ -104,34 +97,24 @@ export function CustomSidebar({
         </div>
 
         {/* Brands Section */}
-        {!isCollapsed && (
-          <div className="text-[14px] text-gray-400 mb-2 mt-4 px-4">Brands</div>
-        )}
+        <div className="text-[12px] text-gray-200 mt-4 px-4">Brands</div>
         <div className="w-full">
           {brandLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
-              <div key={link.title} className="mb-1">
+              <div key={link.title} className="">
                 <Link
                   href={link.href}
-                  className={`w-full flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+                  className={`w-full flex items-center text-[14px] gap-2 px-4 py-1 h-8 rounded-md transition-colors ${
                     isActive
                       ? "bg-gray-800 text-white"
                       : "hover:bg-gray-900/60 text-white"
                   }`}
                 >
-                  <Image
-                    src={link.icon}
-                    alt={link.title}
-                    width={20}
-                    height={20}
-                    className="w-5 h-5"
-                  />
-                  {!isCollapsed && (
-                    <span className="ml-2 text-[14px] font-medium">
-                      {link.title}
-                    </span>
-                  )}
+                  <img src={link.icon} alt="" className="w-5 h-5" />
+                  <span className="ml-1 text-[14px] font-medium">
+                    {link.title}
+                  </span>
                 </Link>
               </div>
             );
@@ -139,32 +122,28 @@ export function CustomSidebar({
         </div>
 
         {/* Admin Section */}
-        {!isCollapsed && (
-          <div className="text-[14px] text-gray-400 mb-2 mt-4 px-4">Admin</div>
-        )}
+        <div className="text-[12px] text-gray-200 mb-1 mt-4 px-4">Admin</div>
         <div className="w-full">
           {adminLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
-              <div key={link.title} className="mb-1">
+              <div key={link.title} className="mb-0.5">
                 <Link
                   href={link.href}
-                  className={`w-full flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+                  className={`w-full flex items-center gap-2 px-4 py-1 h-8 rounded-md transition-colors ${
                     isActive
                       ? "bg-gray-800 text-white"
                       : "hover:bg-gray-900/60 text-white"
                   }`}
                 >
                   <link.icon
-                    className={`w-5 h-5 ${
+                    className={`w-4 h-4 ${
                       link.title === "Options" ? "rotate-[135deg]" : ""
                     }`}
                   />
-                  {!isCollapsed && (
-                    <span className="ml-2 text-[14px] font-medium">
-                      {link.title}
-                    </span>
-                  )}
+                  <span className="ml-1 text-[14px] font-medium">
+                    {link.title}
+                  </span>
                 </Link>
               </div>
             );
@@ -174,7 +153,7 @@ export function CustomSidebar({
 
       {/* Footer */}
       <div className="mt-auto bg-black text-[14px] px-4 pb-4">
-        <UserButton showUserInfo={!isCollapsed} />
+        <UserButton showUserInfo={true} />
       </div>
     </div>
   );

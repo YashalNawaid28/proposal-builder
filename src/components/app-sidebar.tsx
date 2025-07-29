@@ -18,7 +18,7 @@ const navLinks = [
   {
     title: "Home",
     icon: House,
-    href: "/",
+    href: "/jobs",
   },
 ];
 
