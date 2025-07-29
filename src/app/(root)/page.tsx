@@ -11,7 +11,7 @@ export default function Home() {
 
   useEffect(() => {
     if (user?.id) {
-      router.push("/brands");
+      router.push("/jobs");
     } else {
       router.push("/handler/sign-in");
     }
