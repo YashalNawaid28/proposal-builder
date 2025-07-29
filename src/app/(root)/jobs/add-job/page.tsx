@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
-import { ArrowLeft, Plus, ChevronDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ArrowLeft, Plus, ChevronDown, MapPinPlus, User } from "lucide-react";
 import { JobInfoDialog } from "@/components/jobs/JobInfoDialog";
 import { ClientInfoDialog } from "@/components/jobs/ClientInfoDialog";
 import Link from "next/link";
@@ -16,6 +15,8 @@ export default function AddJobPage() {
     jobLocation?: string;
     brand?: string;
     manager?: string;
+    creator?: string;
+    pm?: string;
   }>({});
   const [clientData, setClientData] = useState<{
     clientName?: string;
@@ -24,21 +25,33 @@ export default function AddJobPage() {
     clientPhone?: string;
   }>({});
 
-  const handleJobInfoSave = () => {
+  const handleJobInfoSave = (data: any) => {
+    setJobData(data);
     setJobInfoOpen(false);
   };
 
-  const handleClientInfoSave = () => {
+  const handleClientInfoSave = (data: any) => {
+    setClientData(data);
     setClientInfoOpen(false);
   };
 
-  const hasJobData = Object.keys(jobData).length > 0;
-  const hasClientData = Object.keys(clientData).length > 0;
+  const hasJobData =
+    Object.keys(jobData).length > 0 &&
+    (jobData.brand ||
+      jobData.jobLocation ||
+      jobData.jobName ||
+      jobData.jobNumber);
+  const hasClientData =
+    Object.keys(clientData).length > 0 &&
+    (clientData.clientName ||
+      clientData.clientLocation ||
+      clientData.clientContact ||
+      clientData.clientPhone);
 
   return (
-    <div className="bg-white min-h-screen">
+    <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <div className="py-5 px-4">
+      <div className="py-5 px-4 bg-white">
         <div className="flex items-center justify-between">
           <div className="flex gap-3">
             <Link href="/jobs">
@@ -68,11 +81,11 @@ export default function AddJobPage() {
           </section>
         </div>
       </div>
-      <div className="flex">
+      <div className="flex flex-1">
         {/* Main Content */}
-        <div className="flex-1">
+        <div className="flex-1 flex flex-col">
           {/* Tabs */}
-          <div className="ml-10 border-b border-[#EAEBEE]">
+          <div className="ml-11 border-b border-[#EAEBEE] bg-white">
             <div className="flex space-x-6 text-[14px] h-11 text-[#60646C] font-semibold">
               <button
                 onClick={() => setSelectedTab("All")}
@@ -106,9 +119,9 @@ export default function AddJobPage() {
               </button>
             </div>
           </div>
-          <section className="flex">
+          <section className="flex flex-1">
             {/* Table */}
-            <div className="border-l flex-1 border-r border-b border-[#EAEBEE] overflow-hidden">
+            <div className="border-l flex-1 overflow-hidden flex flex-col">
               <table className="w-full">
                 <thead className="bg-[#F9F9FB]">
                   <tr className="border-b border-[#EAEBEE]">
@@ -135,49 +148,35 @@ export default function AddJobPage() {
                     </th>
                   </tr>
                 </thead>
-                <tbody>
-                  {/* Empty State */}
-                  <tr className="border-b border-[#EAEBEE]">
-                    <td colSpan={7} className="p-12">
-                      <div className="flex flex-col items-center justify-center text-center">
-                        <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                          Add your first sign.
-                        </h3>
-                        <p className="text-gray-500 mb-6 max-w-md">
-                          You&apos;ll use this section to add all the signs
-                          needed for this proposal.
-                        </p>
-                        <Button className="bg-black hover:bg-gray-800">
-                          <Plus className="w-4 h-4 mr-2" />
-                          Add Sign/Service
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
               </table>
-            </div>
-            {/* Right Sidebar */}
-            <div className="w-[360px]border-l border-gray-200 p-6 space-y-6">
-              {/* Job Info Section */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    Job Info
-                  </h2>
-                  <button
-                    onClick={() => setJobInfoOpen(true)}
-                    className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-                  >
-                    Edit
+              <div className="flex-1 flex items-center justify-center">
+                <div className="flex flex-col items-center justify-center text-center">
+                  <h3 className="text-2xl font-semibold mb-2">
+                    Add your first sign.
+                  </h3>
+                  <p className="text-[#0D1216B2] text-[14px] mb-6 max-w-md">
+                    You&apos;ll use this section to add all the signs needed for
+                    this proposal.
+                  </p>
+                  <button className="bg-[#F9F9FB] h-10 flex items-center justify-center px-4 gap-2 border border-[#E0E0E0] rounded-md font-semibold text-[14px]">
+                    Add Sign/Service
                   </button>
                 </div>
+              </div>
+            </div>
+            {/* Right Sidebar */}
+            <div className="w-[360px] flex flex-col h-full border-l border-[#EAEBEE]">
+              {/* Job Info Section */}
+              <section className="h-full w-full flex justify-center items-center border-b border-[#EAEBEE]">
                 {hasJobData ? (
                   <div className="space-y-3">
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      Job Info
+                    </h2>
                     <div>
                       <p className="text-sm font-medium text-gray-700">Brand</p>
                       <p className="text-gray-900">
-                        {jobData.brand || "Dave&apos;s Hot Chicken"}
+                        {jobData.brand || "Dave's Hot Chicken"}
                       </p>
                     </div>
                     <div>
@@ -201,47 +200,43 @@ export default function AddJobPage() {
                       </p>
                       <div className="flex items-center gap-2">
                         <div className="w-6 h-6 bg-gray-300 rounded-full"></div>
-                        <span className="text-gray-900">John Doe</span>
+                        <span className="text-gray-900">
+                          {jobData.creator || "John Doe"}
+                        </span>
                       </div>
                     </div>
                     <div>
                       <p className="text-sm font-medium text-gray-700">PM</p>
                       <div className="flex items-center gap-2">
                         <div className="w-6 h-6 bg-gray-300 rounded-full"></div>
-                        <span className="text-gray-900">Jane Smith</span>
+                        <span className="text-gray-900">
+                          {jobData.pm || "Jane Smith"}
+                        </span>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 text-center">
-                    <p className="text-sm text-gray-500">
-                      No job information added yet.
-                    </p>
+                  <div className="flex flex-col items-center space-y-3">
+                    <span className="bg-[#F9F9FB] size-10 flex items-center justify-center gap-2 border border-[#E0E0E0] rounded-md">
+                      <MapPinPlus className="size-7" />
+                    </span>
                     <button
                       onClick={() => setJobInfoOpen(true)}
-                      className="text-sm text-blue-600 hover:text-blue-700 font-medium mt-2"
+                      className="text-[16px] font-medium underline underline-offset-2"
                     >
-                      Add Job Info
+                      Add Your Job Info
                     </button>
                   </div>
                 )}
-              </div>
-
+              </section>
               {/* Client Info Section */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    Client Info
-                  </h2>
-                  <button
-                    onClick={() => setClientInfoOpen(true)}
-                    className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-                  >
-                    Edit
-                  </button>
-                </div>
+              <section className="h-full w-full flex justify-center items-center">
+                <div className="flex items-center justify-between"></div>
                 {hasClientData ? (
                   <div className="space-y-3">
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      Client Info
+                    </h2>
                     <div>
                       <p className="text-sm font-medium text-gray-700">
                         Client
@@ -275,19 +270,19 @@ export default function AddJobPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 text-center">
-                    <p className="text-sm text-gray-500">
-                      No client information added yet.
-                    </p>
+                  <div className="flex flex-col items-center space-y-3">
+                    <span className="bg-[#F9F9FB] size-10 flex items-center justify-center gap-2 border border-[#E0E0E0] rounded-md">
+                      <User className="size-7" />
+                    </span>
                     <button
                       onClick={() => setClientInfoOpen(true)}
-                      className="text-sm text-blue-600 hover:text-blue-700 font-medium mt-2"
+                      className="text-[16px] font-medium underline underline-offset-2"
                     >
-                      Add Client Info
+                      Add Client
                     </button>
                   </div>
                 )}
-              </div>
+              </section>
             </div>
           </section>
         </div>
