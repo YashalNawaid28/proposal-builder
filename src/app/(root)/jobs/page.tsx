@@ -38,23 +38,23 @@ export default function JobsPage() {
   };
 
   useEffect(() => {
-    const fetchBrands = async () => {
+    const fetchJobs = async () => {
       if (!user) return; // Don't fetch if user is not available
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch("/api/jobs", {
+        const res = await fetch("/api/jobs?page=1&limit=10", {
           headers: { "request.user.id": user.id },
         });
 
         if (!res.ok) {
-          throw new Error("Failed to fetch brands");
+          throw new Error("Failed to fetch jobs");
         }
 
         const data = await res.json();
         setJobs(data.data || []);
       } catch (error) {
-        console.error("Error fetching brands:", error);
+        console.error("Error fetching jobs:", error);
         setError(
           error instanceof Error ? error.message : "An unknown error occurred"
         );
@@ -63,8 +63,8 @@ export default function JobsPage() {
       }
     };
 
-    fetchBrands();
-  }, []);
+    fetchJobs();
+  }, [user]);
 
   const tabs = ["all", "drafts", "sent", "signed"];
 
