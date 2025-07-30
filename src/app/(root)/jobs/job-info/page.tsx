@@ -28,7 +28,10 @@ export default function AddJobPage() {
     manager?: string;
     creator?: string;
     creatorName?: string; // Add creator name field
+    creatorAvatar?: string | null; // Add creator avatar field
     pm?: string;
+    pmName?: string; // Add PM name field
+    pmAvatar?: string | null; // Add PM avatar field
   }>({});
   const [clientData, setClientData] = useState<{
     clientName?: string;
@@ -36,6 +39,16 @@ export default function AddJobPage() {
     clientContact?: string;
     clientPhone?: string;
   }>({});
+
+  // Function to generate initials from display name
+  const getInitials = (displayName: string) => {
+    return displayName
+      .split(' ')
+      .map(name => name.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   // Function to fetch brand name by ID
   const fetchBrandName = async (brandId: string) => {
@@ -58,12 +71,18 @@ export default function AddJobPage() {
       const response = await fetch(`/api/users/${userId}`);
       if (response.ok) {
         const user = await response.json();
-        return user.display_name || 'Unknown User';
+        return {
+          displayName: user.display_name || 'Unknown User',
+          avatarUrl: user.avatar_url || null
+        };
       }
     } catch (error) {
       console.error('Error fetching user:', error);
     }
-    return 'Unknown User';
+    return {
+      displayName: 'Unknown User',
+      avatarUrl: null
+    };
   };
 
   // Function to fetch client data by ID
@@ -170,10 +189,16 @@ export default function AddJobPage() {
           brandName = await fetchBrandName(job.brand_id);
         }
 
-        // Fetch creator name if creator_id exists
-        let creatorName = 'Unknown User';
+        // Fetch creator name and avatar if creator_id exists
+        let creatorData = { displayName: 'Unknown User', avatarUrl: null };
         if (job.creator_id) {
-          creatorName = await fetchUserName(job.creator_id);
+          creatorData = await fetchUserName(job.creator_id);
+        }
+
+        // Fetch PM name and avatar if pm_id exists
+        let pmData = { displayName: 'Unknown PM', avatarUrl: null };
+        if (job.pm_id) {
+          pmData = await fetchUserName(job.pm_id);
         }
 
         // Fetch client data if client_id exists
@@ -196,8 +221,11 @@ export default function AddJobPage() {
           brandName: brandName, // Add the brand name
           manager: job.manager_id,
           creator: job.creator_id, // Keep the ID for reference
-          creatorName: creatorName, // Add the creator name
+          creatorName: creatorData.displayName, // Add the creator name
+          creatorAvatar: creatorData.avatarUrl, // Add the creator avatar
           pm: job.pm_id,
+          pmName: pmData.displayName, // Add the PM name
+          pmAvatar: pmData.avatarUrl, // Add the PM avatar
         });
 
         // Set the actual client data
@@ -364,19 +392,33 @@ export default function AddJobPage() {
                         Creator
                       </p>
                       <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-gray-300 rounded-full"></div>
-                        {/* <span className="text-gray-900">
-                          {jobData.creatorName || "Unknown User"}
-                        </span> */}
+                        {jobData.creatorAvatar ? (
+                          <img 
+                            src={jobData.creatorAvatar} 
+                            alt={jobData.creatorName || "Creator"} 
+                            className="w-6 h-6 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center text-xs font-medium text-gray-700">
+                            {jobData.creatorName ? getInitials(jobData.creatorName) : "U"}
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="text-[14px] text-[#60646C] font-[500] flex justify-between">
                       <p>PM</p>
                       <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-gray-300 rounded-full"></div>
-                        {/* <span className="text-gray-900">
-                          {jobData.pm || "Jane Smith"}
-                        </span> */}
+                        {jobData.pmAvatar ? (
+                          <img 
+                            src={jobData.pmAvatar} 
+                            alt={jobData.pmName || "PM"} 
+                            className="w-6 h-6 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center text-xs font-medium text-gray-700">
+                            {jobData.pmName ? getInitials(jobData.pmName) : "P"}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
