@@ -436,42 +436,34 @@ export default function AddJobPage() {
                 )}
               </section>
               {/* Client Info Section */}
-              <section className="h-full w-full flex justify-center items-center">
-                <div className="flex items-center justify-between"></div>
+              <section className={`h-full w-full flex p-[16px] ${hasClientData ? 'justify-start items-start' : 'justify-center items-center'}`}>
                 {hasClientData ? (
-                  <div className="space-y-3">
-                    <h2 className="text-lg font-semibold text-gray-900">
+                  <div className="flex flex-col gap-[24px] w-full">
+                    <h2 className="text-[18px] font-[600] text-[#15191E]">
                       Client Info
                     </h2>
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">
-                        Client
-                      </p>
-                      <p className="text-gray-900">
-                        {clientData.clientName || "WKS Restaurant Group"}
+                    <div className="text-[14px] text-[#60646C] font-[500] flex justify-between">
+                      <p>Client</p>
+                      <p className="font-[400]">
+                        {clientData.clientName || "Unknown Client"}
                       </p>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">
-                        Location
-                      </p>
-                      <p className="text-gray-900">
-                        {clientData.clientLocation ||
-                          "5856 Corporation Ave. ste 200 Cypress, CA 90630"}
+                    <div className="text-[14px] text-[#60646C] font-[500] flex justify-between items-start">
+                      <p>Location</p>
+                      <p className="font-[400] text-right max-w-[200px] leading-[18px]">
+                        {clientData.clientLocation || "Unknown Location"}
                       </p>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">
-                        Contact
-                      </p>
-                      <p className="text-gray-900">
-                        {clientData.clientContact || "Becca Meussner"}
+                    <div className="text-[14px] text-[#60646C] font-[500] flex justify-between">
+                      <p>Contact</p>
+                      <p className="font-[400]">
+                        {clientData.clientContact || "Unknown Contact"}
                       </p>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">Phone</p>
-                      <p className="text-gray-900">
-                        {clientData.clientPhone || "310.318.3100"}
+                    <div className="text-[14px] text-[#60646C] font-[500] flex justify-between">
+                      <p>Phone</p>
+                      <p className="font-[400]">
+                        {clientData.clientPhone || "Unknown Phone"}
                       </p>
                     </div>
                   </div>
