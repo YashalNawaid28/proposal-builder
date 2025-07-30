@@ -177,11 +177,7 @@ const SignsPage = () => {
   return (
     <div className="bg-white">
       <h1 className="text-2xl font-bold p-5">Signs</h1>
-      <PageTabs
-        tabs={brands}
-        activeTab={tab}
-        onTabChange={setTab}
-      />
+      <PageTabs tabs={brands} activeTab={tab} onTabChange={setTab} />
       <div className="border border-[#DEE1EA] rounded-lg overflow-hidden">
         {(() => {
           if (loading) {
@@ -193,27 +189,27 @@ const SignsPage = () => {
           return (
             <div className="overflow-x-auto">
               <table className="min-w-full border-collapse">
-                <thead className="bg-[#F9F9FB] text-base font-semibold">
+                <thead className="bg-[#F9F9FB] text-xs font-semibold">
                   <tr className="border-b border-[#DEE1EA] h-[50px]">
                     <th className="w-12 border-r border-[#DEE1EA]">
                       <input
                         type="checkbox"
-                        className="h-4 w-4 border-[#DEE1EA]"
+                        className="h-4 w-4 mt-1 border-[#DEE1EA]"
                       />
                     </th>
-                    <th className="p-4 text-left font-semibold w-52 border-r border-[#DEE1EA] text-base">
+                    <th className="p-4 text-left font-semibold w-52 border-r border-[#DEE1EA] text-xs">
                       Sign Image
                     </th>
-                    <th className="p-4 text-left font-semibold min-w-[200px] border-r border-[#DEE1EA] text-base">
+                    <th className="p-4 text-left font-semibold min-w-[200px] border-r border-[#DEE1EA] text-xs">
                       Sign Name
                     </th>
-                    <th className="p-4 text-left font-semibold min-w-[350px] border-r border-[#DEE1EA] text-base">
+                    <th className="p-4 text-left font-semibold min-w-[350px] border-r border-[#DEE1EA] text-xs">
                       Sign Description
                     </th>
-                    <th className="p-4 text-center font-semibold w-64 border-r border-[#DEE1EA] text-base">
+                    <th className="p-4 text-center font-semibold w-64 border-r border-[#DEE1EA] text-xs">
                       Status
                     </th>
-                    <th className="p-4 text-center font-semibold w-64 text-base">
+                    <th className="p-4 text-center font-semibold w-64 text-xs">
                       Date Added
                     </th>
                   </tr>
@@ -285,7 +281,7 @@ const SignsPage = () => {
                                       ].map((header, index) => (
                                         <th
                                           key={header}
-                                          className={`p-4 text-center font-semibold text-black text-base ${
+                                          className={`p-4 text-center font-semibold text-black text-[13px] ${
                                             index < 5
                                               ? "border-r border-[#DEE1EA]"
                                               : ""
@@ -330,8 +326,8 @@ const SignsPage = () => {
                                 </table>
                               </div>
                               {/* Right Side: Sign Options */}
-                              <div className="w-80 lg:w-96 xl:w-[500px] flex-shrink-0">
-                                <h3 className="font-semibold pl-6 text-[16px] my-4">
+                              <div className="w-[320px] flex-shrink-0">
+                                <h3 className="font-semibold pl-6 text-[13px] my-4">
                                   Sign Options
                                 </h3>
                                 <div className="space-y-3 p-6 w-full">
