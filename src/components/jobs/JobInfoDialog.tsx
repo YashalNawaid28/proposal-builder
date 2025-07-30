@@ -150,7 +150,7 @@ export const JobInfoDialog = ({
       formData.append('site_postcode', addressComponents.sitePostcode);
       formData.append('site_country', addressComponents.siteCountry);
       formData.append('brand_id', jobData.brandId || '');
-      formData.append('manager_id', jobData.managerId || '');
+      formData.append('pm_id', jobData.managerId || ''); // Store as pm_id instead of manager_id
 
       const response = await fetch('/api/jobs/add-job-info', {
         method: 'POST',
