@@ -334,51 +334,49 @@ export default function AddJobPage() {
             {/* Right Sidebar */}
             <div className="w-[360px] flex flex-col h-full border-l border-[#EAEBEE]">
               {/* Job Info Section */}
-              <section className="h-full w-full flex justify-center items-center border-b border-[#EAEBEE]">
+              <section className="h-full w-full flex justify-start items-start p-[16px]  border-b border-[#EAEBEE]">
                 {hasJobData ? (
-                  <div className="space-y-3">
-                    <h2 className="text-lg font-semibold text-gray-900">
+                  <div className="flex flex-col gap-[24px] w-full">
+                    <h2 className="text-[18px] font-[600] text-[#15191E]">
                       Job Info
                     </h2>
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">Brand</p>
-                      <p className="text-gray-900">
+                    <div className="text-[14px] text-[#60646C] font-[500] flex justify-between">
+                      <p >Brand</p>
+                      <p className="font-[400]">
                         {jobData?.brandName || 'Unknown Brand'}
                       </p>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">
-                        Location
-                      </p>
-                      <p className="text-gray-900">
+                    <div className="text-[14px] text-[#60646C] font-[500] flex justify-between items-start">
+                      <p>Location</p>
+                      <p className="font-[400] text-right max-w-[200px] leading-[18px]">
                         {jobData.jobLocation ||
                           "100 Coastal Way, Chesapeake, VA 23320, USA"}
                       </p>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">
+                    <div className="text-[14px] text-[#60646C] font-[500] flex justify-between">
+                      <p>
                         Created
                       </p>
-                      <p className="text-gray-900">Jul 13th, 2025</p>
+                      <p className="font-[400]">Jul 13th, 2025</p>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">
+                    <div className="text-[14px] text-[#60646C] font-[500] flex justify-between">
+                      <p>
                         Creator
                       </p>
                       <div className="flex items-center gap-2">
                         <div className="w-6 h-6 bg-gray-300 rounded-full"></div>
-                        <span className="text-gray-900">
+                        {/* <span className="text-gray-900">
                           {jobData.creatorName || "Unknown User"}
-                        </span>
+                        </span> */}
                       </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">PM</p>
+                    <div className="text-[14px] text-[#60646C] font-[500] flex justify-between">
+                      <p>PM</p>
                       <div className="flex items-center gap-2">
                         <div className="w-6 h-6 bg-gray-300 rounded-full"></div>
-                        <span className="text-gray-900">
+                        {/* <span className="text-gray-900">
                           {jobData.pm || "Jane Smith"}
-                        </span>
+                        </span> */}
                       </div>
                     </div>
                   </div>
