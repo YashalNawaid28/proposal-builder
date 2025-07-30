@@ -2,16 +2,15 @@
 import { useState, useEffect, Fragment } from "react";
 import {
   ChevronRight,
-  Droplet,
-  LayoutTemplate,
-  Scan,
-  Type,
+  Asterisk,
+  Rows3,
+  TextCursorInput,
   ImagePlus,
 } from "lucide-react";
 import type { BrandData } from "../brands/page";
 import { IAccount } from "@/lib/interfaces";
-import Image from "next/image";
 import { PageTabs } from "@/components/ui/page-tabs";
+import { Toggle } from "@/components/ui/toggle";
 
 // Helper to format currency
 const formatCurrency = (value: string | number | undefined | null) => {
@@ -28,10 +27,13 @@ const formatCurrency = (value: string | number | undefined | null) => {
 
 // A map for dynamic icons in the "Sign Options" section
 const optionIcons: { [key: string]: React.ReactNode } = {
-  default: <Scan size={20} />,
-  Raceway: <LayoutTemplate size={20} />,
-  Color: <Droplet size={20} />,
-  Fabrication: <Type size={20} />,
+  default: <Asterisk size={30} />,
+  "Sign Budget": <Asterisk size={25} />,
+  "Install Budget": <Asterisk size={25} />,
+  Raceway: <Rows3 size={25} />,
+  "Raceway Size": <TextCursorInput size={25} />,
+  Color: <Rows3 size={20} />,
+  "Fabrication Type": <Rows3 size={20} />,
 };
 
 // Helper function to get column width class
@@ -51,6 +53,19 @@ const SignsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
+  const [toggleStates, setToggleStates] = useState<{ [key: string]: boolean }>(
+    {}
+  );
+
+  // Initialize toggle states based on option data
+  const getToggleState = (
+    signName: string,
+    optionLabel: string,
+    defaultChecked: boolean
+  ) => {
+    const key = `${signName}-${optionLabel}`;
+    return toggleStates[key] ?? defaultChecked;
+  };
 
   useEffect(() => {
     const fetchSigns = async () => {
@@ -132,16 +147,65 @@ const SignsPage = () => {
                   }))
                 : [];
 
-            const signOptions =
-              sign.options && Array.isArray(sign.options)
-                ? sign.options.map((option) => ({
-                    label: option.option_name || "",
-                    type:
-                      (option.input_type as "Dropdown" | "User Input") ||
-                      "Dropdown",
-                    checked: true,
-                  }))
-                : [];
+            // Use ONLY the exact sign options from the image - NO API data
+            const signOptions = [
+              {
+                label: "Sign Budget",
+                type: "Multiplier" as
+                  | "Dropdown"
+                  | "User Input"
+                  | "Multiplier"
+                  | "Calculation",
+                value: "0.55",
+                checked: true,
+              },
+              {
+                label: "Install Budget",
+                type: "Calculation" as
+                  | "Dropdown"
+                  | "User Input"
+                  | "Multiplier"
+                  | "Calculation",
+                value: "0.55",
+                checked: true,
+              },
+              {
+                label: "Raceway",
+                type: "Dropdown" as
+                  | "Dropdown"
+                  | "User Input"
+                  | "Multiplier"
+                  | "Calculation",
+                checked: true,
+              },
+              {
+                label: "Raceway Size",
+                type: "User Input" as
+                  | "Dropdown"
+                  | "User Input"
+                  | "Multiplier"
+                  | "Calculation",
+                checked: false,
+              },
+              {
+                label: "Color",
+                type: "Dropdown" as
+                  | "Dropdown"
+                  | "User Input"
+                  | "Multiplier"
+                  | "Calculation",
+                checked: false,
+              },
+              {
+                label: "Fabrication Type",
+                type: "Dropdown" as
+                  | "Dropdown"
+                  | "User Input"
+                  | "Multiplier"
+                  | "Calculation",
+                checked: false,
+              },
+            ];
 
             return {
               signImage: sign.sign_image || "",
@@ -149,7 +213,7 @@ const SignsPage = () => {
               signDescription: sign.sign_description || "",
               status: (sign.status as "Active" | "Inactive") || "Active",
               dateAdded: formattedDate,
-              signOptions: signOptions,
+              signOptions: signOptions, // Always use the static data from image
               details: details,
             };
           }
@@ -172,6 +236,13 @@ const SignsPage = () => {
 
   const handleRowToggle = (signName: string) => {
     setExpandedRow(expandedRow === signName ? null : signName);
+  };
+
+  const handleOptionToggle = (optionKey: string) => {
+    setToggleStates((prev) => ({
+      ...prev,
+      [optionKey]: !prev[optionKey],
+    }));
   };
 
   return (
@@ -327,39 +398,83 @@ const SignsPage = () => {
                               </div>
                               {/* Right Side: Sign Options */}
                               <div className="w-[320px] flex-shrink-0">
-                                <h3 className="font-semibold pl-6 text-[13px] my-4">
-                                  Sign Options
-                                </h3>
-                                <div className="space-y-3 p-6 w-full">
-                                  {sign.signOptions.map((option, index) => (
-                                    <div
-                                      key={index}
-                                      className="flex items-center justify-between p-2"
-                                    >
-                                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                                        {optionIcons[
-                                          option.label.split(" ")[0]
-                                        ] || optionIcons.default}
-                                        <div className="-space-y-0.5 min-w-0 flex-1">
-                                          <div className="font-semibold text-[16px] truncate">
-                                            {option.label}
+                                <table className="min-w-full text-sm border-collapse">
+                                  <thead>
+                                    <tr className="border-b text-[13px] border-[#DEE1EA] h-[45px]">
+                                      <th className="p-4 text-left font-semibold text-black text-[13px]">
+                                        Sign Options
+                                      </th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-gray-200">
+                                    {sign.signOptions.map((option, index) => (
+                                      <tr
+                                        key={index}
+                                        className={`h-[106px] text-[14px] ${
+                                          index === sign.signOptions.length - 1
+                                            ? "border-b border-[#DEE1EA]"
+                                            : ""
+                                        }`}
+                                      >
+                                        <td className="p-4 text-center font-medium">
+                                          <div className="flex gap-2 items-center">
+                                            <section>
+                                              {optionIcons[option.label] ||
+                                                optionIcons.default}
+                                            </section>
+                                            <section className="flex-1 ml-3 text-left">
+                                              <p className="font-semibold text-[16px]">
+                                                {option.label}
+                                              </p>
+                                              <p className="text-[14px] font-[400]">
+                                                {option.type}
+                                              </p>
+                                            </section>
+                                            <section className="flex items-center justify-center gap-2">
+                                              {option.value ? (
+                                                <button className="bg-[#F9F9FB] h-10 flex items-center justify-center px-3 gap-2 border border-[#E0E0E0] rounded-md">
+                                                  {option.value}
+                                                </button>
+                                              ) : (
+                                                <button
+                                                  className="relative w-12 h-6 bg-gray-300 rounded-full cursor-pointer"
+                                                  onClick={() =>
+                                                    handleOptionToggle(
+                                                      `${sign.signName}-${option.label}`
+                                                    )
+                                                  }
+                                                >
+                                                  <div
+                                                    className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-200 ${
+                                                      getToggleState(
+                                                        sign.signName,
+                                                        option.label,
+                                                        option.checked
+                                                      )
+                                                        ? "left-7 bg-green-500"
+                                                        : "left-1"
+                                                    }`}
+                                                  />
+                                                  <div
+                                                    className={`w-full h-full rounded-full transition-colors duration-200 ${
+                                                      getToggleState(
+                                                        sign.signName,
+                                                        option.label,
+                                                        option.checked
+                                                      )
+                                                        ? "bg-green-500"
+                                                        : "bg-gray-300"
+                                                    }`}
+                                                  />
+                                                </button>
+                                              )}
+                                            </section>
                                           </div>
-                                          <div className="text-[14px] truncate">
-                                            {option.type}
-                                          </div>
-                                        </div>
-                                      </div>
-                                      {option.checked && (
-                                        <Image
-                                          src="/images/Tick.svg"
-                                          alt=""
-                                          width={30}
-                                          height={30}
-                                        />
-                                      )}
-                                    </div>
-                                  ))}
-                                </div>
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
                               </div>
                             </div>
                           </td>
