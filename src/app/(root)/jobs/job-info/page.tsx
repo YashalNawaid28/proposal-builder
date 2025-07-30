@@ -32,6 +32,7 @@ export default function AddJobPage() {
     pm?: string;
     pmName?: string; // Add PM name field
     pmAvatar?: string | null; // Add PM avatar field
+    createdDate?: string; // Add created date field
   }>({});
   const [clientData, setClientData] = useState<{
     clientName?: string;
@@ -48,6 +49,27 @@ export default function AddJobPage() {
       .join('')
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  // Function to format date like "Jul 13th, 2025"
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const month = date.toLocaleDateString('en-US', { month: 'short' });
+    const day = date.getDate();
+    const year = date.getFullYear();
+    
+    // Add ordinal suffix to day
+    const getOrdinalSuffix = (day: number) => {
+      if (day > 3 && day < 21) return 'th';
+      switch (day % 10) {
+        case 1: return 'st';
+        case 2: return 'nd';
+        case 3: return 'rd';
+        default: return 'th';
+      }
+    };
+    
+    return `${month} ${day}${getOrdinalSuffix(day)}, ${year}`;
   };
 
   // Function to fetch brand name by ID
@@ -210,6 +232,10 @@ export default function AddJobPage() {
           }
         }
 
+        // Format the created_at date
+        const createdAt = new Date(job.created_at);
+        const formattedDate = formatDate(job.created_at);
+
         // Populate job data with existing values
         setJobData({
           jobName: job.job_name,
@@ -224,6 +250,7 @@ export default function AddJobPage() {
           pm: job.pm_id,
           pmName: pmData.displayName, // Add the PM name
           pmAvatar: pmData.avatarUrl, // Add the PM avatar
+          createdDate: formattedDate, // Add the created date
         });
 
         // Set the actual client data
@@ -384,7 +411,9 @@ export default function AddJobPage() {
                       <p>
                         Created
                       </p>
-                      <p className="font-[400]">Jul 13th, 2025</p>
+                      <p className="font-[400]">
+                        {jobData.createdDate || "Loading..."}
+                      </p>
                     </div>
                     <div className="text-[14px] text-[#60646C] font-[500] flex justify-between">
                       <p>
