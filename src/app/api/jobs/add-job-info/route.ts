@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { getServerSupabase } from "@/lib/supabase";
 
 export async function POST(request: NextRequest) {
     try {
       const supabase = getServerSupabase();
   
+      // Get the user ID from the request headers
+      const userId = request.headers.get("request.user.id");
+      
+      if (!userId) {
+        return NextResponse.json({ error: "User ID is required" }, { status: 401 });
+      }
+
       const formData = await request.formData();
       const job_name = formData.get("job_name") as string;
       const job_no = formData.get("job_number") as string;
@@ -29,6 +35,7 @@ export async function POST(request: NextRequest) {
           site_country,
           brand_id,
           manager_id,
+          creator_id: userId, // Use the user ID from headers
         })
         .select();
   
