@@ -86,7 +86,7 @@ export default function JobsPage() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch("/api/jobs", {
+        const res = await fetch("/api/jobs?page=1&limit=10", {
           headers: { "request.user.id": user.id },
         });
 
