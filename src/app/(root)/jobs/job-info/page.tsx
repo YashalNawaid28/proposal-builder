@@ -24,8 +24,10 @@ export default function AddJobPage() {
     jobNumber?: string;
     jobLocation?: string;
     brand?: string;
+    brandName?: string; // Add brand name field
     manager?: string;
     creator?: string;
+    creatorName?: string; // Add creator name field
     pm?: string;
   }>({});
   const [clientData, setClientData] = useState<{
@@ -34,6 +36,35 @@ export default function AddJobPage() {
     clientContact?: string;
     clientPhone?: string;
   }>({});
+
+  // Function to fetch brand name by ID
+  const fetchBrandName = async (brandId: string) => {
+    try {
+      const response = await fetch('/api/brands');
+      const result = await response.json();
+      if (result.data) {
+        const brand = result.data.find((b: any) => b.id === brandId);
+        return brand ? brand.brand_name : 'Unknown Brand';
+      }
+    } catch (error) {
+      console.error('Error fetching brand:', error);
+    }
+    return 'Unknown Brand';
+  };
+
+  // Function to fetch user name by ID
+  const fetchUserName = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/users/${userId}`);
+      if (response.ok) {
+        const user = await response.json();
+        return user.display_name || 'Unknown User';
+      }
+    } catch (error) {
+      console.error('Error fetching user:', error);
+    }
+    return 'Unknown User';
+  };
 
   const handleJobInfoSave = async (data: any) => {
     setJobData(data);
@@ -109,14 +140,28 @@ export default function AddJobPage() {
 
         const job = await res.json();
 
+        // Fetch brand name if brand_id exists
+        let brandName = 'Unknown Brand';
+        if (job.brand_id) {
+          brandName = await fetchBrandName(job.brand_id);
+        }
+
+        // Fetch creator name if creator_id exists
+        let creatorName = 'Unknown User';
+        if (job.creator_id) {
+          creatorName = await fetchUserName(job.creator_id);
+        }
+
         // Populate job data with existing values
         setJobData({
           jobName: job.job_name,
           jobNumber: job.job_no,
           jobLocation: `${job.site_street}, ${job.site_city}, ${job.site_state} ${job.site_postcode}`,
-          brand: job.brand_id, // You might want to fetch brand name separately
+          brand: job.brand_id, // Keep the ID for reference
+          brandName: brandName, // Add the brand name
           manager: job.manager_id,
-          creator: job.creator_id,
+          creator: job.creator_id, // Keep the ID for reference
+          creatorName: creatorName, // Add the creator name
           pm: job.pm_id,
         });
 
@@ -271,7 +316,7 @@ export default function AddJobPage() {
                     <div>
                       <p className="text-sm font-medium text-gray-700">Brand</p>
                       <p className="text-gray-900">
-                        {jobData.brand || "Dave's Hot Chicken"}
+                        {jobData?.brandName || 'Unknown Brand'}
                       </p>
                     </div>
                     <div>
@@ -296,7 +341,7 @@ export default function AddJobPage() {
                       <div className="flex items-center gap-2">
                         <div className="w-6 h-6 bg-gray-300 rounded-full"></div>
                         <span className="text-gray-900">
-                          {jobData.creator || "John Doe"}
+                          {jobData.creatorName || "Unknown User"}
                         </span>
                       </div>
                     </div>
