@@ -5,6 +5,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { user } = body;
+    console.log(user, 'user data')
 
     if (!user || !user.id) {
       return NextResponse.json(
@@ -33,7 +34,10 @@ export async function POST(request: NextRequest) {
         .from('users')
         .update({ 
           last_active_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
+          display_name: user?.displayName,
+          email: user?.primaryEmail,
+          avatar_url: user?.profileImageUrl
         })
         .eq('id', user.id);
 
