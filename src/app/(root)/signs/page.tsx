@@ -11,6 +11,7 @@ import {
 import type { BrandData } from "../brands/page";
 import { IAccount } from "@/lib/interfaces";
 import Image from "next/image";
+import { PageTabs } from "@/components/ui/page-tabs";
 
 // Helper to format currency
 const formatCurrency = (value: string | number | undefined | null) => {
@@ -176,19 +177,11 @@ const SignsPage = () => {
   return (
     <div className="bg-white">
       <h1 className="text-2xl font-bold p-5">Signs</h1>
-      <div className="flex">
-        {brands.map((brand) => (
-          <button
-            key={brand}
-            className={
-              "text-[16px] text-white bg-black font-semibold rounded-t-lg px-3 py-2 ml-6"
-            }
-            onClick={() => setTab(brand)}
-          >
-            {brand}
-          </button>
-        ))}
-      </div>
+      <PageTabs
+        tabs={brands}
+        activeTab={tab}
+        onTabChange={setTab}
+      />
       <div className="border border-[#DEE1EA] rounded-lg overflow-hidden">
         {(() => {
           if (loading) {

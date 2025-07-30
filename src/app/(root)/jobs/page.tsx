@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { ListFilter, ArrowUpDown } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { PageTabs } from "@/components/ui/page-tabs";
 
 export default function JobsPage() {
   const [tab, setTab] = useState<"all" | "drafts" | "sent" | "signed">("all");
@@ -10,6 +11,8 @@ export default function JobsPage() {
   const handleNewJob = () => {
     router.push("/jobs/add-job");
   };
+
+  const tabs = ["all", "drafts", "sent", "signed"];
 
   return (
     <div className="bg-white">
@@ -34,20 +37,14 @@ export default function JobsPage() {
           </button>
         </div>
       </section>
-      <div className="flex border-b border-[#EAEBEE] px-7">
-        {(["all", "drafts", "sent", "signed"] as const).map((tabName) => (
-          <button
-            key={tabName}
-            className={`rounded-t-md text-[16px] h-10 px-4 cursor-pointer py-2 ${
-              tab === tabName
-                ? "text-white text-[16px] font-semibold bg-black"
-                : "text-[14px] text-[#60646C]"
-            }`}
-            onClick={() => setTab(tabName)}
-          >
-            {tabName.charAt(0).toUpperCase() + tabName.slice(1)}
-          </button>
-        ))}
+      <div className="border-b border-[#EAEBEE] px-7">
+        <PageTabs
+          tabs={tabs}
+          activeTab={tab}
+          onTabChange={(tab) =>
+            setTab(tab as "all" | "drafts" | "sent" | "signed")
+          }
+        />
       </div>
 
       {/* Empty State */}

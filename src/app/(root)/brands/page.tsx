@@ -1,7 +1,7 @@
 "use client";
-import React, { useMemo, useState, useEffect } from "react";
-import Image from "next/image";
+import { useMemo, useState, useEffect } from "react";
 import { useUser } from "@stackframe/stack";
+import { PageTabs } from "@/components/ui/page-tabs";
 
 // Define interfaces for our data structures
 export interface BrandData {
@@ -270,24 +270,16 @@ const BrandsPage = () => {
     );
   };
 
+  const tabs = ["All", "Active", "Archived"];
+
   return (
     <div className="bg-white">
       <h1 className="text-2xl font-semibold p-5">Brands</h1>
-      <div className="flex ml-6">
-        {(["All", "Active", "Archived"] as const).map((tabName) => (
-          <button
-            key={tabName}
-            className={`rounded-t-lg px-4 cursor-pointer py-2 ${
-              tab === tabName
-                ? "text-white text-[16px] font-semibold bg-black"
-                : "text-[14px] text-[#60646C]"
-            }`}
-            onClick={() => setTab(tabName)}
-          >
-            {tabName}
-          </button>
-        ))}
-      </div>
+      <PageTabs
+        tabs={tabs}
+        activeTab={tab}
+        onTabChange={(tab) => setTab(tab as "All" | "Active" | "Archived")}
+      />
       <div className="border border-[#DEE1EA] rounded-lg overflow-hidden">
         <div>{renderTable()}</div>
       </div>
