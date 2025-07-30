@@ -1,5 +1,6 @@
 "use client";
-import React, { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { PageTabs } from "@/components/ui/page-tabs";
 
 // Define interfaces for our data structures
 export interface UserData {
@@ -128,7 +129,8 @@ const UsersPage = () => {
         // Transform the data to match our UserData interface with safe fallbacks
         const transformedUsers: UserData[] = (result.data || []).map(
           (user: any) => ({
-            id: user?.id || `user-${Math.random().toString(36).substr(2, 9)}`,
+            id:
+              user?.id || `user-${Math.random().toString(36).substring(2, 11)}`,
             user_image:
               user?.user_image || user?.avatar_url || user?.profile_image || "",
             user_name:
@@ -321,6 +323,8 @@ const UsersPage = () => {
     );
   };
 
+  const tabs = ["all", "active", "disabled"];
+
   return (
     <div className="bg-white">
       <div className="flex justify-between items-center p-5">
@@ -329,21 +333,11 @@ const UsersPage = () => {
           New Users
         </button>
       </div>
-      <div className="flex ml-6">
-        {(["all", "active", "disabled"] as const).map((tabName) => (
-          <button
-            key={tabName}
-            className={`rounded-t-md text-[16px] h-10 px-4 cursor-pointer py-2 ${
-              tab === tabName
-                ? "text-white text-[16px] font-semibold bg-black"
-                : "text-[14px] text-[#60646C]"
-            }`}
-            onClick={() => setTab(tabName)}
-          >
-            {tabName.charAt(0).toUpperCase() + tabName.slice(1)}
-          </button>
-        ))}
-      </div>
+      <PageTabs
+        tabs={tabs}
+        activeTab={tab}
+        onTabChange={(tab) => setTab(tab as "all" | "active" | "disabled")}
+      />
       <div className="border border-[#DEE1EA] overflow-hidden">
         <div>{renderTable()}</div>
       </div>

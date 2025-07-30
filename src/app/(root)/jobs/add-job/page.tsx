@@ -4,9 +4,10 @@ import { ArrowLeft, Plus, ChevronDown, MapPinPlus, User } from "lucide-react";
 import { JobInfoDialog } from "@/components/jobs/JobInfoDialog";
 import { ClientInfoDialog } from "@/components/jobs/ClientInfoDialog";
 import Link from "next/link";
+import { PageTabs } from "@/components/ui/page-tabs";
 
 export default function AddJobPage() {
-  const [jobInfoOpen, setJobInfoOpen] = useState(false);
+  const [jobInfoOpen, setJobInfoOpen] = useState(true);
   const [clientInfoOpen, setClientInfoOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState("All");
   const [jobData, setJobData] = useState<{
@@ -85,40 +86,12 @@ export default function AddJobPage() {
         {/* Main Content */}
         <div className="flex-1 flex flex-col">
           {/* Tabs */}
-          <div className="ml-11 border-b border-[#EAEBEE] bg-white">
-            <div className="flex space-x-6 text-[14px] h-11 text-[#60646C] font-semibold">
-              <button
-                onClick={() => setSelectedTab("All")}
-                className={`pb-2 border-b-2 transition-colors ${
-                  selectedTab === "All"
-                    ? "border-black text-black font-semibold"
-                    : "border-transparent text-[#60646C] hover:text-gray-700"
-                }`}
-              >
-                All
-              </button>
-              <button
-                onClick={() => setSelectedTab("Budget")}
-                className={`pb-2 border-b-2 transition-colors ${
-                  selectedTab === "Budget"
-                    ? "border-black text-black font-semibold"
-                    : "border-transparent text-[#60646C] hover:text-gray-700"
-                }`}
-              >
-                Budget
-              </button>
-              <button
-                onClick={() => setSelectedTab("Pricing")}
-                className={`pb-2 border-b-2 transition-colors ${
-                  selectedTab === "Pricing"
-                    ? "border-black text-black font-semibold"
-                    : "border-transparent text-[#60646C] hover:text-gray-700"
-                }`}
-              >
-                Pricing
-              </button>
-            </div>
-          </div>
+          <PageTabs
+            tabs={["All", "Budget", "Pricing"]}
+            activeTab={selectedTab}
+            onTabChange={setSelectedTab}
+            variant="border-bottom"
+          />
           <section className="flex flex-1">
             {/* Table */}
             <div className="border-l flex-1 overflow-hidden flex flex-col">
