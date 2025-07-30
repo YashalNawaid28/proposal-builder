@@ -66,6 +66,30 @@ export default function AddJobPage() {
     return 'Unknown User';
   };
 
+  // Function to fetch client data by ID
+  const fetchClientData = async (clientId: string) => {
+    try {
+      const response = await fetch(`/api/clients/${clientId}`);
+      if (response.ok) {
+        const client = await response.json();
+        return {
+          clientName: client.legal_name,
+          clientLocation: `${client.street || ''}, ${client.city || ''}, ${client.state || ''} ${client.postcode || ''}`.trim().replace(/^,\s*/, ''),
+          clientContact: client.client_contact || client.legal_name,
+          clientPhone: client.phone || '',
+        };
+      }
+    } catch (error) {
+      console.error('Error fetching client:', error);
+    }
+    return {
+      clientName: 'Unknown Client',
+      clientLocation: 'Unknown Location',
+      clientContact: 'Unknown Contact',
+      clientPhone: 'Unknown Phone',
+    };
+  };
+
   const handleJobInfoSave = async (data: any) => {
     setJobData(data);
 
@@ -152,6 +176,17 @@ export default function AddJobPage() {
           creatorName = await fetchUserName(job.creator_id);
         }
 
+        // Fetch client data if client_id exists
+        let clientData = {
+          clientName: 'Unknown Client',
+          clientLocation: 'Unknown Location',
+          clientContact: 'Unknown Contact',
+          clientPhone: 'Unknown Phone',
+        };
+        if (job.client_id) {
+          clientData = await fetchClientData(job.client_id);
+        }
+
         // Populate job data with existing values
         setJobData({
           jobName: job.job_name,
@@ -165,16 +200,8 @@ export default function AddJobPage() {
           pm: job.pm_id,
         });
 
-        // You can also load client data if available
-        if (job.client_id) {
-          // Fetch client data here if needed
-          setClientData({
-            clientName: "Client Name", // Replace with actual client data
-            clientLocation: "Client Location",
-            clientContact: "Client Contact",
-            clientPhone: "Client Phone",
-          });
-        }
+        // Set the actual client data
+        setClientData(clientData);
       } catch (error) {
         console.error("Error loading job data:", error);
       } finally {
