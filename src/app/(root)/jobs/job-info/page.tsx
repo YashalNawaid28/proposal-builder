@@ -101,12 +101,7 @@ export default function AddJobPage() {
     } catch (error) {
       console.error('Error fetching client:', error);
     }
-    return {
-      clientName: 'Unknown Client',
-      clientLocation: 'Unknown Location',
-      clientContact: 'Unknown Contact',
-      clientPhone: 'Unknown Phone',
-    };
+    return null; // Return null when no client is found
   };
 
   const handleJobInfoSave = async (data: any) => {
@@ -209,7 +204,10 @@ export default function AddJobPage() {
           clientPhone: 'Unknown Phone',
         };
         if (job.client_id) {
-          clientData = await fetchClientData(job.client_id);
+          const fetchedClientData = await fetchClientData(job.client_id);
+          if (fetchedClientData) {
+            clientData = fetchedClientData;
+          }
         }
 
         // Populate job data with existing values
@@ -248,8 +246,9 @@ export default function AddJobPage() {
       jobData.jobNumber);
   const hasClientData =
     Object.keys(clientData).length > 0 &&
-    (clientData.clientName ||
-      clientData.clientLocation ||
+    clientData.clientName &&
+    clientData.clientName !== 'Unknown Client' &&
+    (clientData.clientLocation ||
       clientData.clientContact ||
       clientData.clientPhone);
 
