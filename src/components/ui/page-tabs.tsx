@@ -35,15 +35,14 @@ export function PageTabs<T extends string>({
       </div>
     );
   }
-
   return (
     <div className={`flex ml-6 ${className}`}>
       {tabs.map((tab) => (
         <button
           key={tab}
-          className={`rounded-t-md text-[16px] h-10 px-4 cursor-pointer py-2 ${
+          className={`rounded-t-[6px] text-[16px] h-10 px-4 cursor-pointer p-4 flex items-center justify-center ${
             activeTab === tab
-              ? "text-white text-[16px] font-semibold bg-black"
+              ? "text-white text-[16px] font-semibold bg-black shadow-[2px_0px_4px_0px_rgba(21,25,30,0.3)]"
               : "text-[14px] text-[#60646C]"
           }`}
           onClick={() => onTabChange(tab)}
