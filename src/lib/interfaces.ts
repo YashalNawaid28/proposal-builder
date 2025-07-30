@@ -1,16 +1,17 @@
 export interface ICallDetail {
   callId: string;
-  direction: 'Inbound' | 'Outbound';
+  direction: "Inbound" | "Outbound";
   duration: number; // in minutes
   subject: string;
   date: string; // ISO string
-  status: 'Completed' | 'Missed' | 'In Progress';
+  status: "Completed" | "Missed" | "In Progress";
 }
 
 export interface ISignOption {
   label: string;
-  type: 'Dropdown' | 'User Input';
+  type: "Dropdown" | "User Input" | "Multiplier" | "Calculation";
   checked: boolean;
+  value?: string; // Optional: for numerical values like "0.55"
   icon?: string; // Optional: for UI icon reference
 }
 
@@ -18,7 +19,7 @@ export interface IAccount {
   signImage: string;
   signName: string;
   signDescription: string;
-  status: 'Active' | 'Inactive';
+  status: "Active" | "Inactive";
   dateAdded: string; // e.g. 'Aug 1st, 2025'
   signOptions: ISignOption[];
   details: ISignDetail[];
@@ -31,4 +32,4 @@ export interface ISignDetail {
   signBudget: string;
   installBudget: string;
   raceway: string;
-} 
+}
