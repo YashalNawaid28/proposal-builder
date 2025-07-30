@@ -361,7 +361,7 @@ export default function AddJobPage() {
             {/* Right Sidebar */}
             <div className="w-[360px] flex flex-col h-full border-l border-[#EAEBEE]">
               {/* Job Info Section */}
-              <section className="h-full w-full flex justify-start items-start p-[16px]  border-b border-[#EAEBEE]">
+              <section className={`h-full w-full flex p-[16px] border-b border-[#EAEBEE] ${hasJobData ? 'justify-start items-start' : 'justify-center items-center'}`}>
                 {hasJobData ? (
                   <div className="flex flex-col gap-[24px] w-full">
                     <h2 className="text-[18px] font-[600] text-[#15191E]">
