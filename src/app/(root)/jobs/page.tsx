@@ -77,7 +77,11 @@ export default function JobsPage() {
   const user = useUser();
 
   const handleNewJob = () => {
-    router.push("/jobs/add-job");
+    router.push("/jobs/job-info");
+  };
+
+  const handleJobClick = (jobId: string) => {
+    router.push(`/jobs/job-info?id=${jobId}`);
   };
 
   useEffect(() => {
@@ -198,7 +202,8 @@ export default function JobsPage() {
             {rowData.map((row) => (
               <tr
                 key={row.id}
-                className="hover:bg-gray-50 h-20 border-b border-[#DEE1EA] text-[14px]"
+                className="hover:bg-gray-50 h-20 border-b border-[#DEE1EA] text-[14px] cursor-pointer"
+                onClick={() => handleJobClick(row.id)}
               >
                 <td className="p-4 text-center border-r border-[#DEE1EA]">
                   <div className="flex items-center justify-center">
@@ -207,6 +212,7 @@ export default function JobsPage() {
                       className="h-4 w-4 border-[#DEE1EA] text-gray-400"
                       checked={selectedRows.includes(row.id)}
                       onChange={() => handleRowSelect(row.id)}
+                      onClick={(e) => e.stopPropagation()}
                     />
                   </div>
                 </td>

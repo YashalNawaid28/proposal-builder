@@ -1,17 +1,24 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, Plus, ChevronDown, MapPinPlus, User } from "lucide-react";
 import { JobInfoDialog } from "@/components/jobs/JobInfoDialog";
 import { ClientInfoDialog } from "@/components/jobs/ClientInfoDialog";
 import { AddSignServiceSidebar } from "@/components/jobs/AddSignServiceSidebar";
 import Link from "next/link";
 import { PageTabs } from "@/components/ui/page-tabs";
+import { useSearchParams } from "next/navigation";
+import { useUser } from "@stackframe/stack";
 
 export default function AddJobPage() {
-  const [jobInfoOpen, setJobInfoOpen] = useState(true);
+  const searchParams = useSearchParams();
+  const user = useUser();
+  const jobId = searchParams.get("id");
+
+  const [jobInfoOpen, setJobInfoOpen] = useState(!jobId); // Don't show dialog if editing existing job
   const [clientInfoOpen, setClientInfoOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState("All");
   const [addSignSidebarOpen, setAddSignSidebarOpen] = useState(false);
+  const [loading, setLoading] = useState(!!jobId);
   const [jobData, setJobData] = useState<{
     jobName?: string;
     jobNumber?: string;
@@ -28,16 +35,110 @@ export default function AddJobPage() {
     clientPhone?: string;
   }>({});
 
-  const handleJobInfoSave = (data: any) => {
+  const handleJobInfoSave = async (data: any) => {
     setJobData(data);
+
+    // If editing an existing job, save the changes
+    if (jobId) {
+      try {
+        const res = await fetch(`/api/jobs/${jobId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            job_name: data.jobName,
+            job_no: data.jobNumber,
+            // Add other fields as needed
+          }),
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to update job");
+        }
+      } catch (error) {
+        console.error("Error updating job:", error);
+      }
+    }
+
     setJobInfoOpen(false);
     setClientInfoOpen(true);
   };
 
-  const handleClientInfoSave = (data: any) => {
+  const handleClientInfoSave = async (data: any) => {
     setClientData(data);
+
+    // If editing an existing job, save the client changes
+    if (jobId) {
+      try {
+        const res = await fetch(`/api/jobs/${jobId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            // Add client-related fields as needed
+            // This might need to be updated based on your database schema
+          }),
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to update job client info");
+        }
+      } catch (error) {
+        console.error("Error updating job client info:", error);
+      }
+    }
+
     setClientInfoOpen(false);
   };
+
+  // Load existing job data when jobId is provided
+  useEffect(() => {
+    const loadJobData = async () => {
+      if (!jobId || !user) return;
+
+      try {
+        const res = await fetch(`/api/jobs/${jobId}`, {
+          headers: { "request.user.id": user.id },
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch job data");
+        }
+
+        const job = await res.json();
+
+        // Populate job data with existing values
+        setJobData({
+          jobName: job.job_name,
+          jobNumber: job.job_no,
+          jobLocation: `${job.site_street}, ${job.site_city}, ${job.site_state} ${job.site_postcode}`,
+          brand: job.brand_id, // You might want to fetch brand name separately
+          manager: job.manager_id,
+          creator: job.creator_id,
+          pm: job.pm_id,
+        });
+
+        // You can also load client data if available
+        if (job.client_id) {
+          // Fetch client data here if needed
+          setClientData({
+            clientName: "Client Name", // Replace with actual client data
+            clientLocation: "Client Location",
+            clientContact: "Client Contact",
+            clientPhone: "Client Phone",
+          });
+        }
+      } catch (error) {
+        console.error("Error loading job data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadJobData();
+  }, [jobId, user]);
 
   const hasJobData =
     Object.keys(jobData).length > 0 &&
@@ -63,11 +164,15 @@ export default function AddJobPage() {
             </Link>
             <section>
               <h1 className="text-[16px] font-semibold">
-                Dave&apos;s Hot Chicken - Coasteal Way (14039R)
+                {loading
+                  ? "Loading..."
+                  : jobId
+                  ? `${jobData.jobName || "Job"} - ${jobData.jobNumber || ""}`
+                  : "Create New Job"}
               </h1>
               <div className="text-sm text-[#60646C] flex items-center gap-2">
                 <span className="font-semibold">Last Updated:</span>
-                Jun 13th, 10:07 am
+                {loading ? "Loading..." : "Jun 13th, 10:07 am"}
                 <div className="size-2 bg-gray-300 rounded-full" />
                 <span className="font-semibold">Version:</span> 1.0
               </div>
@@ -98,50 +203,61 @@ export default function AddJobPage() {
           <section className="flex flex-1">
             {/* Table */}
             <div className="border-l flex-1 overflow-hidden flex flex-col">
-              <table className="w-full">
-                <thead className="bg-[#F9F9FB]">
-                  <tr className="border-b border-[#EAEBEE]">
-                    <th className="text-left p-4 text-xs font-semibold w-16">
-                      Qty
-                    </th>
-                    <th className="text-left p-4 text-xs font-semibold w-32">
-                      Sign
-                    </th>
-                    <th className="text-left p-4 text-xs font-semibold w-96">
-                      Description
-                    </th>
-                    <th className="text-left p-4 text-xs font-semibold w-32">
-                      Sign Price
-                    </th>
-                    <th className="text-left p-4 text-xs font-semibold w-32">
-                      Install Price
-                    </th>
-                    <th className="text-left p-4 text-xs font-semibold w-32">
-                      Sign Budget
-                    </th>
-                    <th className="text-left p-4 text-xs font-semibold w-32">
-                      Install Budget
-                    </th>
-                  </tr>
-                </thead>
-              </table>
-              <div className="flex-1 flex items-center justify-center">
-                <div className="flex flex-col items-center justify-center text-center">
-                  <h3 className="text-2xl font-semibold mb-2">
-                    Add your first sign.
-                  </h3>
-                  <p className="text-[#0D1216B2] text-[14px] mb-6 max-w-md">
-                    You&apos;ll use this section to add all the signs needed for
-                    this proposal.
-                  </p>
-                  <button
-                    onClick={() => setAddSignSidebarOpen(true)}
-                    className="bg-[#F9F9FB] h-10 flex items-center justify-center px-4 gap-2 border border-[#E0E0E0] rounded-md font-semibold text-[14px]"
-                  >
-                    Add Sign/Service
-                  </button>
+              {loading ? (
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading job data...</p>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <>
+                  <table className="w-full">
+                    <thead className="bg-[#F9F9FB]">
+                      <tr className="border-b border-[#EAEBEE]">
+                        <th className="text-left p-4 text-xs font-semibold w-16">
+                          Qty
+                        </th>
+                        <th className="text-left p-4 text-xs font-semibold w-32">
+                          Sign
+                        </th>
+                        <th className="text-left p-4 text-xs font-semibold w-96">
+                          Description
+                        </th>
+                        <th className="text-left p-4 text-xs font-semibold w-32">
+                          Sign Price
+                        </th>
+                        <th className="text-left p-4 text-xs font-semibold w-32">
+                          Install Price
+                        </th>
+                        <th className="text-left p-4 text-xs font-semibold w-32">
+                          Sign Budget
+                        </th>
+                        <th className="text-left p-4 text-xs font-semibold w-32">
+                          Install Budget
+                        </th>
+                      </tr>
+                    </thead>
+                  </table>
+                  <div className="flex-1 flex items-center justify-center">
+                    <div className="flex flex-col items-center justify-center text-center">
+                      <h3 className="text-2xl font-semibold mb-2">
+                        Add your first sign.
+                      </h3>
+                      <p className="text-[#0D1216B2] text-[14px] mb-6 max-w-md">
+                        You&apos;ll use this section to add all the signs needed
+                        for this proposal.
+                      </p>
+                      <button
+                        onClick={() => setAddSignSidebarOpen(true)}
+                        className="bg-[#F9F9FB] h-10 flex items-center justify-center px-4 gap-2 border border-[#E0E0E0] rounded-md font-semibold text-[14px]"
+                      >
+                        Add Sign/Service
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
             {/* Right Sidebar */}
             <div className="w-[360px] flex flex-col h-full border-l border-[#EAEBEE]">
