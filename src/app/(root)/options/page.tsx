@@ -1,7 +1,15 @@
 "use client";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { useUser } from "@stackframe/stack";
 import { PageTabs } from "@/components/ui/page-tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 // Define interfaces for our data structures
 export interface OptionData {
@@ -25,6 +33,98 @@ interface RowData {
   status: string;
   values: string[];
 }
+
+// Edit Option Value Dialog Component
+interface EditOptionValueDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onUpdate: (valueName: string, addPrice: string) => void;
+  initialValue: string;
+}
+
+const EditOptionValueDialog = ({
+  isOpen,
+  onClose,
+  onUpdate,
+  initialValue,
+}: EditOptionValueDialogProps) => {
+  const [valueName, setValueName] = useState(initialValue);
+  const [addPrice, setAddPrice] = useState("");
+  const valueNameRef = useRef<HTMLInputElement>(null);
+
+  // Reset form when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      setValueName(initialValue);
+      setAddPrice("");
+      // Prevent auto-focus and text selection
+      setTimeout(() => {
+        if (valueNameRef.current) {
+          valueNameRef.current.blur();
+        }
+      }, 0);
+    }
+  }, [isOpen, initialValue]);
+
+  const handleUpdate = () => {
+    onUpdate(valueName, addPrice);
+    onClose();
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[370px]" showCloseButton={false}>
+        <DialogHeader>
+          <div className="flex justify-between items-start">
+            <DialogTitle className="text-[16px] font-semibold">
+              Edit Option Value
+            </DialogTitle>
+          </div>
+        </DialogHeader>
+        <div className="space-y-4 mt-1">
+          <div>
+            <Label htmlFor="valueName" className="text-sm font-medium">
+              Value name
+            </Label>
+            <Input
+              ref={valueNameRef}
+              id="valueName"
+              value={valueName}
+              onChange={(e) => setValueName(e.target.value)}
+              className="mt-1 w-full border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0"
+              autoFocus={false}
+            />
+          </div>
+          <div>
+            <Label htmlFor="addPrice" className="text-sm font-medium">
+              Add Price
+            </Label>
+            <Input
+              id="addPrice"
+              value={addPrice}
+              onChange={(e) => setAddPrice(e.target.value)}
+              className="mt-1 w-full border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0"
+            />
+          </div>
+        </div>
+        <section className="flex items-center text-[14px] mt-2 gap-2 font-semibold">
+          <button
+            onClick={onClose}
+            className="bg-[#F9F9FB] h-10 w-full flex items-center justify-center px-3 gap-2 border border-[#E0E0E0] rounded-md"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleUpdate}
+            className="h-10 bg-black w-full flex items-center text-white justify-center px-3 gap-2 rounded-md"
+          >
+            Update
+          </button>
+        </section>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 // StatusCell component that handles different statuses
 const StatusCell = ({ status }: { status: string }) => {
@@ -84,16 +184,23 @@ const OptionIconCell = ({
   );
 };
 
-// Values cell renderer
-const ValuesCell = ({ values }: { values: string[] }) => (
+// Values cell renderer with clickable values
+const ValuesCell = ({
+  values,
+  onValueClick,
+}: {
+  values: string[];
+  onValueClick: (value: string) => void;
+}) => (
   <div className="flex flex-wrap justify-start gap-1">
     {values.map((val: string, idx: number) => (
-      <span
+      <button
         key={idx}
-        className="bg-gray-100 px-2 py-1 rounded text-xs font-medium border border-gray-300"
+        className="bg-[#F9F9FB] px-2 py-1 rounded text-xs font-medium border border-[#E0E0E0] cursor-pointer hover:bg-gray-200 transition-colors"
+        onClick={() => onValueClick(val)}
       >
         {val}
-      </span>
+      </button>
     ))}
   </div>
 );
@@ -105,6 +212,8 @@ const OptionsPage = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedValue, setSelectedValue] = useState("");
 
   // Fetch options data when component mounts or user changes
   useEffect(() => {
@@ -172,6 +281,17 @@ const OptionsPage = () => {
     setSelectedRows((prev) =>
       prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
     );
+  };
+
+  // Handle value click to open edit dialog
+  const handleValueClick = (value: string) => {
+    setSelectedValue(value);
+    setEditDialogOpen(true);
+  };
+
+  // Handle dialog update
+  const handleUpdateValue = (valueName: string, addPrice: string) => {
+    console.log("Updated value:", { valueName, addPrice });
   };
 
   const isAllSelected =
@@ -256,7 +376,10 @@ const OptionsPage = () => {
                   <StatusCell status={row.status} />
                 </td>
                 <td className="p-4 text-center text-[14px] flex-1 align-middle">
-                  <ValuesCell values={row.values} />
+                  <ValuesCell
+                    values={row.values}
+                    onValueClick={handleValueClick}
+                  />
                 </td>
               </tr>
             ))}
@@ -279,6 +402,13 @@ const OptionsPage = () => {
       <div className="border border-[#DEE1EA] overflow-hidden">
         <div>{renderTable()}</div>
       </div>
+
+      <EditOptionValueDialog
+        isOpen={editDialogOpen}
+        onClose={() => setEditDialogOpen(false)}
+        onUpdate={handleUpdateValue}
+        initialValue={selectedValue}
+      />
     </div>
   );
 };

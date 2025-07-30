@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ArrowLeft, Plus, ChevronDown, MapPinPlus, User } from "lucide-react";
 import { JobInfoDialog } from "@/components/jobs/JobInfoDialog";
 import { ClientInfoDialog } from "@/components/jobs/ClientInfoDialog";
+import { AddSignServiceSidebar } from "@/components/jobs/AddSignServiceSidebar";
 import Link from "next/link";
 import { PageTabs } from "@/components/ui/page-tabs";
 
@@ -10,6 +11,7 @@ export default function AddJobPage() {
   const [jobInfoOpen, setJobInfoOpen] = useState(true);
   const [clientInfoOpen, setClientInfoOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState("All");
+  const [addSignSidebarOpen, setAddSignSidebarOpen] = useState(false);
   const [jobData, setJobData] = useState<{
     jobName?: string;
     jobNumber?: string;
@@ -131,7 +133,10 @@ export default function AddJobPage() {
                     You&apos;ll use this section to add all the signs needed for
                     this proposal.
                   </p>
-                  <button className="bg-[#F9F9FB] h-10 flex items-center justify-center px-4 gap-2 border border-[#E0E0E0] rounded-md font-semibold text-[14px]">
+                  <button 
+                    onClick={() => setAddSignSidebarOpen(true)}
+                    className="bg-[#F9F9FB] h-10 flex items-center justify-center px-4 gap-2 border border-[#E0E0E0] rounded-md font-semibold text-[14px]"
+                  >
                     Add Sign/Service
                   </button>
                 </div>
@@ -274,6 +279,10 @@ export default function AddJobPage() {
         onComplete={handleClientInfoSave}
         clientData={clientData}
         setClientData={setClientData}
+      />
+      <AddSignServiceSidebar
+        isOpen={addSignSidebarOpen}
+        onClose={() => setAddSignSidebarOpen(false)}
       />
     </div>
   );
