@@ -1,16 +1,70 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ListFilter, ArrowUpDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { PageTabs } from "@/components/ui/page-tabs";
+import { useUser } from "@stackframe/stack";
+
+export interface JobData {
+  id: string;
+  brand_id: string;
+  contact_id: string;
+  site_street: string;
+  site_city: string;
+  site_state: string;
+  site_postcode: string;
+  site_country: string;
+  status: string;
+  proposal_no: number;
+  proposal_seq: number;
+  creator_id: string;
+  pm_id: string;
+  job_name: string[];
+  job_no: number;
+  current_pricing_version_id: string;
+}
 
 export default function JobsPage() {
   const [tab, setTab] = useState<"all" | "drafts" | "sent" | "signed">("all");
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [jobs, setJobs] = useState<JobData[]>([]);
   const router = useRouter();
+
+  const user = useUser();
 
   const handleNewJob = () => {
     router.push("/jobs/add-job");
   };
+
+  useEffect(() => {
+    const fetchBrands = async () => {
+      if (!user) return; // Don't fetch if user is not available
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch("/api/jobs", {
+          headers: { "request.user.id": user.id },
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch brands");
+        }
+
+        const data = await res.json();
+        setJobs(data.data || []);
+      } catch (error) {
+        console.error("Error fetching brands:", error);
+        setError(
+          error instanceof Error ? error.message : "An unknown error occurred"
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBrands();
+  }, []);
 
   const tabs = ["all", "drafts", "sent", "signed"];
 
