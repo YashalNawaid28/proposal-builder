@@ -31,6 +31,7 @@ export default function AddJobPage() {
   const handleJobInfoSave = (data: any) => {
     setJobData(data);
     setJobInfoOpen(false);
+    setClientInfoOpen(true);
   };
 
   const handleClientInfoSave = (data: any) => {
@@ -133,7 +134,7 @@ export default function AddJobPage() {
                     You&apos;ll use this section to add all the signs needed for
                     this proposal.
                   </p>
-                  <button 
+                  <button
                     onClick={() => setAddSignSidebarOpen(true)}
                     className="bg-[#F9F9FB] h-10 flex items-center justify-center px-4 gap-2 border border-[#E0E0E0] rounded-md font-semibold text-[14px]"
                   >
