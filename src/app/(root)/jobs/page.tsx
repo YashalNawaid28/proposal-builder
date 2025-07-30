@@ -31,7 +31,6 @@ export interface JobData {
   current_pricing_version_id: string | null;
   job_name: string;
   job_no: string;
-  manager_id: string;
 }
 
 // Simplified row data structure for the table
