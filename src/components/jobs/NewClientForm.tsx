@@ -11,7 +11,7 @@ interface NewClientFormProps {
 export const NewClientForm = ({ onSubmit, onCancel }: NewClientFormProps) => {
   const [formData, setFormData] = useState({
     clientName: "",
-    jobNumber: "",
+    location: "",
     clientContact: "",
     clientPhone: "",
   });
@@ -36,14 +36,14 @@ export const NewClientForm = ({ onSubmit, onCancel }: NewClientFormProps) => {
         />
       </div>
       <div>
-        <Label htmlFor="newJobNumber" className="text-sm font-medium">
-          Job Number
+        <Label htmlFor="location" className="text-sm font-medium">
+          Location
         </Label>
         <Input
-          id="newJobNumber"
-          value={formData.jobNumber}
+          id="location"
+          value={formData.location}
           onChange={(e) =>
-            setFormData({ ...formData, jobNumber: e.target.value })
+            setFormData({ ...formData, location: e.target.value })
           }
           className="mt-1 w-full border-[#DEE1EA] focus:ring-0 focus:outline-none"
         />
@@ -63,7 +63,7 @@ export const NewClientForm = ({ onSubmit, onCancel }: NewClientFormProps) => {
       </div>
       <div>
         <Label htmlFor="newClientPhone" className="text-sm font-medium">
-          Job Number
+          Phone
         </Label>
         <Input
           id="newClientPhone"
