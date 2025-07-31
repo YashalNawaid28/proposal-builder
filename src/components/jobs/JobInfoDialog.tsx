@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useUser } from "@stackframe/stack";
 
 interface Brand {
   id: string;
@@ -60,6 +61,7 @@ export const JobInfoDialog = ({
   const [brands, setBrands] = useState<Brand[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
+  const user = useUser();
 
   useEffect(() => {
     if (isOpen) {
@@ -70,39 +72,39 @@ export const JobInfoDialog = ({
 
   const fetchBrands = async () => {
     try {
-      const response = await fetch("/api/brands");
+      const response = await fetch('/api/brands');
       const result = await response.json();
       if (result.data) {
         setBrands(result.data);
       }
     } catch (error) {
-      console.error("Error fetching brands:", error);
+      console.error('Error fetching brands:', error);
     }
   };
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch("/api/users");
+      const response = await fetch('/api/users');
       const result = await response.json();
       if (result.data) {
         setUsers(result.data);
       }
     } catch (error) {
-      console.error("Error fetching users:", error);
+      console.error('Error fetching users:', error);
     }
   };
 
   // Function to parse address into components
   const parseAddress = (address: string) => {
     // Simple address parsing - you might want to use a more sophisticated library
-    const parts = address.split(",").map((part) => part.trim());
-
+    const parts = address.split(',').map(part => part.trim());
+    
     // Default structure: Street, City, State Postcode, Country
-    let siteStreet = "";
-    let siteCity = "";
-    let siteState = "";
-    let sitePostcode = "";
-    let siteCountry = "";
+    let siteStreet = '';
+    let siteCity = '';
+    let siteState = '';
+    let sitePostcode = '';
+    let siteCountry = '';
 
     if (parts.length >= 1) siteStreet = parts[0];
     if (parts.length >= 2) siteCity = parts[1];
@@ -124,29 +126,35 @@ export const JobInfoDialog = ({
       siteCity,
       siteState,
       sitePostcode,
-      siteCountry,
+      siteCountry
     };
   };
 
   const handleSave = async () => {
+    if (!user) {
+      console.error('User not available');
+      return;
+    }
+
     setLoading(true);
     try {
       // Parse the address into components
       const addressComponents = parseAddress(jobData.jobLocation || "");
 
       const formData = new FormData();
-      formData.append("job_name", jobData.jobName || "");
-      formData.append("job_number", jobData.jobNumber || "");
-      formData.append("site_street", addressComponents.siteStreet);
-      formData.append("site_city", addressComponents.siteCity);
-      formData.append("site_state", addressComponents.siteState);
-      formData.append("site_postcode", addressComponents.sitePostcode);
-      formData.append("site_country", addressComponents.siteCountry);
-      formData.append("brand_id", jobData.brandId || "");
-      formData.append("manager_id", jobData.managerId || "");
+      formData.append('job_name', jobData.jobName || '');
+      formData.append('job_number', jobData.jobNumber || '');
+      formData.append('site_street', addressComponents.siteStreet);
+      formData.append('site_city', addressComponents.siteCity);
+      formData.append('site_state', addressComponents.siteState);
+      formData.append('site_postcode', addressComponents.sitePostcode);
+      formData.append('site_country', addressComponents.siteCountry);
+      formData.append('brand_id', jobData.brandId || '');
+      formData.append('pm_id', jobData.managerId || ''); // Store as pm_id instead of manager_id
 
-      const response = await fetch("/api/jobs/add-job-info", {
-        method: "POST",
+      const response = await fetch('/api/jobs/add-job-info', {
+        method: 'POST',
+        headers: { "request.user.id": user.id },
         body: formData,
       });
 
@@ -154,10 +162,10 @@ export const JobInfoDialog = ({
         const result = await response.json();
         onNext({ ...jobData, jobId: result.data?.[0]?.id });
       } else {
-        console.error("Error saving job:", await response.text());
+        console.error('Error saving job:', await response.text());
       }
     } catch (error) {
-      console.error("Error saving job:", error);
+      console.error('Error saving job:', error);
     } finally {
       setLoading(false);
     }
@@ -277,7 +285,7 @@ export const JobInfoDialog = ({
             disabled={loading}
             className="h-10 bg-black w-full flex items-center text-white justify-center px-3 gap-2 rounded-md disabled:opacity-50"
           >
-            {loading ? "Saving..." : "Next: Client Info"}
+            {loading ? 'Saving...' : 'Next: Client Info'}
           </button>
         </section>
       </DialogContent>

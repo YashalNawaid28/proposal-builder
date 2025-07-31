@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import {
   Dialog,
@@ -10,6 +10,21 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NewClientForm } from "@/components/jobs/NewClientForm";
+
+interface Client {
+  id: string;
+  legal_name: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  postcode?: string;
+  country?: string;
+  client_contact?: string;
+  created_at?: string;
+  updated_at?: string;
+}
 
 interface ClientInfoDialogProps {
   isOpen: boolean;
@@ -30,20 +45,47 @@ export const ClientInfoDialog = ({
   const [selectedClient, setSelectedClient] = useState("");
   const [showClientForm, setShowClientForm] = useState(false);
   const [showClientList, setShowClientList] = useState(false);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const clients = [
-    { id: "1", name: "Customer 1" },
-    { id: "2", name: "Customer 2" },
-    { id: "3", name: "Customer 3" },
-  ];
+  // Fetch clients from API
+  useEffect(() => {
+    const fetchClients = async () => {
+      if (!isOpen) return;
+      
+      setLoading(true);
+      try {
+        const response = await fetch('/api/clients');
+        const result = await response.json();
+        if (result.data) {
+          setClients(result.data);
+        }
+      } catch (error) {
+        console.error('Error fetching clients:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const filteredClients = clients; // Show all clients, no filtering
+    fetchClients();
+  }, [isOpen]);
+
+  // Filter clients based on search term
+  const filteredClients = clients.filter((client) =>
+    (client.legal_name?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+  );
 
   const handleClientSelect = (clientId: string) => {
     setSelectedClient(clientId);
     const client = clients.find((c) => c.id === clientId);
     if (client) {
-      setClientData({ ...clientData, clientName: client.name });
+      setClientData({ 
+        ...clientData, 
+        clientName: client.legal_name,
+        clientLocation: `${client.address || ''}, ${client.city || ''}, ${client.state || ''} ${client.postcode || ''}`.trim().replace(/^,\s*/, ''),
+        clientContact: client.client_contact || client.legal_name,
+        clientPhone: client.phone || ''
+      });
     }
   };
 
@@ -56,8 +98,39 @@ export const ClientInfoDialog = ({
     setShowClientForm(false);
   };
 
-  const handleSave = () => {
-    onComplete(clientData);
+  const handleSave = async () => {
+    if (!selectedClient) {
+      console.error('No client selected');
+      return;
+    }
+
+    try {
+      // Get the job ID from the URL or job data
+      const urlParams = new URLSearchParams(window.location.search);
+      const jobId = urlParams.get('id');
+
+      if (jobId) {
+        // Update the existing job with the client ID
+        const response = await fetch(`/api/jobs/${jobId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            client_id: selectedClient,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to update job with client');
+        }
+      }
+
+      // Call the onComplete callback with the client data
+      onComplete(clientData);
+    } catch (error) {
+      console.error('Error updating job with client:', error);
+    }
   };
 
   const handleSearchFocus = () => {
@@ -67,7 +140,7 @@ export const ClientInfoDialog = ({
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
-    // Always show list for design purposes
+    // Show list when user types
     setShowClientList(true);
   };
 
@@ -132,37 +205,59 @@ export const ClientInfoDialog = ({
                 </div>
               </div>
               {showClientList && (
-                <div className="border border-[#E0E0E0] rounded-md bg-white">
-                  {filteredClients.map((client) => (
-                    <div
-                      key={client.id}
-                      className={`px-3 py-2 cursor-pointer border-b border-[#E0E0E0] last:border-b-0 ${
-                        selectedClient === client.id
-                          ? "bg-[#F9F9FB]"
-                          : "hover:bg-[#F9F9FB]"
-                      }`}
-                      onClick={() => handleClientSelect(client.id)}
-                    >
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium text-[#1F2937]">
-                          {client.name}
-                        </span>
-                        {selectedClient === client.id && (
-                          <svg
-                            className="w-4 h-4 text-green-600"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        )}
-                      </div>
+                <div className="border border-[#E0E0E0] rounded-md bg-white max-h-60 overflow-y-auto">
+                  {loading ? (
+                    <div className="px-3 py-4 text-center text-gray-500">
+                      Loading clients...
                     </div>
-                  ))}
+                  ) : filteredClients.length > 0 ? (
+                    filteredClients.map((client) => (
+                      <div
+                        key={client.id}
+                        className={`px-3 py-2 cursor-pointer border-b border-[#E0E0E0] last:border-b-0 ${
+                          selectedClient === client.id
+                            ? "bg-[#F9F9FB]"
+                            : "hover:bg-[#F9F9FB]"
+                        }`}
+                        onClick={() => handleClientSelect(client.id)}
+                      >
+                        <div className="flex justify-between items-center">
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium text-[#1F2937]">
+                              {client.legal_name}
+                            </span>
+                            {client.email && (
+                              <span className="text-xs text-gray-500">
+                                {client.email}
+                              </span>
+                            )}
+                            {client.city && (
+                              <span className="text-xs text-gray-500">
+                                {client.city}, {client.state}
+                              </span>
+                            )}
+                          </div>
+                          {selectedClient === client.id && (
+                            <svg
+                              className="w-4 h-4 text-green-600"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="px-3 py-4 text-center text-gray-500">
+                      {searchTerm ? 'No clients found' : 'No clients available'}
+                    </div>
+                  )}
                   <div className="border-t border-[#E0E0E0]">
                     <div
                       className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-[#F9F9FB]"

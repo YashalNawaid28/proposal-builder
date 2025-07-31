@@ -24,9 +24,15 @@ export default function AddJobPage() {
     jobNumber?: string;
     jobLocation?: string;
     brand?: string;
+    brandName?: string; // Add brand name field
     manager?: string;
     creator?: string;
+    creatorName?: string; // Add creator name field
+    creatorAvatar?: string | null; // Add creator avatar field
     pm?: string;
+    pmName?: string; // Add PM name field
+    pmAvatar?: string | null; // Add PM avatar field
+    createdDate?: string; // Add created date field
   }>({});
   const [clientData, setClientData] = useState<{
     clientName?: string;
@@ -34,6 +40,91 @@ export default function AddJobPage() {
     clientContact?: string;
     clientPhone?: string;
   }>({});
+
+  // Function to generate initials from display name
+  const getInitials = (displayName: string) => {
+    return displayName
+      .split(' ')
+      .map(name => name.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  // Function to format date like "Jul 13th, 2025"
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const month = date.toLocaleDateString('en-US', { month: 'short' });
+    const day = date.getDate();
+    const year = date.getFullYear();
+    
+    // Add ordinal suffix to day
+    const getOrdinalSuffix = (day: number) => {
+      if (day > 3 && day < 21) return 'th';
+      switch (day % 10) {
+        case 1: return 'st';
+        case 2: return 'nd';
+        case 3: return 'rd';
+        default: return 'th';
+      }
+    };
+    
+    return `${month} ${day}${getOrdinalSuffix(day)}, ${year}`;
+  };
+
+  // Function to fetch brand name by ID
+  const fetchBrandName = async (brandId: string) => {
+    try {
+      const response = await fetch('/api/brands');
+      const result = await response.json();
+      if (result.data) {
+        const brand = result.data.find((b: any) => b.id === brandId);
+        return brand ? brand.brand_name : 'Unknown Brand';
+      }
+    } catch (error) {
+      console.error('Error fetching brand:', error);
+    }
+    return 'Unknown Brand';
+  };
+
+  // Function to fetch user name by ID
+  const fetchUserName = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/users/${userId}`);
+      if (response.ok) {
+        const user = await response.json();
+        return {
+          displayName: user.display_name || 'Unknown User',
+          avatarUrl: user.avatar_url || null
+        };
+      }
+    } catch (error) {
+      console.error('Error fetching user:', error);
+    }
+    return {
+      displayName: 'Unknown User',
+      avatarUrl: null
+    };
+  };
+
+  // Function to fetch client data by ID
+  const fetchClientData = async (clientId: string) => {
+    try {
+      const response = await fetch(`/api/clients/${clientId}`);
+      if (response.ok) {
+        const client = await response.json();
+        return {
+          clientName: client.legal_name,
+          clientLocation: `${client.street || ''}, ${client.city || ''}, ${client.state || ''} ${client.postcode || ''}`.trim().replace(/^,\s*/, ''),
+          clientContact: client.client_contact || client.legal_name,
+          clientPhone: client.phone || '',
+        };
+      }
+    } catch (error) {
+      console.error('Error fetching client:', error);
+    }
+    return null; // Return null when no client is found
+  };
 
   const handleJobInfoSave = async (data: any) => {
     setJobData(data);
@@ -109,27 +200,61 @@ export default function AddJobPage() {
 
         const job = await res.json();
 
+        // Fetch brand name if brand_id exists
+        let brandName = 'Unknown Brand';
+        if (job.brand_id) {
+          brandName = await fetchBrandName(job.brand_id);
+        }
+
+        // Fetch creator name and avatar if creator_id exists
+        let creatorData = { displayName: 'Unknown User', avatarUrl: null };
+        if (job.creator_id) {
+          creatorData = await fetchUserName(job.creator_id);
+        }
+
+        // Fetch PM name and avatar if pm_id exists
+        let pmData = { displayName: 'Unknown PM', avatarUrl: null };
+        if (job.pm_id) {
+          pmData = await fetchUserName(job.pm_id);
+        }
+
+        // Fetch client data if client_id exists
+        let clientData = {
+          clientName: 'Unknown Client',
+          clientLocation: 'Unknown Location',
+          clientContact: 'Unknown Contact',
+          clientPhone: 'Unknown Phone',
+        };
+        if (job.client_id) {
+          const fetchedClientData = await fetchClientData(job.client_id);
+          if (fetchedClientData) {
+            clientData = fetchedClientData;
+          }
+        }
+
+        // Format the created_at date
+        const createdAt = new Date(job.created_at);
+        const formattedDate = formatDate(job.created_at);
+
         // Populate job data with existing values
         setJobData({
           jobName: job.job_name,
           jobNumber: job.job_no,
           jobLocation: `${job.site_street}, ${job.site_city}, ${job.site_state} ${job.site_postcode}`,
-          brand: job.brand_id, // You might want to fetch brand name separately
+          brand: job.brand_id, // Keep the ID for reference
+          brandName: brandName, // Add the brand name
           manager: job.manager_id,
-          creator: job.creator_id,
+          creator: job.creator_id, // Keep the ID for reference
+          creatorName: creatorData.displayName, // Add the creator name
+          creatorAvatar: creatorData.avatarUrl, // Add the creator avatar
           pm: job.pm_id,
+          pmName: pmData.displayName, // Add the PM name
+          pmAvatar: pmData.avatarUrl, // Add the PM avatar
+          createdDate: formattedDate, // Add the created date
         });
 
-        // You can also load client data if available
-        if (job.client_id) {
-          // Fetch client data here if needed
-          setClientData({
-            clientName: "Client Name", // Replace with actual client data
-            clientLocation: "Client Location",
-            clientContact: "Client Contact",
-            clientPhone: "Client Phone",
-          });
-        }
+        // Set the actual client data
+        setClientData(clientData);
       } catch (error) {
         console.error("Error loading job data:", error);
       } finally {
@@ -148,8 +273,9 @@ export default function AddJobPage() {
       jobData.jobNumber);
   const hasClientData =
     Object.keys(clientData).length > 0 &&
-    (clientData.clientName ||
-      clientData.clientLocation ||
+    clientData.clientName &&
+    clientData.clientName !== 'Unknown Client' &&
+    (clientData.clientLocation ||
       clientData.clientContact ||
       clientData.clientPhone);
 
@@ -262,51 +388,65 @@ export default function AddJobPage() {
             {/* Right Sidebar */}
             <div className="w-[360px] flex flex-col h-full border-l border-[#EAEBEE]">
               {/* Job Info Section */}
-              <section className="h-full w-full flex justify-center items-center border-b border-[#EAEBEE]">
+              <section className={`h-full w-full flex p-[16px] border-b border-[#EAEBEE] ${hasJobData ? 'justify-start items-start' : 'justify-center items-center'}`}>
                 {hasJobData ? (
-                  <div className="space-y-3">
-                    <h2 className="text-lg font-semibold text-gray-900">
+                  <div className="flex flex-col gap-[24px] w-full">
+                    <h2 className="text-[18px] font-[600] text-[#15191E]">
                       Job Info
                     </h2>
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">Brand</p>
-                      <p className="text-gray-900">
-                        {jobData.brand || "Dave's Hot Chicken"}
+                    <div className="text-[14px] text-[#60646C] font-[500] flex justify-between">
+                      <p >Brand</p>
+                      <p className="font-[400]">
+                        {jobData?.brandName || 'Unknown Brand'}
                       </p>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">
-                        Location
-                      </p>
-                      <p className="text-gray-900">
+                    <div className="text-[14px] text-[#60646C] font-[500] flex justify-between items-start">
+                      <p>Location</p>
+                      <p className="font-[400] text-right max-w-[200px] leading-[18px]">
                         {jobData.jobLocation ||
                           "100 Coastal Way, Chesapeake, VA 23320, USA"}
                       </p>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">
+                    <div className="text-[14px] text-[#60646C] font-[500] flex justify-between">
+                      <p>
                         Created
                       </p>
-                      <p className="text-gray-900">Jul 13th, 2025</p>
+                      <p className="font-[400]">
+                        {jobData.createdDate || "Loading..."}
+                      </p>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">
+                    <div className="text-[14px] text-[#60646C] font-[500] flex justify-between">
+                      <p>
                         Creator
                       </p>
                       <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-gray-300 rounded-full"></div>
-                        <span className="text-gray-900">
-                          {jobData.creator || "John Doe"}
-                        </span>
+                        {jobData.creatorAvatar ? (
+                          <img 
+                            src={jobData.creatorAvatar} 
+                            alt={jobData.creatorName || "Creator"} 
+                            className="w-6 h-6 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center text-xs font-medium text-gray-700">
+                            {jobData.creatorName ? getInitials(jobData.creatorName) : "U"}
+                          </div>
+                        )}
                       </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">PM</p>
+                    <div className="text-[14px] text-[#60646C] font-[500] flex justify-between">
+                      <p>PM</p>
                       <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-gray-300 rounded-full"></div>
-                        <span className="text-gray-900">
-                          {jobData.pm || "Jane Smith"}
-                        </span>
+                        {jobData.pmAvatar ? (
+                          <img 
+                            src={jobData.pmAvatar} 
+                            alt={jobData.pmName || "PM"} 
+                            className="w-6 h-6 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center text-xs font-medium text-gray-700">
+                            {jobData.pmName ? getInitials(jobData.pmName) : "P"}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -325,42 +465,34 @@ export default function AddJobPage() {
                 )}
               </section>
               {/* Client Info Section */}
-              <section className="h-full w-full flex justify-center items-center">
-                <div className="flex items-center justify-between"></div>
+              <section className={`h-full w-full flex p-[16px] ${hasClientData ? 'justify-start items-start' : 'justify-center items-center'}`}>
                 {hasClientData ? (
-                  <div className="space-y-3">
-                    <h2 className="text-lg font-semibold text-gray-900">
+                  <div className="flex flex-col gap-[24px] w-full">
+                    <h2 className="text-[18px] font-[600] text-[#15191E]">
                       Client Info
                     </h2>
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">
-                        Client
-                      </p>
-                      <p className="text-gray-900">
-                        {clientData.clientName || "WKS Restaurant Group"}
+                    <div className="text-[14px] text-[#60646C] font-[500] flex justify-between">
+                      <p>Client</p>
+                      <p className="font-[400]">
+                        {clientData.clientName || "Unknown Client"}
                       </p>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">
-                        Location
-                      </p>
-                      <p className="text-gray-900">
-                        {clientData.clientLocation ||
-                          "5856 Corporation Ave. ste 200 Cypress, CA 90630"}
+                    <div className="text-[14px] text-[#60646C] font-[500] flex justify-between items-start">
+                      <p>Location</p>
+                      <p className="font-[400] text-right max-w-[200px] leading-[18px]">
+                        {clientData.clientLocation || "Unknown Location"}
                       </p>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">
-                        Contact
-                      </p>
-                      <p className="text-gray-900">
-                        {clientData.clientContact || "Becca Meussner"}
+                    <div className="text-[14px] text-[#60646C] font-[500] flex justify-between">
+                      <p>Contact</p>
+                      <p className="font-[400]">
+                        {clientData.clientContact || "Unknown Contact"}
                       </p>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">Phone</p>
-                      <p className="text-gray-900">
-                        {clientData.clientPhone || "310.318.3100"}
+                    <div className="text-[14px] text-[#60646C] font-[500] flex justify-between">
+                      <p>Phone</p>
+                      <p className="font-[400]">
+                        {clientData.clientPhone || "Unknown Phone"}
                       </p>
                     </div>
                   </div>
