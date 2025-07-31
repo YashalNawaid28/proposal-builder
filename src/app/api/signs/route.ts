@@ -46,11 +46,7 @@ export async function GET(request: NextRequest) {
       .from("brands")
       .select(`
         *,
-        signs (
-          *,
-          sign_pricing (*),
-          options (*)
-        )
+        signs (*)
       `);
 
     if (error) {
