@@ -36,11 +36,13 @@ export interface SignData {
 interface AddSignServiceSidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  jobId: string;
 }
 
 export const AddSignServiceSidebar = ({
   isOpen,
   onClose,
+  jobId,
 }: AddSignServiceSidebarProps) => {
   const [activeTab, setActiveTab] = useState<"signage" | "services">("signage");
   const [step, setStep] = useState<1 | 2>(1);
@@ -149,6 +151,7 @@ export const AddSignServiceSidebar = ({
       setSignData={setSignData}
       onBack={handleBack}
       onClose={handleClose}
+      jobId={jobId}
     />
   );
 
