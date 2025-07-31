@@ -105,7 +105,7 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
     {
       field: "size",
       headerName: "Size",
-      flex: 1,
+      width: 150,
       cellClass: "font-medium text-center border-r border-[#DEE1EA]",
       headerClass: "text-center",
     },
@@ -113,6 +113,7 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       field: "signPrice",
       headerName: "Sign Price",
       flex: 1,
+      minWidth: 120,
       editable: true,
       valueFormatter: (p: ValueFormatterParams) => formatCurrency(p.value),
       valueParser: (p: ValueParserParams) =>
@@ -124,6 +125,7 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       field: "installPrice",
       headerName: "Install Price",
       flex: 1,
+      minWidth: 120,
       editable: true,
       valueFormatter: (p: ValueFormatterParams) => formatCurrency(p.value),
       valueParser: (p: ValueParserParams) =>
@@ -135,6 +137,7 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       field: "signBudget",
       headerName: "Sign Budget",
       flex: 1,
+      minWidth: 120,
       editable: true,
       valueFormatter: (p: ValueFormatterParams) => formatCurrency(p.value),
       valueParser: (p: ValueParserParams) =>
@@ -146,6 +149,7 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       field: "installBudget",
       headerName: "Install Budget",
       flex: 1,
+      minWidth: 120,
       editable: true,
       valueFormatter: (p: ValueFormatterParams) => formatCurrency(p.value),
       valueParser: (p: ValueParserParams) =>
@@ -157,6 +161,7 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       field: "raceway",
       headerName: "Raceway",
       flex: 1,
+      minWidth: 120,
       editable: true,
       valueFormatter: (p: ValueFormatterParams) => formatCurrency(p.value),
       valueParser: (p: ValueParserParams) =>
@@ -172,34 +177,35 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
     filter: false,
     resizable: true,
     suppressMovable: true,
+    // 👇 Replace the previous cellStyle with this one
+    cellStyle: {
+      display: "flex",
+      alignItems: "center",      // Vertically center
+      justifyContent: "center", // Horizontally center
+    },
   };
 
   return (
-    // The div wrapper is used to apply custom CSS variables for perfect styling.
-    <div
-      className="ag-theme-quartz w-full h-full"
-      style={
-        {
-          minHeight: "200px",
-          width: "100%",
-          height: "100%",
-          flex: "1",
-        } as React.CSSProperties
-      }
-    >
+    <div className="ag-theme-quartz bg-red-300 w-full h-full flex-1">
       <style>{`
         /* Center header text */
         .ag-theme-quartz .ag-header-cell-label {
           justify-content: center !important;
           text-align: center !important;
+          font-size: 13px !important;
+          font-weight: 600 !important;
         }
         .ag-theme-quartz .ag-header-cell {
           text-align: center !important;
+          height: 40px !important;
+          font-size: 13px !important;
+          font-weight: 600 !important;
         }
         
         /* Match borders with main table */
         .ag-theme-quartz .ag-header-cell {
           border-right: 1px solid #DEE1EA !important;
+          border-bottom: none !important;
         }
         .ag-theme-quartz .ag-cell {
           border-right: 1px solid #DEE1EA !important;
@@ -244,13 +250,14 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
         rowData={gridData}
         columnDefs={colDefs}
         defaultColDef={defaultColDef}
+        rowHeight={60}
+        headerHeight={50}
         domLayout="normal"
         enableFillHandle={true}
         enableRangeSelection={true}
         suppressCellFocus={false}
         getRowId={(params: GetRowIdParams) => params.data.size}
         onGridReady={(params) => {
-          console.log("AG Grid is ready:", params);
           setTimeout(() => {
             params.api.sizeColumnsToFit();
           }, 100);
