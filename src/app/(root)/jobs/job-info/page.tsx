@@ -41,6 +41,11 @@ export default function AddJobPage() {
     clientContact?: string;
     clientPhone?: string;
   }>({});
+  const [pricingData, setPricingData] = useState<{
+    versions: any[];
+    lines: any[];
+  }>({ versions: [], lines: [] });
+  const [loadingPricing, setLoadingPricing] = useState(false);
 
   // Function to generate initials from display name
   const getInitials = (displayName: string) => {
@@ -133,6 +138,60 @@ export default function AddJobPage() {
       console.error("Error fetching client:", error);
     }
     return null; // Return null when no client is found
+  };
+
+  // Function to fetch pricing versions for a job
+  const fetchPricingVersions = async (jobId: string) => {
+    try {
+      const response = await fetch(`/api/pricing-versions?job_id=${jobId}`);
+      if (response.ok) {
+        const result = await response.json();
+        return result.data || [];
+      }
+    } catch (error) {
+      console.error("Error fetching pricing versions:", error);
+    }
+    return [];
+  };
+
+  // Function to fetch pricing lines for a pricing version
+  const fetchPricingLines = async (pricingVersionId: string) => {
+    try {
+      const response = await fetch(`/api/pricing-lines?pricing_version_id=${pricingVersionId}`);
+      if (response.ok) {
+        const result = await response.json();
+        return result.data || [];
+      }
+    } catch (error) {
+      console.error("Error fetching pricing lines:", error);
+    }
+    return [];
+  };
+
+  // Function to fetch all pricing data for a job
+  const fetchPricingData = async (jobId: string) => {
+    try {
+      setLoadingPricing(true);
+      
+      // Fetch pricing versions
+      const versions = await fetchPricingVersions(jobId);
+      
+      // Fetch pricing lines for each version
+      const allLines = [];
+      for (const version of versions) {
+        const lines = await fetchPricingLines(version.id);
+        allLines.push(...lines);
+      }
+      
+      setPricingData({
+        versions,
+        lines: allLines
+      });
+    } catch (error) {
+      console.error("Error fetching pricing data:", error);
+    } finally {
+      setLoadingPricing(false);
+    }
   };
 
   const handleJobInfoSave = async (data: any) => {
@@ -264,6 +323,9 @@ export default function AddJobPage() {
 
         // Set the actual client data
         setClientData(clientData);
+        
+        // Fetch pricing data for this job
+        await fetchPricingData(jobId);
       } catch (error) {
         console.error("Error loading job data:", error);
       } finally {
@@ -373,24 +435,61 @@ export default function AddJobPage() {
                         </th>
                       </tr>
                     </thead>
+                    <tbody>
+                      {loadingPricing ? (
+                        <tr>
+                          <td colSpan={7} className="text-center py-8">
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 mx-auto mb-2"></div>
+                            <p className="text-gray-600 text-sm">Loading pricing data...</p>
+                          </td>
+                        </tr>
+                      ) : pricingData.lines.length > 0 ? (
+                        pricingData.lines.map((line: any, index: number) => (
+                          <tr key={line.id} className="border-b border-[#EAEBEE] hover:bg-gray-50">
+                            <td className="p-4 text-sm">{line.qty || 1}</td>
+                            <td className="p-4 text-sm">
+                              {line.signs?.sign_name || "Unknown Sign"}
+                            </td>
+                            <td className="p-4 text-sm">
+                              {line.description_resolved || "No description"}
+                            </td>
+                            <td className="p-4 text-sm font-medium">
+                              ${line.list_price?.toFixed(2) || "0.00"}
+                            </td>
+                            <td className="p-4 text-sm font-medium">
+                              ${line.list_install_price?.toFixed(2) || "0.00"}
+                            </td>
+                            <td className="p-4 text-sm font-medium">
+                              ${line.cost_budget?.toFixed(2) || "0.00"}
+                            </td>
+                            <td className="p-4 text-sm font-medium">
+                              ${line.cost_install_budget?.toFixed(2) || "0.00"}
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={7} className="text-center py-8">
+                            <div className="flex flex-col items-center justify-center text-center">
+                              <h3 className="text-2xl font-semibold mb-2">
+                                Add your first sign.
+                              </h3>
+                              <p className="text-[#0D1216B2] text-[14px] mb-6 max-w-md">
+                                You&apos;ll use this section to add all the signs needed
+                                for this proposal.
+                              </p>
+                              <button
+                                onClick={() => setAddSignSidebarOpen(true)}
+                                className="bg-[#F9F9FB] h-10 flex items-center justify-center px-4 gap-2 border border-[#E0E0E0] rounded-md font-semibold text-[14px]"
+                              >
+                                Add Sign/Service
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
                   </table>
-                  <div className="flex-1 flex items-center justify-center">
-                    <div className="flex flex-col items-center justify-center text-center">
-                      <h3 className="text-2xl font-semibold mb-2">
-                        Add your first sign.
-                      </h3>
-                      <p className="text-[#0D1216B2] text-[14px] mb-6 max-w-md">
-                        You&apos;ll use this section to add all the signs needed
-                        for this proposal.
-                      </p>
-                      <button
-                        onClick={() => setAddSignSidebarOpen(true)}
-                        className="bg-[#F9F9FB] h-10 flex items-center justify-center px-4 gap-2 border border-[#E0E0E0] rounded-md font-semibold text-[14px]"
-                      >
-                        Add Sign/Service
-                      </button>
-                    </div>
-                  </div>
                 </>
               )}
             </div>
@@ -550,7 +649,13 @@ export default function AddJobPage() {
       />
       <AddSignServiceSidebar
         isOpen={addSignSidebarOpen}
-        onClose={() => setAddSignSidebarOpen(false)}
+        onClose={() => {
+          setAddSignSidebarOpen(false);
+          // Refresh pricing data when sidebar closes (in case a new sign was added)
+          if (jobId) {
+            fetchPricingData(jobId);
+          }
+        }}
         jobId={jobId || ""}
       />
     </div>
