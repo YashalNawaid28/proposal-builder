@@ -119,7 +119,7 @@ export const SignConfigurationStep = ({
     };
 
     fetchSizes();
-  }, [selectedSign?.id]);
+  }, [selectedSign?.id, setSignData, signData]);
 
   // Fetch sign data when selected sign changes
   useEffect(() => {
@@ -429,7 +429,7 @@ export const SignConfigurationStep = ({
   const calculateModifiedValues = () => {
     if (!currentPricing) return { signPrice: "0.00", signBudget: "0.00", installBudget: "0.00" };
     
-    let baseSignPrice = currentPricing.sign_price;
+    const baseSignPrice = currentPricing.sign_price;
     let totalModifier = 0;
     
     // Calculate modifiers from selected options

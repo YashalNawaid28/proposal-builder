@@ -334,7 +334,7 @@ export default function AddJobPage() {
     };
 
     loadJobData();
-  }, [jobId, user]);
+  }, [jobId, user, fetchPricingData]);
 
   const hasJobData =
     Object.keys(jobData).length > 0 &&
