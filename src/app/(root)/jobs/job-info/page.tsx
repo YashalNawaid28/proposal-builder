@@ -447,8 +447,21 @@ export default function AddJobPage() {
                         pricingData.lines.map((line: any, index: number) => (
                           <tr key={line.id} className="border-b border-[#EAEBEE] hover:bg-gray-50">
                             <td className="p-4 text-sm">{line.qty || 1}</td>
-                            <td className="p-4 text-sm">
-                              {line.signs?.sign_name || "Unknown Sign"}
+                            <td >
+                              <div className="flex items-center gap-3">
+                                <div className=" rounded-lg flex items-center justify-center px-[8px]">
+                                  {line.signs?.sign_image ? (
+                                    <img 
+                                      src={line.signs.sign_image} 
+                                      alt={line.signs?.sign_name || "Sign"} 
+                                    />
+                                  ) : (
+                                    <div className="text-gray-400 text-xs text-center">
+                                      No Image
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
                             </td>
                             <td className="p-4 text-sm">
                               {line.description_resolved || "No description"}
