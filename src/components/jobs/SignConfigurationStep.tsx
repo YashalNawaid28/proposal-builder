@@ -31,6 +31,15 @@ interface SignPricing {
   raceway: number;
 }
 
+interface OptionValue {
+  id: string;
+  option_id: string;
+  display_label: string;
+  price_modifier_type: string;
+  price_modifier_value: number;
+  created_at: string;
+}
+
 export const SignConfigurationStep = ({
   selectedSign,
   signData,
@@ -49,6 +58,10 @@ export const SignConfigurationStep = ({
   const [loadingPricing, setLoadingPricing] = useState(false);
   const [availableSizes, setAvailableSizes] = useState<string[]>([]);
   const [loadingSizes, setLoadingSizes] = useState(false);
+  const [colorOptions, setColorOptions] = useState<OptionValue[]>([]);
+  const [fabTypeOptions, setFabTypeOptions] = useState<OptionValue[]>([]);
+  const [racewayOptions, setRacewayOptions] = useState<OptionValue[]>([]);
+  const [loadingOptions, setLoadingOptions] = useState(false);
 
   // Fetch available sizes when sign changes
   useEffect(() => {
@@ -92,6 +105,60 @@ export const SignConfigurationStep = ({
 
     fetchSizes();
   }, [selectedSign?.id]);
+
+  // Fetch options for Color, Fab Type, and Raceway
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        setLoadingOptions(true);
+        
+        // Fetch Color options
+        const colorResponse = await fetch("/api/options/get-by-name?option_name=Color");
+        if (colorResponse.ok) {
+          const colorData = await colorResponse.json();
+          if (colorData.data) {
+            const colorValuesResponse = await fetch(`/api/option-values/get-by-optionId?option_id=${colorData.data.id}`);
+            if (colorValuesResponse.ok) {
+              const colorValuesData = await colorValuesResponse.json();
+              setColorOptions(colorValuesData.data || []);
+            }
+          }
+        }
+
+        // Fetch Fab Type options
+        const fabTypeResponse = await fetch("/api/options/get-by-name?option_name=Fab Type");
+        if (fabTypeResponse.ok) {
+          const fabTypeData = await fabTypeResponse.json();
+          if (fabTypeData.data) {
+            const fabTypeValuesResponse = await fetch(`/api/option-values/get-by-optionId?option_id=${fabTypeData.data.id}`);
+            if (fabTypeValuesResponse.ok) {
+              const fabTypeValuesData = await fabTypeValuesResponse.json();
+              setFabTypeOptions(fabTypeValuesData.data || []);
+            }
+          }
+        }
+
+        // Fetch Raceway options
+        const racewayResponse = await fetch("/api/options/get-by-name?option_name=Raceway");
+        if (racewayResponse.ok) {
+          const racewayData = await racewayResponse.json();
+          if (racewayData.data) {
+            const racewayValuesResponse = await fetch(`/api/option-values/get-by-optionId?option_id=${racewayData.data.id}`);
+            if (racewayValuesResponse.ok) {
+              const racewayValuesData = await racewayValuesResponse.json();
+              setRacewayOptions(racewayValuesData.data || []);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching options:", error);
+      } finally {
+        setLoadingOptions(false);
+      }
+    };
+
+    fetchOptions();
+  }, []);
 
   // Fetch pricing data when sign or size changes
   useEffect(() => {
@@ -262,11 +329,17 @@ export const SignConfigurationStep = ({
                 side="bottom"
                 align="end"
               >
-                <SelectItem value="Red">Red</SelectItem>
-                <SelectItem value="Blue">Blue</SelectItem>
-                <SelectItem value="Green">Green</SelectItem>
-                <SelectItem value="Yellow">Yellow</SelectItem>
-                <SelectItem value="White">White</SelectItem>
+                {loadingOptions ? (
+                  <SelectItem value="loading" disabled>Loading...</SelectItem>
+                ) : colorOptions.length > 0 ? (
+                  colorOptions.map((option) => (
+                    <SelectItem key={option.id} value={option.display_label}>
+                      {option.display_label}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="no-colors" disabled>No colors available</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -287,10 +360,17 @@ export const SignConfigurationStep = ({
                 side="bottom"
                 align="end"
               >
-                <SelectItem value="Halo-Lit">Halo-Lit</SelectItem>
-                <SelectItem value="Channel-Lit">Channel-Lit</SelectItem>
-                <SelectItem value="Back-Lit">Back-Lit</SelectItem>
-                <SelectItem value="Front-Lit">Front-Lit</SelectItem>
+                {loadingOptions ? (
+                  <SelectItem value="loading" disabled>Loading...</SelectItem>
+                ) : fabTypeOptions.length > 0 ? (
+                  fabTypeOptions.map((option) => (
+                    <SelectItem key={option.id} value={option.display_label}>
+                      {option.display_label}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="no-fab-types" disabled>No fab types available</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -311,9 +391,17 @@ export const SignConfigurationStep = ({
                 side="bottom"
                 align="end"
               >
-                <SelectItem value="Raceway-Mounted">Raceway-Mounted</SelectItem>
-                <SelectItem value="Direct-Mounted">Direct-Mounted</SelectItem>
-                <SelectItem value="Pole-Mounted">Pole-Mounted</SelectItem>
+                {loadingOptions ? (
+                  <SelectItem value="loading" disabled>Loading...</SelectItem>
+                ) : racewayOptions.length > 0 ? (
+                  racewayOptions.map((option) => (
+                    <SelectItem key={option.id} value={option.display_label}>
+                      {option.display_label}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="no-raceway" disabled>No raceway options available</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
