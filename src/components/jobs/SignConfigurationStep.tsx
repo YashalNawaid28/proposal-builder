@@ -370,7 +370,7 @@ export const SignConfigurationStep = ({
             )}
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <button
             onClick={isEditingPrices ? handleSavePrices : handleEditPrices}
             className="w-28 py-2 px-3 border border-white h-10 flex items-center justify-center text-white text-[14px] rounded-sm bg-transparent font-semibold"
