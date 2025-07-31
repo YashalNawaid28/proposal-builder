@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select";
 import { SignOption, SignData } from "./AddSignServiceSidebar";
 import { useState, useEffect } from "react";
+import { useUser } from "@stackframe/stack";
 
 interface SignConfigurationStepProps {
   selectedSign: SignOption | null;
@@ -18,6 +19,7 @@ interface SignConfigurationStepProps {
   setSignData: (data: SignData) => void;
   onBack: () => void;
   onClose: () => void;
+  jobId: string;
 }
 
 interface SignPricing {
@@ -48,7 +50,9 @@ export const SignConfigurationStep = ({
   setSignData,
   onBack,
   onClose,
+  jobId,
 }: SignConfigurationStepProps) => {
+  const user = useUser();
   const [isEditingPrices, setIsEditingPrices] = useState(false);
   const [editablePrices, setEditablePrices] = useState({
     signPrice: "0.00",
@@ -300,6 +304,75 @@ export const SignConfigurationStep = ({
     // Clear saved prices and revert to original calculated values
     setSavedPrices(null);
     console.log("Prices reset to original calculated values");
+  };
+
+  const handleAddSign = async () => {
+    try {
+      // Use the jobId passed as prop
+      console.log("Component Debug - jobId:", jobId);
+      
+      // Get current user ID
+      if (!user) {
+        throw new Error("User not authenticated");
+      }
+      const userId = user.id;
+
+      // Create pricing version
+      const pricingVersionBody = {
+        job_id: jobId,
+        creator_id: userId,
+      };
+      console.log("Component Debug - Pricing version request body:", pricingVersionBody);
+      
+      const pricingVersionResponse = await fetch("/api/pricing-versions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(pricingVersionBody),
+      });
+
+      if (!pricingVersionResponse.ok) {
+        throw new Error("Failed to create pricing version");
+      }
+
+      const pricingVersionData = await pricingVersionResponse.json();
+      const pricingVersionId = pricingVersionData.data.id;
+
+      // Get the current prices (saved or calculated)
+      const currentSignPrice = savedPrices?.signPrice || modifiedSignPrice;
+      const currentSignBudget = savedPrices?.signBudget || modifiedSignBudget;
+      const currentInstallPrice = editablePrices.installPrice;
+      const currentInstallBudget = savedPrices?.installBudget || modifiedInstallBudget;
+
+      // Create pricing line
+      const pricingLineResponse = await fetch("/api/pricing-lines", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          pricing_version_id: pricingVersionId,
+          sign_id: selectedSign?.id,
+          qty: 1, // You might want to get this from a quantity input
+          list_price: parseFloat(currentSignPrice),
+          cost_budget: parseFloat(currentSignBudget),
+          list_install_price: parseFloat(currentInstallPrice),
+          cost_install_budget: parseFloat(currentInstallBudget),
+        }),
+      });
+
+      if (!pricingLineResponse.ok) {
+        throw new Error("Failed to create pricing line");
+      }
+
+      console.log("Sign added successfully!");
+      // Close the sidebar or navigate away
+      onClose();
+    } catch (error) {
+      console.error("Error adding sign:", error);
+      // You might want to show an error message to the user
+    }
   };
 
   // Helper function to calculate modified sign price and budgets based on selected options
@@ -728,7 +801,7 @@ export const SignConfigurationStep = ({
             </button>
           )}
           <button
-            onClick={isEditingPrices ? handleSavePrices : undefined}
+            onClick={isEditingPrices ? handleSavePrices : handleAddSign}
             className="flex-1 py-2 px-3 text-black disabled:text-[#464C53] bg-white disabled:bg-[#1018280D] h-10 flex items-center justify-center text-[14px] rounded-sm font-semibold"
           >
             {isEditingPrices ? "Save Pricing" : "Add Sign"}
