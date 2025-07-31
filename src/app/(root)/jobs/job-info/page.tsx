@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ArrowLeft, Plus, ChevronDown, MapPinPlus, User } from "lucide-react";
 import { JobInfoDialog } from "@/components/jobs/JobInfoDialog";
 import { ClientInfoDialog } from "@/components/jobs/ClientInfoDialog";
@@ -169,12 +169,14 @@ export default function AddJobPage() {
   };
 
   // Function to fetch all pricing data for a job
-  const fetchPricingData = async (jobId: string) => {
+  const fetchPricingData = useCallback(async (jobId: string) => {
+    console.log("Job Info Page - fetchPricingData called for jobId:", jobId);
     try {
       setLoadingPricing(true);
       
       // Fetch pricing versions
       const versions = await fetchPricingVersions(jobId);
+      console.log("Job Info Page - Fetched versions:", versions.length);
       
       // Fetch pricing lines for each version
       const allLines = [];
@@ -182,6 +184,7 @@ export default function AddJobPage() {
         const lines = await fetchPricingLines(version.id);
         allLines.push(...lines);
       }
+      console.log("Job Info Page - Fetched total lines:", allLines.length);
       
       setPricingData({
         versions,
@@ -192,7 +195,7 @@ export default function AddJobPage() {
     } finally {
       setLoadingPricing(false);
     }
-  };
+  }, []);
 
   const handleJobInfoSave = async (data: any) => {
     setJobData(data);
@@ -325,6 +328,7 @@ export default function AddJobPage() {
         setClientData(clientData);
         
         // Fetch pricing data for this job
+        console.log("Job Info Page - Fetching pricing data for jobId:", jobId);
         await fetchPricingData(jobId);
       } catch (error) {
         console.error("Error loading job data:", error);
