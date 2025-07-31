@@ -346,6 +346,8 @@ export const SignConfigurationStep = ({
       const currentInstallBudget = savedPrices?.installBudget || modifiedInstallBudget;
 
       // Create pricing line
+      const descriptionResolved = generateDescriptionResolved();
+      
       const pricingLineResponse = await fetch("/api/pricing-lines", {
         method: "POST",
         headers: {
@@ -354,6 +356,7 @@ export const SignConfigurationStep = ({
         body: JSON.stringify({
           pricing_version_id: pricingVersionId,
           sign_id: selectedSign?.id,
+          description_resolved: descriptionResolved,
           qty: 1, // You might want to get this from a quantity input
           list_price: parseFloat(currentSignPrice),
           cost_budget: parseFloat(currentSignBudget),
@@ -373,6 +376,53 @@ export const SignConfigurationStep = ({
       console.error("Error adding sign:", error);
       // You might want to show an error message to the user
     }
+  };
+
+  // Helper function to generate description_resolved based on sign_description template
+  const generateDescriptionResolved = () => {
+    if (!selectedSign || !selectedSignData) return "";
+    
+    let description = selectedSignData.sign_description || "";
+    
+    // Replace placeholders with actual values
+    if (signData.size) {
+      description = description.replace(/{Size}/g, signData.size);
+    }
+    
+    if (signData.color) {
+      description = description.replace(/{color}/g, signData.color);
+    }
+    
+    if (signData.fabType) {
+      description = description.replace(/{fab_type}/g, signData.fabType);
+    }
+    
+    // Handle raceway option
+    if (signData.raceway) {
+      let racewayValue = signData.raceway;
+      
+      // Add raceway size in parentheses if raceway size inputs are provided
+      if (signData.racewaySize && signData.racewaySize.height && signData.racewaySize.width) {
+        const heightFeet = signData.racewaySize.height.feet || "0";
+        const heightInches = signData.racewaySize.height.inches || "0";
+        const widthFeet = signData.racewaySize.width.feet || "0";
+        const widthInches = signData.racewaySize.width.inches || "0";
+        
+        const racewaySizeValue = `${heightFeet}'-${heightInches}"x ${widthFeet}'-${widthInches}"`;
+        racewayValue = `${signData.raceway} (${racewaySizeValue})`;
+      }
+      
+      description = description.replace(/{raceway_size}/g, racewayValue);
+    }
+    
+    // Handle mounting surface (if implemented in the future)
+    // For now, we'll remove the {mounting_surface} placeholder if no value is selected
+    description = description.replace(/{mounting_surface}/g, "");
+    
+    // Clean up any extra spaces that might result from empty replacements
+    description = description.replace(/\s+/g, " ").trim();
+    
+    return description;
   };
 
   // Helper function to calculate modified sign price and budgets based on selected options
