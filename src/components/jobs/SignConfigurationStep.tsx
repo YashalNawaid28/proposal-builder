@@ -67,6 +67,11 @@ export const SignConfigurationStep = ({
   const [modifiedSignPrice, setModifiedSignPrice] = useState<string>("0.00");
   const [modifiedSignBudget, setModifiedSignBudget] = useState<string>("0.00");
   const [modifiedInstallBudget, setModifiedInstallBudget] = useState<string>("0.00");
+  const [savedPrices, setSavedPrices] = useState<{
+    signPrice: string;
+    signBudget: string;
+    installBudget: string;
+  } | null>(null);
   const [selectedSignData, setSelectedSignData] = useState<any>(null);
 
   // Fetch available sizes when sign changes
@@ -270,13 +275,31 @@ export const SignConfigurationStep = ({
   };
 
   const handleEditPrices = () => {
+    // Set the editable prices to the current calculated values
+    setEditablePrices({
+      signPrice: modifiedSignPrice,
+      installPrice: editablePrices.installPrice, // Keep install price as is since it's not modified
+      signBudget: modifiedSignBudget,
+      installBudget: modifiedInstallBudget,
+    });
     setIsEditingPrices(true);
   };
 
   const handleSavePrices = () => {
+    // Save the edited prices only in the form state
+    console.log("Saving prices in form:", editablePrices);
+    setSavedPrices({
+      signPrice: editablePrices.signPrice,
+      signBudget: editablePrices.signBudget,
+      installBudget: editablePrices.installBudget,
+    });
     setIsEditingPrices(false);
-    // Here you could save the prices to your backend
-    console.log("Saving prices:", editablePrices);
+  };
+
+  const handleResetPrices = () => {
+    // Clear saved prices and revert to original calculated values
+    setSavedPrices(null);
+    console.log("Prices reset to original calculated values");
   };
 
   // Helper function to calculate modified sign price and budgets based on selected options
@@ -627,7 +650,7 @@ export const SignConfigurationStep = ({
               </div>
             ) : (
               <span className="text-[16px] font-[800]">
-                ${modifiedSignPrice}
+                ${savedPrices?.signPrice || modifiedSignPrice}
               </span>
             )}
           </div>
@@ -665,7 +688,7 @@ export const SignConfigurationStep = ({
               </div>
             ) : (
               <span className="text-[16px] font-[800]">
-                ${modifiedSignBudget}
+                ${savedPrices?.signBudget || modifiedSignBudget}
               </span>
             )}
           </div>
@@ -684,7 +707,7 @@ export const SignConfigurationStep = ({
               </div>
             ) : (
               <span className="text-[16px] font-[800]">
-                ${modifiedInstallBudget}
+                ${savedPrices?.installBudget || modifiedInstallBudget}
               </span>
             )}
           </div>
@@ -696,6 +719,14 @@ export const SignConfigurationStep = ({
           >
             Edit Prices
           </button>
+          {savedPrices && !isEditingPrices && (
+            <button
+              onClick={handleResetPrices}
+              className="w-20 py-2 px-3 border border-white h-10 flex items-center justify-center text-white text-[14px] rounded-sm bg-transparent font-semibold"
+            >
+              Reset
+            </button>
+          )}
           <button
             onClick={isEditingPrices ? handleSavePrices : undefined}
             className="flex-1 py-2 px-3 text-black disabled:text-[#464C53] bg-white disabled:bg-[#1018280D] h-10 flex items-center justify-center text-[14px] rounded-sm font-semibold"
