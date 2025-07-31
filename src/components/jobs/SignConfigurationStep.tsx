@@ -29,6 +29,8 @@ interface SignPricing {
   sign_budget: number;
   install_budget: number;
   raceway: number;
+  sign_budget_multiplier: number;
+  install_budget_multiplier: number;
 }
 
 interface OptionValue {
@@ -62,6 +64,10 @@ export const SignConfigurationStep = ({
   const [fabTypeOptions, setFabTypeOptions] = useState<OptionValue[]>([]);
   const [racewayOptions, setRacewayOptions] = useState<OptionValue[]>([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
+  const [modifiedSignPrice, setModifiedSignPrice] = useState<string>("0.00");
+  const [modifiedSignBudget, setModifiedSignBudget] = useState<string>("0.00");
+  const [modifiedInstallBudget, setModifiedInstallBudget] = useState<string>("0.00");
+  const [selectedSignData, setSelectedSignData] = useState<any>(null);
 
   // Fetch available sizes when sign changes
   useEffect(() => {
@@ -104,6 +110,28 @@ export const SignConfigurationStep = ({
     };
 
     fetchSizes();
+  }, [selectedSign?.id]);
+
+  // Fetch sign data when selected sign changes
+  useEffect(() => {
+    const fetchSignData = async () => {
+      if (!selectedSign?.id) {
+        setSelectedSignData(null);
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/signs/get-by-id?sign_id=${selectedSign.id}`);
+        if (response.ok) {
+          const result = await response.json();
+          setSelectedSignData(result.data);
+        }
+      } catch (error) {
+        console.error("Error fetching sign data:", error);
+      }
+    };
+
+    fetchSignData();
   }, [selectedSign?.id]);
 
   // Fetch options for Color, Fab Type, and Raceway
@@ -192,6 +220,9 @@ export const SignConfigurationStep = ({
         
         if (result.data && result.data.length > 0) {
           const pricing = result.data[0];
+          console.log("Component Debug - Pricing data received:", pricing);
+          console.log("Component Debug - Sign budget multiplier:", pricing.sign_budget_multiplier);
+          console.log("Component Debug - Install budget multiplier:", pricing.install_budget_multiplier);
           setCurrentPricing(pricing);
           setEditablePrices({
             signPrice: pricing.sign_price.toFixed(2),
@@ -247,6 +278,72 @@ export const SignConfigurationStep = ({
     // Here you could save the prices to your backend
     console.log("Saving prices:", editablePrices);
   };
+
+  // Helper function to calculate modified sign price and budgets based on selected options
+  const calculateModifiedValues = () => {
+    if (!currentPricing) return { signPrice: "0.00", signBudget: "0.00", installBudget: "0.00" };
+    
+    let baseSignPrice = currentPricing.sign_price;
+    let totalModifier = 0;
+    
+    // Calculate modifiers from selected options
+    const selectedOptions = [
+      { value: signData.color, options: colorOptions },
+      { value: signData.fabType, options: fabTypeOptions },
+      { value: signData.raceway, options: racewayOptions }
+    ];
+    
+    selectedOptions.forEach(({ value, options }) => {
+      if (value) {
+        const selectedOption = options.find(opt => opt.display_label === value);
+        if (selectedOption && selectedOption.price_modifier_value) {
+          if (selectedOption.price_modifier_type === 'Percentage') {
+            totalModifier += (baseSignPrice * selectedOption.price_modifier_value) / 100;
+          } else {
+            totalModifier += selectedOption.price_modifier_value;
+          }
+        }
+      }
+    });
+    
+    // Add raceway value from pricing data if raceway is selected
+    if (signData.raceway && currentPricing.raceway) {
+      totalModifier += currentPricing.raceway;
+    }
+    
+    const finalSignPrice = baseSignPrice + totalModifier;
+    
+    // Calculate modified budgets using multipliers from sign data
+    const signBudgetMultiplier = selectedSignData?.sign_budget_multiplier || 0;
+    const installBudgetMultiplier = selectedSignData?.install_budget_multiplier || 0;
+    
+    console.log("Component Debug - Budget calculation:", {
+      finalSignPrice,
+      signBudgetMultiplier,
+      installPrice: currentPricing?.install_price,
+      installBudgetMultiplier,
+      selectedSignData
+    });
+    
+    // Sign Budget = Sign Price × Sign Budget Multiplier
+    const modifiedSignBudget = finalSignPrice * signBudgetMultiplier;
+    // Install Budget = Install Price × Install Budget Multiplier
+    const modifiedInstallBudget = currentPricing.install_price * installBudgetMultiplier;
+    
+    return {
+      signPrice: finalSignPrice.toFixed(2),
+      signBudget: modifiedSignBudget.toFixed(2),
+      installBudget: modifiedInstallBudget.toFixed(2)
+    };
+  };
+
+  // Update modified values when options or pricing changes
+  useEffect(() => {
+    const modifiedValues = calculateModifiedValues();
+    setModifiedSignPrice(modifiedValues.signPrice);
+    setModifiedSignBudget(modifiedValues.signBudget);
+    setModifiedInstallBudget(modifiedValues.installBudget);
+  }, [currentPricing, signData.color, signData.fabType, signData.raceway, colorOptions, fabTypeOptions, racewayOptions, selectedSignData]);
 
   const handlePriceChange = (
     field: keyof typeof editablePrices,
@@ -530,7 +627,7 @@ export const SignConfigurationStep = ({
               </div>
             ) : (
               <span className="text-[16px] font-[800]">
-                ${editablePrices.signPrice}
+                ${modifiedSignPrice}
               </span>
             )}
           </div>
@@ -568,7 +665,7 @@ export const SignConfigurationStep = ({
               </div>
             ) : (
               <span className="text-[16px] font-[800]">
-                ${editablePrices.signBudget}
+                ${modifiedSignBudget}
               </span>
             )}
           </div>
@@ -587,7 +684,7 @@ export const SignConfigurationStep = ({
               </div>
             ) : (
               <span className="text-[16px] font-[800]">
-                ${editablePrices.installBudget}
+                ${modifiedInstallBudget}
               </span>
             )}
           </div>
