@@ -11,7 +11,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-// Define interfaces for our data structures
 export interface OptionData {
   id: string;
   sign_id: string;
@@ -31,7 +30,6 @@ export interface OptionValue {
   created_at: string;
 }
 
-// Simplified row data structure for the table
 interface RowData {
   id: string;
   iconUrl: string;
@@ -42,7 +40,6 @@ interface RowData {
   values: OptionValue[];
 }
 
-// Edit Option Value Dialog Component
 interface EditOptionValueDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -60,12 +57,10 @@ const EditOptionValueDialog = ({
   const [addPrice, setAddPrice] = useState("");
   const valueNameRef = useRef<HTMLInputElement>(null);
 
-  // Reset form when dialog opens
   useEffect(() => {
     if (isOpen) {
       setValueName(initialValue);
       setAddPrice("");
-      // Prevent auto-focus and text selection
       setTimeout(() => {
         if (valueNameRef.current) {
           valueNameRef.current.blur();
@@ -134,7 +129,6 @@ const EditOptionValueDialog = ({
   );
 };
 
-// StatusCell component that handles different statuses
 const StatusCell = ({ status }: { status: string }) => {
   let bgColor = "bg-[#17B26A1A]";
   let textColor = "text-[#17B26A]";
@@ -156,7 +150,6 @@ const StatusCell = ({ status }: { status: string }) => {
   );
 };
 
-// Option icon cell renderer
 const OptionIconCell = ({
   src,
   optionName,
@@ -165,8 +158,6 @@ const OptionIconCell = ({
   optionName: string;
 }) => {
   const [imgError, setImgError] = useState(false);
-
-  // Return a simple colored div with initials if image fails to load
   if (imgError || !src) {
     const initials = optionName
       .split(" ")
@@ -174,7 +165,6 @@ const OptionIconCell = ({
       .join("")
       .toUpperCase()
       .substring(0, 2);
-
     return (
       <div className="flex items-center justify-center h-10 w-10 rounded-full bg-gray-200 text-gray-600 text-sm font-medium">
         {initials}
@@ -192,7 +182,6 @@ const OptionIconCell = ({
   );
 };
 
-// Values cell renderer with clickable values
 const ValuesCell = ({
   values,
   onValueClick,
@@ -234,21 +223,18 @@ const OptionsPage = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedValue, setSelectedValue] = useState("");
 
-  // Fetch options data when component mounts or user changes
   useEffect(() => {
     const fetchOptions = async () => {
-      if (!user) return; // Don't fetch if user is not available
+      if (!user) return;
       setLoading(true);
       setError(null);
       try {
         const res = await fetch("/api/options", {
           headers: { "request.user.id": user.id },
         });
-
         if (!res.ok) {
           throw new Error("Failed to fetch options");
         }
-
         const data = await res.json();
         const optionsData = data.data || [];
         setOptions(optionsData);
@@ -277,11 +263,9 @@ const OptionsPage = () => {
         setLoading(false);
       }
     };
-
     fetchOptions();
   }, [user]);
 
-  // Filter options based on the selected tab
   const filteredOptions = useMemo(() => {
     if (tab === "all") return options;
     return options.filter((option) =>
@@ -291,7 +275,6 @@ const OptionsPage = () => {
     );
   }, [options, tab]);
 
-  // Transform API data to match the table structure
   const rowData: RowData[] = useMemo(() => {
     return filteredOptions.map((option) => ({
       id: option.id,
@@ -304,7 +287,6 @@ const OptionsPage = () => {
     }));
   }, [filteredOptions, optionValues]);
 
-  // --- Selection Handlers ---
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
       setSelectedRows(rowData.map((row) => row.id));
@@ -319,13 +301,11 @@ const OptionsPage = () => {
     );
   };
 
-  // Handle value click to open edit dialog
   const handleValueClick = (value: string) => {
     setSelectedValue(value);
     setEditDialogOpen(true);
   };
 
-  // Handle dialog update
   const handleUpdateValue = (valueName: string, addPrice: string) => {
     console.log("Updated value:", { valueName, addPrice });
   };

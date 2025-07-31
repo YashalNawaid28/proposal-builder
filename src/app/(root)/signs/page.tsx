@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, Fragment } from "react";
+import { useState, useEffect, Fragment, useRef } from "react";
 import {
   ChevronRight,
   Asterisk,
@@ -8,13 +8,37 @@ import {
   ImagePlus,
 } from "lucide-react";
 import type { BrandData } from "../brands/page";
-import { IAccount } from "@/lib/interfaces";
+import { IAccount, ISignDetail, ISignOption } from "@/lib/interfaces";
 import { PageTabs } from "@/components/ui/page-tabs";
-import { Toggle } from "@/components/ui/toggle";
+
+// AG-Grid Imports
+import { AgGridReact } from "ag-grid-react";
+import {
+  ColDef,
+  ValueFormatterParams,
+  ValueParserParams,
+  GetRowIdParams,
+  RowClassParams,
+  AllCommunityModule,
+  ModuleRegistry,
+} from "ag-grid-community";
+import "ag-grid-community/styles/ag-grid.css"; // Core grid CSS
+import "ag-grid-community/styles/ag-theme-quartz.css"; // Modern theme
+import { LicenseManager } from "ag-grid-enterprise";
+
+// Register all Community features
+ModuleRegistry.registerModules([AllCommunityModule]);
+
+// --- IMPORTANT: Set your AG-Grid Enterprise license key here ---
+// You can get a trial key from the AG-Grid website.
+LicenseManager.setLicenseKey(
+  "Using_this_AG_Grid_Enterprise_key_(https://ag-grid.com/legal/license/enterprise)_in_excess_of_the_licenses_granted_is_not_permitted___Please_report_misuse_to_(legal@ag-grid.com)___For_help_with_changing_this_key_please_contact_info@ag-grid.com__"
+);
 
 // Helper to format currency
 const formatCurrency = (value: string | number | undefined | null) => {
-  if (value === null || value === undefined) return "$0.00";
+  if (value === null || value === undefined || isNaN(Number(value)))
+    return "$0.00";
   const num =
     typeof value === "string"
       ? parseFloat(value.replace(/[^0-9.-]+/g, ""))
@@ -36,14 +60,209 @@ const optionIcons: { [key: string]: React.ReactNode } = {
   "Fabrication Type": <Rows3 size={20} />,
 };
 
-// Helper function to get column width class
-const getColumnWidth = (index: number): string => {
-  if (index === 0) return "w-[77px]";
-  if (index === 1) return "w-24";
-  if (index === 2) return "w-24";
-  if (index === 3) return "w-24";
-  if (index === 4) return "w-24";
-  return "w-[77px]";
+// ## New Component: PricingGrid with AG-Grid Enterprise ##
+// This component replaces the nested HTML table for pricing details.
+// -----------------------------------------------------------------
+
+interface PricingDetail {
+  size: string;
+  signPrice: number;
+  installPrice: number;
+  signBudget: number;
+  installBudget: number;
+  raceway: number;
+}
+
+const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
+  console.log("PricingGrid received data:", rowData); // Debug log
+
+  // Grid API reference - must be before any early returns
+  const gridRef = useRef<AgGridReact>(null);
+
+  if (!rowData || rowData.length === 0) {
+    return (
+      <div className="p-4 text-center text-gray-500">
+        No pricing data available
+      </div>
+    );
+  }
+
+  // Convert ISignDetail[] to PricingDetail[] for AG Grid
+  const gridData = rowData.map((item) => ({
+    size: item.size,
+    signPrice: parseFloat(item.signPrice.replace(/[^0-9.-]+/g, "")) || 0,
+    installPrice: parseFloat(item.installPrice.replace(/[^0-9.-]+/g, "")) || 0,
+    signBudget: parseFloat(item.signBudget.replace(/[^0-9.-]+/g, "")) || 0,
+    installBudget:
+      parseFloat(item.installBudget.replace(/[^0-9.-]+/g, "")) || 0,
+    raceway: parseFloat(item.raceway.replace(/[^0-9.-]+/g, "")) || 0,
+  }));
+
+  console.log("Converted grid data:", gridData);
+
+  // Column Definitions for AG-Grid
+  const colDefs: ColDef[] = [
+    {
+      field: "size",
+      headerName: "Size",
+      flex: 1,
+      cellClass: "font-medium text-center border-r border-[#DEE1EA]",
+      headerClass: "text-center",
+    },
+    {
+      field: "signPrice",
+      headerName: "Sign Price",
+      flex: 1,
+      editable: true,
+      valueFormatter: (p: ValueFormatterParams) => formatCurrency(p.value),
+      valueParser: (p: ValueParserParams) =>
+        Number(String(p.newValue).replace(/[^0-9.-]+/g, "")),
+      cellClass: "text-center border-r border-[#DEE1EA]",
+      headerClass: "text-center",
+    },
+    {
+      field: "installPrice",
+      headerName: "Install Price",
+      flex: 1,
+      editable: true,
+      valueFormatter: (p: ValueFormatterParams) => formatCurrency(p.value),
+      valueParser: (p: ValueParserParams) =>
+        Number(String(p.newValue).replace(/[^0-9.-]+/g, "")),
+      cellClass: "text-center border-r border-[#DEE1EA]",
+      headerClass: "text-center",
+    },
+    {
+      field: "signBudget",
+      headerName: "Sign Budget",
+      flex: 1,
+      editable: true,
+      valueFormatter: (p: ValueFormatterParams) => formatCurrency(p.value),
+      valueParser: (p: ValueParserParams) =>
+        Number(String(p.newValue).replace(/[^0-9.-]+/g, "")),
+      cellClass: "text-center border-r border-[#DEE1EA]",
+      headerClass: "text-center",
+    },
+    {
+      field: "installBudget",
+      headerName: "Install Budget",
+      flex: 1,
+      editable: true,
+      valueFormatter: (p: ValueFormatterParams) => formatCurrency(p.value),
+      valueParser: (p: ValueParserParams) =>
+        Number(String(p.newValue).replace(/[^0-9.-]+/g, "")),
+      cellClass: "text-center border-r border-[#DEE1EA]",
+      headerClass: "text-center",
+    },
+    {
+      field: "raceway",
+      headerName: "Raceway",
+      flex: 1,
+      editable: true,
+      valueFormatter: (p: ValueFormatterParams) => formatCurrency(p.value),
+      valueParser: (p: ValueParserParams) =>
+        Number(String(p.newValue).replace(/[^0-9.-]+/g, "")),
+      cellClass: "text-center", // No right border on the last column
+      headerClass: "text-center",
+    },
+  ];
+
+  // Default column definitions
+  const defaultColDef: ColDef = {
+    sortable: false,
+    filter: false,
+    resizable: true,
+    suppressMovable: true,
+  };
+
+  return (
+    // The div wrapper is used to apply custom CSS variables for perfect styling.
+    <div
+      className="ag-theme-quartz w-full h-full"
+      style={
+        {
+          minHeight: "200px",
+          width: "100%",
+          height: "100%",
+          flex: "1",
+        } as React.CSSProperties
+      }
+    >
+      <style>{`
+        /* Center header text */
+        .ag-theme-quartz .ag-header-cell-label {
+          justify-content: center !important;
+          text-align: center !important;
+        }
+        .ag-theme-quartz .ag-header-cell {
+          text-align: center !important;
+        }
+        
+        /* Match borders with main table */
+        .ag-theme-quartz .ag-header-cell {
+          border-right: 1px solid #DEE1EA !important;
+        }
+        .ag-theme-quartz .ag-cell {
+          border-right: 1px solid #DEE1EA !important;
+        }
+        .ag-theme-quartz .ag-row {
+          border-bottom: 1px solid #DEE1EA !important;
+        }
+        .ag-theme-quartz .ag-header-cell:last-child {
+          border-right: none !important;
+        }
+        .ag-theme-quartz .ag-cell:last-child {
+          border-right: none !important;
+        }
+        
+        /* Remove main border from AG Grid */
+        .ag-theme-quartz {
+          border: none !important;
+        }
+        .ag-theme-quartz .ag-root-wrapper {
+          border: none !important;
+        }
+        .ag-theme-quartz .ag-root {
+          border: none !important;
+        }
+        
+        /* Match background with sign options table */
+        .ag-theme-quartz .ag-header {
+          background-color: #F9F9FB !important;
+        }
+        .ag-theme-quartz .ag-header-cell {
+          background-color: #F9F9FB !important;
+        }
+        .ag-theme-quartz .ag-row {
+          background-color: #F9F9FB !important;
+        }
+        .ag-theme-quartz .ag-cell {
+          background-color: #F9F9FB !important;
+        }
+      `}</style>
+      <AgGridReact
+        ref={gridRef}
+        rowData={gridData}
+        columnDefs={colDefs}
+        defaultColDef={defaultColDef}
+        domLayout="normal"
+        enableFillHandle={true}
+        enableRangeSelection={true}
+        suppressCellFocus={false}
+        getRowId={(params: GetRowIdParams) => params.data.size}
+        onGridReady={(params) => {
+          console.log("AG Grid is ready:", params);
+          setTimeout(() => {
+            params.api.sizeColumnsToFit();
+          }, 100);
+        }}
+        rowClassRules={{
+          "border-b border-[#DEE1EA]": (params: RowClassParams) => {
+            return params.rowIndex === params.api.getLastDisplayedRowIndex();
+          },
+        }}
+      />
+    </div>
+  );
 };
 
 const SignsPage = () => {
@@ -57,7 +276,6 @@ const SignsPage = () => {
     {}
   );
 
-  // Initialize toggle states based on option data
   const getToggleState = (
     signName: string,
     optionLabel: string,
@@ -72,16 +290,13 @@ const SignsPage = () => {
       try {
         setLoading(true);
         const response = await fetch("/api/signs");
-
         if (!response.ok) {
           throw new Error(`API request failed with status: ${response.status}`);
         }
         const responseData = await response.json();
-
         if (!responseData.data || !Array.isArray(responseData.data)) {
           throw new Error("Invalid API response format");
         }
-
         const brandNames = responseData.data.map(
           (brand: BrandData) => brand.brand_name
         );
@@ -91,28 +306,13 @@ const SignsPage = () => {
             setTab(brandNames[0]);
           }
         }
-
         const selectedBrand = responseData.data.find(
           (brand: BrandData) => brand.brand_name === tab
         );
-
         if (!selectedBrand?.signs) {
           setSignData([]);
           return;
         }
-
-        type SignPricing = {
-          size?: string;
-          sign_price?: number;
-          install_price?: number;
-          sign_budget?: number;
-          install_budget?: number;
-          raceway?: number;
-        };
-        type SignOptionRaw = {
-          option_name?: string;
-          input_type?: string;
-        };
         type SignRaw = {
           id: string;
           sign_image?: string;
@@ -120,10 +320,16 @@ const SignsPage = () => {
           sign_description?: string;
           status?: string;
           created_at: string;
-          sign_pricing?: SignPricing[];
-          options?: SignOptionRaw[];
+          sign_pricing?: {
+            size?: string;
+            sign_price?: number;
+            install_price?: number;
+            sign_budget?: number;
+            install_budget?: number;
+            raceway?: number;
+          }[];
+          options?: { option_name?: string; input_type?: string }[];
         };
-
         const transformedData = await Promise.all(
           (selectedBrand.signs as SignRaw[]).map(async (sign) => {
             const createdDate = new Date(sign.created_at);
@@ -135,8 +341,6 @@ const SignsPage = () => {
             const formattedDate = `${createdDate.toLocaleDateString("en-US", {
               month: "short",
             })} ${day}${suffix}, ${createdDate.getFullYear()}`;
-
-            // Fetch pricing data for this sign
             let details: any[] = [];
             try {
               const pricingResponse = await fetch(
@@ -144,79 +348,59 @@ const SignsPage = () => {
               );
               if (pricingResponse.ok) {
                 const pricingData = await pricingResponse.json();
+                console.log(
+                  `Raw pricing data for sign ${sign.id}:`,
+                  pricingData
+                );
                 if (pricingData.data && Array.isArray(pricingData.data)) {
                   details = pricingData.data.map((pricing: any) => ({
                     size: pricing.size || "",
-                    signPrice: formatCurrency(pricing.sign_price),
-                    installPrice: formatCurrency(pricing.install_price),
-                    signBudget: formatCurrency(pricing.sign_budget),
-                    installBudget: formatCurrency(pricing.install_budget),
-                    raceway: formatCurrency(pricing.raceway),
+                    signPrice: pricing.sign_price || 0,
+                    installPrice: pricing.install_price || 0,
+                    signBudget: pricing.sign_budget || 0,
+                    installBudget: pricing.install_budget || 0,
+                    raceway: pricing.raceway || 0,
                   }));
                 }
               }
             } catch (error) {
-              console.error(`Error fetching pricing for sign ${sign.id}:`, error);
+              console.error(
+                `Error fetching pricing for sign ${sign.id}:`,
+                error
+              );
             }
 
-            // Use ONLY the exact sign options from the image - NO API data
-            const signOptions = [
+            const signDetails: ISignDetail[] = details.map((d) => ({
+              size: d.size,
+              signPrice: formatCurrency(d.signPrice),
+              installPrice: formatCurrency(d.installPrice),
+              signBudget: formatCurrency(d.signBudget),
+              installBudget: formatCurrency(d.installBudget),
+              raceway: formatCurrency(d.raceway),
+            }));
+            if (signDetails.length === 0) {
+              console.log(
+                `No pricing data found for sign ${sign.id}, using empty array`
+              );
+            }
+
+            const signOptions: ISignOption[] = [
               {
                 label: "Sign Budget",
-                type: "Multiplier" as
-                  | "Dropdown"
-                  | "User Input"
-                  | "Multiplier"
-                  | "Calculation",
+                type: "Multiplier",
                 value: "0.55",
                 checked: true,
               },
               {
                 label: "Install Budget",
-                type: "Calculation" as
-                  | "Dropdown"
-                  | "User Input"
-                  | "Multiplier"
-                  | "Calculation",
+                type: "Calculation",
                 value: "0.55",
                 checked: true,
               },
-              {
-                label: "Raceway",
-                type: "Dropdown" as
-                  | "Dropdown"
-                  | "User Input"
-                  | "Multiplier"
-                  | "Calculation",
-                checked: true,
-              },
-              {
-                label: "Raceway Size",
-                type: "User Input" as
-                  | "Dropdown"
-                  | "User Input"
-                  | "Multiplier"
-                  | "Calculation",
-                checked: false,
-              },
-              {
-                label: "Color",
-                type: "Dropdown" as
-                  | "Dropdown"
-                  | "User Input"
-                  | "Multiplier"
-                  | "Calculation",
-                checked: false,
-              },
-              {
-                label: "Fabrication Type",
-                type: "Dropdown" as
-                  | "Dropdown"
-                  | "User Input"
-                  | "Multiplier"
-                  | "Calculation",
-                checked: false,
-              },
+              { label: "Raceway", type: "Dropdown", checked: true },
+              { label: "Raceway Size", type: "User Input", checked: false },
+              { label: "Color", type: "Dropdown", checked: false },
+              { label: "Fabrication Type", type: "Dropdown", checked: false },
             ];
 
             return {
@@ -225,12 +409,11 @@ const SignsPage = () => {
               signDescription: sign.sign_description || "",
               status: (sign.status as "Active" | "Inactive") || "Active",
               dateAdded: formattedDate,
-              signOptions: signOptions, // Always use the static data from image
-              details: details,
+              signOptions: signOptions,
+              details: signDetails,
             };
           })
         );
-
         setSignData(transformedData);
         setExpandedRow(null);
         setError(null);
@@ -242,7 +425,6 @@ const SignsPage = () => {
         setLoading(false);
       }
     };
-
     fetchSigns();
   }, [tab]);
 
@@ -251,10 +433,7 @@ const SignsPage = () => {
   };
 
   const handleOptionToggle = (optionKey: string) => {
-    setToggleStates((prev) => ({
-      ...prev,
-      [optionKey]: !prev[optionKey],
-    }));
+    setToggleStates((prev) => ({ ...prev, [optionKey]: !prev[optionKey] }));
   };
 
   return (
@@ -263,12 +442,10 @@ const SignsPage = () => {
       <PageTabs tabs={brands} activeTab={tab} onTabChange={setTab} />
       <div className="border border-[#DEE1EA] rounded-lg overflow-hidden">
         {(() => {
-          if (loading) {
+          if (loading)
             return <div className="p-8 text-center">Loading sign data...</div>;
-          }
-          if (error) {
+          if (error)
             return <div className="p-8 text-center text-red-500">{error}</div>;
-          }
           return (
             <div className="overflow-x-auto">
               <table className="min-w-full border-collapse">
@@ -316,7 +493,7 @@ const SignsPage = () => {
                             />
                           </button>
                         </td>
-                        <td className=" border-r border-[#DEE1EA] flex items-center justify-center h-20">
+                        <td className="border-r border-[#DEE1EA] flex items-center justify-center h-20">
                           {sign.signImage &&
                           sign.signImage !== "" &&
                           sign.signImage !== "/daves-hot-chicken-logo.png" ? (
@@ -344,71 +521,18 @@ const SignsPage = () => {
                           {sign.dateAdded}
                         </td>
                       </tr>
+
                       {/* Expanded Detail Row */}
                       {expandedRow === sign.signName && (
                         <tr className="bg-white">
                           <td colSpan={7} className="p-0">
                             <div className="flex bg-[#F9F9FB]">
-                              {/* Left Side: Pricing Table */}
-                              <div className="flex-1 border-r border-[#DEE1EA] min-w-0">
-                                <table className="min-w-full text-sm border-collapse">
-                                  <thead>
-                                    <tr className="border-b text-[13px] border-[#DEE1EA] h-[45px]">
-                                      {[
-                                        "Size",
-                                        "Sign Price",
-                                        "Install Price",
-                                        "Sign Budget",
-                                        "Install Budget",
-                                        "Raceway",
-                                      ].map((header, index) => (
-                                        <th
-                                          key={header}
-                                          className={`p-4 text-center font-semibold text-black text-[13px] ${
-                                            index < 5
-                                              ? "border-r border-[#DEE1EA]"
-                                              : ""
-                                          } ${getColumnWidth(index)}`}
-                                        >
-                                          {header}
-                                        </th>
-                                      ))}
-                                    </tr>
-                                  </thead>
-                                  <tbody className="divide-y divide-gray-200">
-                                    {sign.details.map((detail, index) => (
-                                      <tr
-                                        key={index}
-                                        className={`h-[45px] text-[14px] ${
-                                          index === sign.details.length - 1
-                                            ? "border-b border-[#DEE1EA]"
-                                            : ""
-                                        }`}
-                                      >
-                                        <td className="p-4 font-medium border-r border-[#DEE1EA] text-center">
-                                          {detail.size}
-                                        </td>
-                                        <td className="p-4 border-r border-[#DEE1EA] text-center w-24">
-                                          {detail.signPrice}
-                                        </td>
-                                        <td className="p-4 border-r border-[#DEE1EA] text-center w-24">
-                                          {detail.installPrice}
-                                        </td>
-                                        <td className="p-4 border-r border-[#DEE1EA] text-center w-24">
-                                          {detail.signBudget}
-                                        </td>
-                                        <td className="p-4 border-r border-[#DEE1EA] text-center w-24">
-                                          {detail.installBudget}
-                                        </td>
-                                        <td className="p-4 text-center w-20">
-                                          {detail.raceway}
-                                        </td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
+                              {/* Left Side: AG-Grid Pricing Table */}
+                              <div className="flex-1 border-r border-[#DEE1EA] min-w-0 w-full">
+                                <PricingGrid rowData={sign.details} />
                               </div>
-                              {/* Right Side: Sign Options */}
+
+                              {/* Right Side: Sign Options (Unchanged) */}
                               <div className="w-[320px] flex-shrink-0">
                                 <table className="min-w-full text-sm border-collapse">
                                   <thead>
@@ -418,17 +542,13 @@ const SignsPage = () => {
                                       </th>
                                     </tr>
                                   </thead>
-                                  <tbody className="divide-y divide-gray-200">
+                                  <tbody>
                                     {sign.signOptions.map((option, index) => (
                                       <tr
                                         key={index}
-                                        className={`h-[106px] text-[14px] ${
-                                          index === sign.signOptions.length - 1
-                                            ? "border-b border-[#DEE1EA]"
-                                            : ""
-                                        }`}
+                                        className="h-[106px] text-[14px] border-b border-[#DEE1EA]"
                                       >
-                                        <td className="p-4 text-center font-medium">
+                                        <td className="p-4 font-medium">
                                           <div className="flex gap-2 items-center">
                                             <section>
                                               {optionIcons[option.label] ||
@@ -449,7 +569,15 @@ const SignsPage = () => {
                                                 </button>
                                               ) : (
                                                 <button
-                                                  className="relative w-12 h-6 bg-gray-300 rounded-full cursor-pointer"
+                                                  className={`relative w-12 h-6 rounded-full transition-colors duration-200 cursor-pointer ${
+                                                    getToggleState(
+                                                      sign.signName,
+                                                      option.label,
+                                                      option.checked
+                                                    )
+                                                      ? "bg-green-500"
+                                                      : "bg-gray-300"
+                                                  }`}
                                                   onClick={() =>
                                                     handleOptionToggle(
                                                       `${sign.signName}-${option.label}`
@@ -457,25 +585,14 @@ const SignsPage = () => {
                                                   }
                                                 >
                                                   <div
-                                                    className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-200 ${
+                                                    className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 ${
                                                       getToggleState(
                                                         sign.signName,
                                                         option.label,
                                                         option.checked
                                                       )
-                                                        ? "left-7 bg-green-500"
-                                                        : "left-1"
-                                                    }`}
-                                                  />
-                                                  <div
-                                                    className={`w-full h-full rounded-full transition-colors duration-200 ${
-                                                      getToggleState(
-                                                        sign.signName,
-                                                        option.label,
-                                                        option.checked
-                                                      )
-                                                        ? "bg-green-500"
-                                                        : "bg-gray-300"
+                                                        ? "translate-x-7"
+                                                        : "translate-x-1"
                                                     }`}
                                                   />
                                                 </button>
