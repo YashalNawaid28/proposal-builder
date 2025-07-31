@@ -87,6 +87,19 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
     );
   }
 
+  // Convert ISignDetail[] to PricingDetail[] for AG Grid
+  const gridData = rowData.map((item) => ({
+    size: item.size,
+    signPrice: parseFloat(item.signPrice.replace(/[^0-9.-]+/g, "")) || 0,
+    installPrice: parseFloat(item.installPrice.replace(/[^0-9.-]+/g, "")) || 0,
+    signBudget: parseFloat(item.signBudget.replace(/[^0-9.-]+/g, "")) || 0,
+    installBudget:
+      parseFloat(item.installBudget.replace(/[^0-9.-]+/g, "")) || 0,
+    raceway: parseFloat(item.raceway.replace(/[^0-9.-]+/g, "")) || 0,
+  }));
+
+  console.log("Converted grid data:", gridData);
+
   // Column Definitions for AG-Grid
   const colDefs: ColDef[] = [
     {
@@ -157,17 +170,20 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
   const defaultColDef: ColDef = {
     sortable: false,
     filter: false,
-    resizable: false,
+    resizable: true,
     suppressMovable: true,
   };
 
   return (
     // The div wrapper is used to apply custom CSS variables for perfect styling.
     <div
-      className="ag-theme-quartz"
+      className="ag-theme-quartz w-full h-full"
       style={
         {
           minHeight: "200px",
+          width: "100%",
+          height: "100%",
+          flex: "1",
         } as React.CSSProperties
       }
     >
@@ -208,23 +224,38 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
         .ag-theme-quartz .ag-root {
           border: none !important;
         }
+        
+        /* Match background with sign options table */
+        .ag-theme-quartz .ag-header {
+          background-color: #F9F9FB !important;
+        }
+        .ag-theme-quartz .ag-header-cell {
+          background-color: #F9F9FB !important;
+        }
+        .ag-theme-quartz .ag-row {
+          background-color: #F9F9FB !important;
+        }
+        .ag-theme-quartz .ag-cell {
+          background-color: #F9F9FB !important;
+        }
       `}</style>
       <AgGridReact
         ref={gridRef}
-        rowData={rowData}
+        rowData={gridData}
         columnDefs={colDefs}
         defaultColDef={defaultColDef}
-        domLayout="autoHeight" // Grid fits its content
-        enableFillHandle={true} // Enable Enterprise Fill Handle
-        enableRangeSelection={true} // Required for Fill Handle
+        domLayout="normal"
+        enableFillHandle={true}
+        enableRangeSelection={true}
         suppressCellFocus={false}
-        getRowId={(params: GetRowIdParams) => params.data.size} // Use size as unique row ID
+        getRowId={(params: GetRowIdParams) => params.data.size}
         onGridReady={(params) => {
           console.log("AG Grid is ready:", params);
-          params.api.sizeColumnsToFit();
+          setTimeout(() => {
+            params.api.sizeColumnsToFit();
+          }, 100);
         }}
         rowClassRules={{
-          // Apply bottom border to the last row to match the original UI
           "border-b border-[#DEE1EA]": (params: RowClassParams) => {
             return params.rowIndex === params.api.getLastDisplayedRowIndex();
           },
@@ -233,11 +264,6 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
     </div>
   );
 };
-
-// -------------------------------------------------------------
-// The main SignsPage component remains largely the same,
-// but now calls the new PricingGrid component.
-// -------------------------------------------------------------
 
 const SignsPage = () => {
   const [tab, setTab] = useState("Dave's Hot Chicken");
@@ -287,7 +313,6 @@ const SignsPage = () => {
           setSignData([]);
           return;
         }
-
         type SignRaw = {
           id: string;
           sign_image?: string;
@@ -305,7 +330,6 @@ const SignsPage = () => {
           }[];
           options?: { option_name?: string; input_type?: string }[];
         };
-
         const transformedData = await Promise.all(
           (selectedBrand.signs as SignRaw[]).map(async (sign) => {
             const createdDate = new Date(sign.created_at);
@@ -317,8 +341,6 @@ const SignsPage = () => {
             const formattedDate = `${createdDate.toLocaleDateString("en-US", {
               month: "short",
             })} ${day}${suffix}, ${createdDate.getFullYear()}`;
-
-            // Fetch pricing data for this sign
             let details: any[] = [];
             try {
               const pricingResponse = await fetch(
@@ -326,22 +348,28 @@ const SignsPage = () => {
               );
               if (pricingResponse.ok) {
                 const pricingData = await pricingResponse.json();
+                console.log(
+                  `Raw pricing data for sign ${sign.id}:`,
+                  pricingData
+                );
                 if (pricingData.data && Array.isArray(pricingData.data)) {
                   details = pricingData.data.map((pricing: any) => ({
                     size: pricing.size || "",
-                    signPrice: formatCurrency(pricing.sign_price),
-                    installPrice: formatCurrency(pricing.install_price),
-                    signBudget: formatCurrency(pricing.sign_budget),
-                    installBudget: formatCurrency(pricing.install_budget),
-                    raceway: formatCurrency(pricing.raceway),
+                    signPrice: pricing.sign_price || 0,
+                    installPrice: pricing.install_price || 0,
+                    signBudget: pricing.sign_budget || 0,
+                    installBudget: pricing.install_budget || 0,
+                    raceway: pricing.raceway || 0,
                   }));
                 }
               }
             } catch (error) {
-              console.error(`Error fetching pricing for sign ${sign.id}:`, error);
+              console.error(
+                `Error fetching pricing for sign ${sign.id}:`,
+                error
+              );
             }
 
-            // Convert to ISignDetail format for the interface
             const signDetails: ISignDetail[] = details.map((d) => ({
               size: d.size,
               signPrice: formatCurrency(d.signPrice),
@@ -350,34 +378,9 @@ const SignsPage = () => {
               installBudget: formatCurrency(d.installBudget),
               raceway: formatCurrency(d.raceway),
             }));
-
-            // If no data from API, add sample data for testing
             if (signDetails.length === 0) {
-              signDetails.push(
-                {
-                  size: "4' x 8'",
-                  signPrice: "$1,200.00",
-                  installPrice: "$300.00",
-                  signBudget: "$660.00",
-                  installBudget: "$165.00",
-                  raceway: "$150.00",
-                },
-                {
-                  size: "6' x 12'",
-                  signPrice: "$2,400.00",
-                  installPrice: "$450.00",
-                  signBudget: "$1,320.00",
-                  installBudget: "$247.50",
-                  raceway: "$200.00",
-                },
-                {
-                  size: "8' x 16'",
-                  signPrice: "$3,600.00",
-                  installPrice: "$600.00",
-                  signBudget: "$1,980.00",
-                  installBudget: "$330.00",
-                  raceway: "$250.00",
-                }
+              console.log(
+                `No pricing data found for sign ${sign.id}, using empty array`
               );
             }
 
@@ -407,11 +410,10 @@ const SignsPage = () => {
               status: (sign.status as "Active" | "Inactive") || "Active",
               dateAdded: formattedDate,
               signOptions: signOptions,
-              details: signDetails, // Use the converted ISignDetail array
+              details: signDetails,
             };
           })
         );
-
         setSignData(transformedData);
         setExpandedRow(null);
         setError(null);
@@ -526,7 +528,7 @@ const SignsPage = () => {
                           <td colSpan={7} className="p-0">
                             <div className="flex bg-[#F9F9FB]">
                               {/* Left Side: AG-Grid Pricing Table */}
-                              <div className="flex-1 border-r border-[#DEE1EA] min-w-0">
+                              <div className="flex-1 border-r border-[#DEE1EA] min-w-0 w-full">
                                 <PricingGrid rowData={sign.details} />
                               </div>
 
