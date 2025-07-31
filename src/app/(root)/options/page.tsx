@@ -20,7 +20,15 @@ export interface OptionData {
   placeholder: string;
   input_type: string;
   status: string;
-  values: string[];
+}
+
+export interface OptionValue {
+  id: string;
+  option_id: string;
+  display_label: string;
+  price_modifier_type: string;
+  price_modifier_value: number;
+  created_at: string;
 }
 
 // Simplified row data structure for the table
@@ -31,7 +39,7 @@ interface RowData {
   placeholder: string;
   type: string;
   status: string;
-  values: string[];
+  values: OptionValue[];
 }
 
 // Edit Option Value Dialog Component
@@ -189,19 +197,29 @@ const ValuesCell = ({
   values,
   onValueClick,
 }: {
-  values: string[];
+  values: { display_label: string; price_modifier_value?: number; price_modifier_type?: string }[];
   onValueClick: (value: string) => void;
 }) => (
   <div className="flex flex-wrap justify-start gap-1">
-    {values?.map((val: string, idx: number) => (
-      <button
-        key={idx}
-        className="bg-[#F9F9FB] px-2 py-1 rounded text-xs font-medium border border-[#E0E0E0] cursor-pointer hover:bg-gray-200 transition-colors"
-        onClick={() => onValueClick(val)}
-      >
-        {val}
-      </button>
-    ))}
+    {values && values.length > 0 ? (
+      values.map((val, idx: number) => {
+        const displayText = val.price_modifier_value !== undefined && val.price_modifier_value !== null
+          ? `${val.display_label} | +${val.price_modifier_value}${val.price_modifier_type === 'Percentage' ? '%' : ''}`
+          : val.display_label;
+        
+        return (
+          <button
+            key={idx}
+            className="bg-[#F9F9FB] px-2 py-1 rounded text-xs font-medium border border-[#E0E0E0] cursor-pointer hover:bg-gray-200 transition-colors"
+            onClick={() => onValueClick(displayText)}
+          >
+            {displayText}
+          </button>
+        );
+      })
+    ) : (
+      <span className="text-gray-500 text-xs">N/A</span>
+    )}
   </div>
 );
 
@@ -209,6 +227,7 @@ const OptionsPage = () => {
   const user = useUser();
   const [tab, setTab] = useState<"all" | "active" | "archived">("all");
   const [options, setOptions] = useState<OptionData[]>([]);
+  const [optionValues, setOptionValues] = useState<{ [optionId: string]: OptionValue[] }>({});
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
@@ -231,7 +250,24 @@ const OptionsPage = () => {
         }
 
         const data = await res.json();
-        setOptions(data.data || []);
+        const optionsData = data.data || [];
+        setOptions(optionsData);
+
+        // Fetch option values for each option
+        const valuesData: { [optionId: string]: OptionValue[] } = {};
+        for (const option of optionsData) {
+          try {
+            const valuesRes = await fetch(`/api/option-values/get-by-optionId?option_id=${option.id}`);
+            if (valuesRes.ok) {
+              const valuesDataRes = await valuesRes.json();
+              valuesData[option.id] = valuesDataRes.data || [];
+            }
+          } catch (error) {
+            console.error(`Error fetching values for option ${option.id}:`, error);
+            valuesData[option.id] = [];
+          }
+        }
+        setOptionValues(valuesData);
       } catch (error) {
         console.error("Error fetching options:", error);
         setError(
@@ -264,9 +300,9 @@ const OptionsPage = () => {
       placeholder: option?.placeholder,
       type: option.input_type,
       status: option.status,
-      values: option.values,
+      values: optionValues[option.id] || [],
     }));
-  }, [filteredOptions]);
+  }, [filteredOptions, optionValues]);
 
   // --- Selection Handlers ---
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
