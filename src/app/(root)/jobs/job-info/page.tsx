@@ -13,6 +13,7 @@ export default function AddJobPage() {
   const searchParams = useSearchParams();
   const user = useUser();
   const jobId = searchParams.get("id");
+  console.log("Job Info Page Debug - jobId from URL:", jobId);
 
   const [jobInfoOpen, setJobInfoOpen] = useState(!jobId); // Don't show dialog if editing existing job
   const [clientInfoOpen, setClientInfoOpen] = useState(false);
@@ -550,6 +551,7 @@ export default function AddJobPage() {
       <AddSignServiceSidebar
         isOpen={addSignSidebarOpen}
         onClose={() => setAddSignSidebarOpen(false)}
+        jobId={jobId || ""}
       />
     </div>
   );
