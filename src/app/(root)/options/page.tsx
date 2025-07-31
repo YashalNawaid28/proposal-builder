@@ -193,7 +193,7 @@ const ValuesCell = ({
   onValueClick: (value: string) => void;
 }) => (
   <div className="flex flex-wrap justify-start gap-1">
-    {values.map((val: string, idx: number) => (
+    {values?.map((val: string, idx: number) => (
       <button
         key={idx}
         className="bg-[#F9F9FB] px-2 py-1 rounded text-xs font-medium border border-[#E0E0E0] cursor-pointer hover:bg-gray-200 transition-colors"
@@ -261,7 +261,7 @@ const OptionsPage = () => {
       id: option.id,
       iconUrl: option.option_icon,
       name: option.option_name,
-      placeholder: option.placeholder,
+      placeholder: option?.placeholder,
       type: option.input_type,
       status: option.status,
       values: option.values,
@@ -367,7 +367,7 @@ const OptionsPage = () => {
                   {row.name}
                 </td>
                 <td className="p-4 border-r text-center border-[#DEE1EA] text-[14px] w-56 align-middle">
-                  {row.placeholder}
+                  {row?.placeholder}
                 </td>
                 <td className="p-4 border-r border-[#DEE1EA] text-center text-[14px] w-32 align-middle">
                   {row.type}
