@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select";
 import { SignOption, SignData } from "./AddSignServiceSidebar";
 import { useState, useEffect } from "react";
+import { useUser } from "@stackframe/stack";
 
 interface SignConfigurationStepProps {
   selectedSign: SignOption | null;
@@ -18,6 +19,7 @@ interface SignConfigurationStepProps {
   setSignData: (data: SignData) => void;
   onBack: () => void;
   onClose: () => void;
+  jobId: string;
 }
 
 interface SignPricing {
@@ -29,6 +31,17 @@ interface SignPricing {
   sign_budget: number;
   install_budget: number;
   raceway: number;
+  sign_budget_multiplier: number;
+  install_budget_multiplier: number;
+}
+
+interface OptionValue {
+  id: string;
+  option_id: string;
+  display_label: string;
+  price_modifier_type: string;
+  price_modifier_value: number;
+  created_at: string;
 }
 
 export const SignConfigurationStep = ({
@@ -37,7 +50,9 @@ export const SignConfigurationStep = ({
   setSignData,
   onBack,
   onClose,
+  jobId,
 }: SignConfigurationStepProps) => {
+  const user = useUser();
   const [isEditingPrices, setIsEditingPrices] = useState(false);
   const [editablePrices, setEditablePrices] = useState({
     signPrice: "0.00",
@@ -49,6 +64,19 @@ export const SignConfigurationStep = ({
   const [loadingPricing, setLoadingPricing] = useState(false);
   const [availableSizes, setAvailableSizes] = useState<string[]>([]);
   const [loadingSizes, setLoadingSizes] = useState(false);
+  const [colorOptions, setColorOptions] = useState<OptionValue[]>([]);
+  const [fabTypeOptions, setFabTypeOptions] = useState<OptionValue[]>([]);
+  const [racewayOptions, setRacewayOptions] = useState<OptionValue[]>([]);
+  const [loadingOptions, setLoadingOptions] = useState(false);
+  const [modifiedSignPrice, setModifiedSignPrice] = useState<string>("0.00");
+  const [modifiedSignBudget, setModifiedSignBudget] = useState<string>("0.00");
+  const [modifiedInstallBudget, setModifiedInstallBudget] = useState<string>("0.00");
+  const [savedPrices, setSavedPrices] = useState<{
+    signPrice: string;
+    signBudget: string;
+    installBudget: string;
+  } | null>(null);
+  const [selectedSignData, setSelectedSignData] = useState<any>(null);
 
   // Fetch available sizes when sign changes
   useEffect(() => {
@@ -91,7 +119,83 @@ export const SignConfigurationStep = ({
     };
 
     fetchSizes();
+  }, [selectedSign?.id, setSignData, signData]);
+
+  // Fetch sign data when selected sign changes
+  useEffect(() => {
+    const fetchSignData = async () => {
+      if (!selectedSign?.id) {
+        setSelectedSignData(null);
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/signs/get-by-id?sign_id=${selectedSign.id}`);
+        if (response.ok) {
+          const result = await response.json();
+          setSelectedSignData(result.data);
+        }
+      } catch (error) {
+        console.error("Error fetching sign data:", error);
+      }
+    };
+
+    fetchSignData();
   }, [selectedSign?.id]);
+
+  // Fetch options for Color, Fab Type, and Raceway
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        setLoadingOptions(true);
+        
+        // Fetch Color options
+        const colorResponse = await fetch("/api/options/get-by-name?option_name=Color");
+        if (colorResponse.ok) {
+          const colorData = await colorResponse.json();
+          if (colorData.data) {
+            const colorValuesResponse = await fetch(`/api/option-values/get-by-optionId?option_id=${colorData.data.id}`);
+            if (colorValuesResponse.ok) {
+              const colorValuesData = await colorValuesResponse.json();
+              setColorOptions(colorValuesData.data || []);
+            }
+          }
+        }
+
+        // Fetch Fab Type options
+        const fabTypeResponse = await fetch("/api/options/get-by-name?option_name=Fab Type");
+        if (fabTypeResponse.ok) {
+          const fabTypeData = await fabTypeResponse.json();
+          if (fabTypeData.data) {
+            const fabTypeValuesResponse = await fetch(`/api/option-values/get-by-optionId?option_id=${fabTypeData.data.id}`);
+            if (fabTypeValuesResponse.ok) {
+              const fabTypeValuesData = await fabTypeValuesResponse.json();
+              setFabTypeOptions(fabTypeValuesData.data || []);
+            }
+          }
+        }
+
+        // Fetch Raceway options
+        const racewayResponse = await fetch("/api/options/get-by-name?option_name=Raceway");
+        if (racewayResponse.ok) {
+          const racewayData = await racewayResponse.json();
+          if (racewayData.data) {
+            const racewayValuesResponse = await fetch(`/api/option-values/get-by-optionId?option_id=${racewayData.data.id}`);
+            if (racewayValuesResponse.ok) {
+              const racewayValuesData = await racewayValuesResponse.json();
+              setRacewayOptions(racewayValuesData.data || []);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching options:", error);
+      } finally {
+        setLoadingOptions(false);
+      }
+    };
+
+    fetchOptions();
+  }, []);
 
   // Fetch pricing data when sign or size changes
   useEffect(() => {
@@ -125,6 +229,9 @@ export const SignConfigurationStep = ({
         
         if (result.data && result.data.length > 0) {
           const pricing = result.data[0];
+          console.log("Component Debug - Pricing data received:", pricing);
+          console.log("Component Debug - Sign budget multiplier:", pricing.sign_budget_multiplier);
+          console.log("Component Debug - Install budget multiplier:", pricing.install_budget_multiplier);
           setCurrentPricing(pricing);
           setEditablePrices({
             signPrice: pricing.sign_price.toFixed(2),
@@ -172,14 +279,217 @@ export const SignConfigurationStep = ({
   };
 
   const handleEditPrices = () => {
+    // Set the editable prices to the current calculated values
+    setEditablePrices({
+      signPrice: modifiedSignPrice,
+      installPrice: editablePrices.installPrice, // Keep install price as is since it's not modified
+      signBudget: modifiedSignBudget,
+      installBudget: modifiedInstallBudget,
+    });
     setIsEditingPrices(true);
   };
 
   const handleSavePrices = () => {
+    // Save the edited prices only in the form state
+    console.log("Saving prices in form:", editablePrices);
+    setSavedPrices({
+      signPrice: editablePrices.signPrice,
+      signBudget: editablePrices.signBudget,
+      installBudget: editablePrices.installBudget,
+    });
     setIsEditingPrices(false);
-    // Here you could save the prices to your backend
-    console.log("Saving prices:", editablePrices);
   };
+
+  const handleResetPrices = () => {
+    // Clear saved prices and revert to original calculated values
+    setSavedPrices(null);
+    console.log("Prices reset to original calculated values");
+  };
+
+  const handleAddSign = async () => {
+    try {
+      // Use the jobId passed as prop
+      console.log("Component Debug - jobId:", jobId);
+      
+      // Get current user ID
+      if (!user) {
+        throw new Error("User not authenticated");
+      }
+      const userId = user.id;
+
+      // Create pricing version
+      const pricingVersionBody = {
+        job_id: jobId,
+        creator_id: userId,
+      };
+      console.log("Component Debug - Pricing version request body:", pricingVersionBody);
+      
+      const pricingVersionResponse = await fetch("/api/pricing-versions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(pricingVersionBody),
+      });
+
+      if (!pricingVersionResponse.ok) {
+        throw new Error("Failed to create pricing version");
+      }
+
+      const pricingVersionData = await pricingVersionResponse.json();
+      const pricingVersionId = pricingVersionData.data.id;
+
+      // Get the current prices (saved or calculated)
+      const currentSignPrice = savedPrices?.signPrice || modifiedSignPrice;
+      const currentSignBudget = savedPrices?.signBudget || modifiedSignBudget;
+      const currentInstallPrice = editablePrices.installPrice;
+      const currentInstallBudget = savedPrices?.installBudget || modifiedInstallBudget;
+
+      // Create pricing line
+      const descriptionResolved = generateDescriptionResolved();
+      
+      const pricingLineResponse = await fetch("/api/pricing-lines", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          pricing_version_id: pricingVersionId,
+          sign_id: selectedSign?.id,
+          description_resolved: descriptionResolved,
+          qty: 1, // You might want to get this from a quantity input
+          list_price: parseFloat(currentSignPrice),
+          cost_budget: parseFloat(currentSignBudget),
+          list_install_price: parseFloat(currentInstallPrice),
+          cost_install_budget: parseFloat(currentInstallBudget),
+        }),
+      });
+
+      if (!pricingLineResponse.ok) {
+        throw new Error("Failed to create pricing line");
+      }
+
+      console.log("Sign added successfully!");
+      // Close the sidebar or navigate away
+      onClose();
+    } catch (error) {
+      console.error("Error adding sign:", error);
+      // You might want to show an error message to the user
+    }
+  };
+
+  // Helper function to generate description_resolved based on sign_description template
+  const generateDescriptionResolved = () => {
+    if (!selectedSign || !selectedSignData) return "";
+    
+    let description = selectedSignData.sign_description || "";
+    
+    // Replace placeholders with actual values
+    if (signData.size) {
+      description = description.replace(/{Size}/g, signData.size);
+    }
+    
+    if (signData.color) {
+      description = description.replace(/{color}/g, signData.color);
+    }
+    
+    if (signData.fabType) {
+      description = description.replace(/{fab_type}/g, signData.fabType);
+    }
+    
+    // Handle raceway option
+    if (signData.raceway) {
+      let racewayValue = signData.raceway;
+      
+      // Add raceway size in parentheses if raceway size inputs are provided
+      if (signData.racewaySize && signData.racewaySize.height && signData.racewaySize.width) {
+        const heightFeet = signData.racewaySize.height.feet || "0";
+        const heightInches = signData.racewaySize.height.inches || "0";
+        const widthFeet = signData.racewaySize.width.feet || "0";
+        const widthInches = signData.racewaySize.width.inches || "0";
+        
+        const racewaySizeValue = `${heightFeet}'-${heightInches}"x ${widthFeet}'-${widthInches}"`;
+        racewayValue = `${signData.raceway} (${racewaySizeValue})`;
+      }
+      
+      description = description.replace(/{raceway_size}/g, racewayValue);
+    }
+    
+    // Handle mounting surface (if implemented in the future)
+    // For now, we'll remove the {mounting_surface} placeholder if no value is selected
+    description = description.replace(/{mounting_surface}/g, "");
+    
+    // Clean up any extra spaces that might result from empty replacements
+    description = description.replace(/\s+/g, " ").trim();
+    
+    return description;
+  };
+
+  // Helper function to calculate modified sign price and budgets based on selected options
+  const calculateModifiedValues = () => {
+    if (!currentPricing) return { signPrice: "0.00", signBudget: "0.00", installBudget: "0.00" };
+    
+    const baseSignPrice = currentPricing.sign_price;
+    let totalModifier = 0;
+    
+    // Calculate modifiers from selected options
+    const selectedOptions = [
+      { value: signData.color, options: colorOptions },
+      { value: signData.fabType, options: fabTypeOptions },
+      { value: signData.raceway, options: racewayOptions }
+    ];
+    
+    selectedOptions.forEach(({ value, options }) => {
+      if (value) {
+        const selectedOption = options.find(opt => opt.display_label === value);
+        if (selectedOption && selectedOption.price_modifier_value) {
+          if (selectedOption.price_modifier_type === 'Percentage') {
+            totalModifier += (baseSignPrice * selectedOption.price_modifier_value) / 100;
+          } else {
+            totalModifier += selectedOption.price_modifier_value;
+          }
+        }
+      }
+    });
+    
+    // Add raceway value from pricing data if raceway is selected
+    if (signData.raceway && currentPricing.raceway) {
+      totalModifier += currentPricing.raceway;
+    }
+    
+    const finalSignPrice = baseSignPrice + totalModifier;
+    
+    // Calculate modified budgets using multipliers from sign data
+    const signBudgetMultiplier = selectedSignData?.sign_budget_multiplier || 0;
+    const installBudgetMultiplier = selectedSignData?.install_budget_multiplier || 0;
+    
+    console.log("Component Debug - Budget calculation:", {
+      finalSignPrice,
+      signBudgetMultiplier,
+      installPrice: currentPricing?.install_price,
+      installBudgetMultiplier,
+      selectedSignData
+    });
+    
+    // Sign Budget = Sign Price × Sign Budget Multiplier
+    const modifiedSignBudget = finalSignPrice * signBudgetMultiplier;
+    // Install Budget = Install Price × Install Budget Multiplier
+    const modifiedInstallBudget = currentPricing.install_price * installBudgetMultiplier;
+    
+    return {
+      signPrice: finalSignPrice.toFixed(2),
+      signBudget: modifiedSignBudget.toFixed(2),
+      installBudget: modifiedInstallBudget.toFixed(2)
+    };
+  };
+
+  // Update modified values when options or pricing changes
+  useEffect(() => {
+    const modifiedValues = calculateModifiedValues();
+    setModifiedSignPrice(modifiedValues.signPrice);
+    setModifiedSignBudget(modifiedValues.signBudget);
+    setModifiedInstallBudget(modifiedValues.installBudget);
+  }, [currentPricing, signData.color, signData.fabType, signData.raceway, colorOptions, fabTypeOptions, racewayOptions, selectedSignData]);
 
   const handlePriceChange = (
     field: keyof typeof editablePrices,
@@ -262,11 +572,17 @@ export const SignConfigurationStep = ({
                 side="bottom"
                 align="end"
               >
-                <SelectItem value="Red">Red</SelectItem>
-                <SelectItem value="Blue">Blue</SelectItem>
-                <SelectItem value="Green">Green</SelectItem>
-                <SelectItem value="Yellow">Yellow</SelectItem>
-                <SelectItem value="White">White</SelectItem>
+                {loadingOptions ? (
+                  <SelectItem value="loading" disabled>Loading...</SelectItem>
+                ) : colorOptions.length > 0 ? (
+                  colorOptions.map((option) => (
+                    <SelectItem key={option.id} value={option.display_label}>
+                      {option.display_label}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="no-colors" disabled>No colors available</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -287,10 +603,17 @@ export const SignConfigurationStep = ({
                 side="bottom"
                 align="end"
               >
-                <SelectItem value="Halo-Lit">Halo-Lit</SelectItem>
-                <SelectItem value="Channel-Lit">Channel-Lit</SelectItem>
-                <SelectItem value="Back-Lit">Back-Lit</SelectItem>
-                <SelectItem value="Front-Lit">Front-Lit</SelectItem>
+                {loadingOptions ? (
+                  <SelectItem value="loading" disabled>Loading...</SelectItem>
+                ) : fabTypeOptions.length > 0 ? (
+                  fabTypeOptions.map((option) => (
+                    <SelectItem key={option.id} value={option.display_label}>
+                      {option.display_label}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="no-fab-types" disabled>No fab types available</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -311,9 +634,17 @@ export const SignConfigurationStep = ({
                 side="bottom"
                 align="end"
               >
-                <SelectItem value="Raceway-Mounted">Raceway-Mounted</SelectItem>
-                <SelectItem value="Direct-Mounted">Direct-Mounted</SelectItem>
-                <SelectItem value="Pole-Mounted">Pole-Mounted</SelectItem>
+                {loadingOptions ? (
+                  <SelectItem value="loading" disabled>Loading...</SelectItem>
+                ) : racewayOptions.length > 0 ? (
+                  racewayOptions.map((option) => (
+                    <SelectItem key={option.id} value={option.display_label}>
+                      {option.display_label}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="no-raceway" disabled>No raceway options available</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -442,7 +773,7 @@ export const SignConfigurationStep = ({
               </div>
             ) : (
               <span className="text-[16px] font-[800]">
-                ${editablePrices.signPrice}
+                ${savedPrices?.signPrice || modifiedSignPrice}
               </span>
             )}
           </div>
@@ -480,7 +811,7 @@ export const SignConfigurationStep = ({
               </div>
             ) : (
               <span className="text-[16px] font-[800]">
-                ${editablePrices.signBudget}
+                ${savedPrices?.signBudget || modifiedSignBudget}
               </span>
             )}
           </div>
@@ -499,7 +830,7 @@ export const SignConfigurationStep = ({
               </div>
             ) : (
               <span className="text-[16px] font-[800]">
-                ${editablePrices.installBudget}
+                ${savedPrices?.installBudget || modifiedInstallBudget}
               </span>
             )}
           </div>
@@ -511,8 +842,16 @@ export const SignConfigurationStep = ({
           >
             Edit Prices
           </button>
+          {savedPrices && !isEditingPrices && (
+            <button
+              onClick={handleResetPrices}
+              className="w-20 py-2 px-3 border border-white h-10 flex items-center justify-center text-white text-[14px] rounded-sm bg-transparent font-semibold"
+            >
+              Reset
+            </button>
+          )}
           <button
-            onClick={isEditingPrices ? handleSavePrices : undefined}
+            onClick={isEditingPrices ? handleSavePrices : handleAddSign}
             className="flex-1 py-2 px-3 text-black disabled:text-[#464C53] bg-white disabled:bg-[#1018280D] h-10 flex items-center justify-center text-[14px] rounded-sm font-semibold"
           >
             {isEditingPrices ? "Save Pricing" : "Add Sign"}
