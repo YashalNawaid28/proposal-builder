@@ -21,8 +21,14 @@ export interface SignData {
   fabType: string;
   raceway: string;
   racewaySize: {
-    height: { value: string; unit: string };
-    width: { value: string; unit: string };
+    height: {
+      feet: string;
+      inches: string;
+    };
+    width: {
+      feet: string;
+      inches: string;
+    };
   };
 }
 
@@ -45,8 +51,8 @@ export const AddSignServiceSidebar = ({
     fabType: "",
     raceway: "",
     racewaySize: {
-      height: { value: "", unit: "ft" },
-      width: { value: "", unit: "ft" },
+      height: { feet: "", inches: "" },
+      width: { feet: "", inches: "" },
     },
   });
 
@@ -71,8 +77,8 @@ export const AddSignServiceSidebar = ({
       fabType: "",
       raceway: "",
       racewaySize: {
-        height: { value: "", unit: "ft" },
-        width: { value: "", unit: "ft" },
+        height: { feet: "", inches: "" },
+        width: { feet: "", inches: "" },
       },
     });
     onClose();

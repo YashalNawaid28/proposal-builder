@@ -44,9 +44,9 @@ export default function AddJobPage() {
   // Function to generate initials from display name
   const getInitials = (displayName: string) => {
     return displayName
-      .split(' ')
-      .map(name => name.charAt(0))
-      .join('')
+      .split(" ")
+      .map((name) => name.charAt(0))
+      .join("")
       .toUpperCase()
       .slice(0, 2);
   };
@@ -54,37 +54,41 @@ export default function AddJobPage() {
   // Function to format date like "Jul 13th, 2025"
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    const month = date.toLocaleDateString('en-US', { month: 'short' });
+    const month = date.toLocaleDateString("en-US", { month: "short" });
     const day = date.getDate();
     const year = date.getFullYear();
-    
+
     // Add ordinal suffix to day
     const getOrdinalSuffix = (day: number) => {
-      if (day > 3 && day < 21) return 'th';
+      if (day > 3 && day < 21) return "th";
       switch (day % 10) {
-        case 1: return 'st';
-        case 2: return 'nd';
-        case 3: return 'rd';
-        default: return 'th';
+        case 1:
+          return "st";
+        case 2:
+          return "nd";
+        case 3:
+          return "rd";
+        default:
+          return "th";
       }
     };
-    
+
     return `${month} ${day}${getOrdinalSuffix(day)}, ${year}`;
   };
 
   // Function to fetch brand name by ID
   const fetchBrandName = async (brandId: string) => {
     try {
-      const response = await fetch('/api/brands');
+      const response = await fetch("/api/brands");
       const result = await response.json();
       if (result.data) {
         const brand = result.data.find((b: any) => b.id === brandId);
-        return brand ? brand.brand_name : 'Unknown Brand';
+        return brand ? brand.brand_name : "Unknown Brand";
       }
     } catch (error) {
-      console.error('Error fetching brand:', error);
+      console.error("Error fetching brand:", error);
     }
-    return 'Unknown Brand';
+    return "Unknown Brand";
   };
 
   // Function to fetch user name by ID
@@ -94,16 +98,16 @@ export default function AddJobPage() {
       if (response.ok) {
         const user = await response.json();
         return {
-          displayName: user.display_name || 'Unknown User',
-          avatarUrl: user.avatar_url || null
+          displayName: user.display_name || "Unknown User",
+          avatarUrl: user.avatar_url || null,
         };
       }
     } catch (error) {
-      console.error('Error fetching user:', error);
+      console.error("Error fetching user:", error);
     }
     return {
-      displayName: 'Unknown User',
-      avatarUrl: null
+      displayName: "Unknown User",
+      avatarUrl: null,
     };
   };
 
@@ -115,13 +119,17 @@ export default function AddJobPage() {
         const client = await response.json();
         return {
           clientName: client.legal_name,
-          clientLocation: `${client.street || ''}, ${client.city || ''}, ${client.state || ''} ${client.postcode || ''}`.trim().replace(/^,\s*/, ''),
+          clientLocation: `${client.street || ""}, ${client.city || ""}, ${
+            client.state || ""
+          } ${client.postcode || ""}`
+            .trim()
+            .replace(/^,\s*/, ""),
           clientContact: client.client_contact || client.legal_name,
-          clientPhone: client.phone || '',
+          clientPhone: client.phone || "",
         };
       }
     } catch (error) {
-      console.error('Error fetching client:', error);
+      console.error("Error fetching client:", error);
     }
     return null; // Return null when no client is found
   };
@@ -201,29 +209,29 @@ export default function AddJobPage() {
         const job = await res.json();
 
         // Fetch brand name if brand_id exists
-        let brandName = 'Unknown Brand';
+        let brandName = "Unknown Brand";
         if (job.brand_id) {
           brandName = await fetchBrandName(job.brand_id);
         }
 
         // Fetch creator name and avatar if creator_id exists
-        let creatorData = { displayName: 'Unknown User', avatarUrl: null };
+        let creatorData = { displayName: "Unknown User", avatarUrl: null };
         if (job.creator_id) {
           creatorData = await fetchUserName(job.creator_id);
         }
 
         // Fetch PM name and avatar if pm_id exists
-        let pmData = { displayName: 'Unknown PM', avatarUrl: null };
+        let pmData = { displayName: "Unknown PM", avatarUrl: null };
         if (job.pm_id) {
           pmData = await fetchUserName(job.pm_id);
         }
 
         // Fetch client data if client_id exists
         let clientData = {
-          clientName: 'Unknown Client',
-          clientLocation: 'Unknown Location',
-          clientContact: 'Unknown Contact',
-          clientPhone: 'Unknown Phone',
+          clientName: "Unknown Client",
+          clientLocation: "Unknown Location",
+          clientContact: "Unknown Contact",
+          clientPhone: "Unknown Phone",
         };
         if (job.client_id) {
           const fetchedClientData = await fetchClientData(job.client_id);
@@ -274,7 +282,7 @@ export default function AddJobPage() {
   const hasClientData =
     Object.keys(clientData).length > 0 &&
     clientData.clientName &&
-    clientData.clientName !== 'Unknown Client' &&
+    clientData.clientName !== "Unknown Client" &&
     (clientData.clientLocation ||
       clientData.clientContact ||
       clientData.clientPhone);
@@ -388,16 +396,22 @@ export default function AddJobPage() {
             {/* Right Sidebar */}
             <div className="w-[360px] flex flex-col h-full border-l border-[#EAEBEE]">
               {/* Job Info Section */}
-              <section className={`h-full w-full flex p-[16px] border-b border-[#EAEBEE] ${hasJobData ? 'justify-start items-start' : 'justify-center items-center'}`}>
+              <section
+                className={`h-full w-full flex p-[16px] border-b border-[#EAEBEE] ${
+                  hasJobData
+                    ? "justify-start items-start"
+                    : "justify-center items-center"
+                }`}
+              >
                 {hasJobData ? (
                   <div className="flex flex-col gap-[24px] w-full">
                     <h2 className="text-[18px] font-[600] text-[#15191E]">
                       Job Info
                     </h2>
                     <div className="text-[14px] text-[#60646C] font-[500] flex justify-between">
-                      <p >Brand</p>
+                      <p>Brand</p>
                       <p className="font-[400]">
-                        {jobData?.brandName || 'Unknown Brand'}
+                        {jobData?.brandName || "Unknown Brand"}
                       </p>
                     </div>
                     <div className="text-[14px] text-[#60646C] font-[500] flex justify-between items-start">
@@ -408,27 +422,25 @@ export default function AddJobPage() {
                       </p>
                     </div>
                     <div className="text-[14px] text-[#60646C] font-[500] flex justify-between">
-                      <p>
-                        Created
-                      </p>
+                      <p>Created</p>
                       <p className="font-[400]">
                         {jobData.createdDate || "Loading..."}
                       </p>
                     </div>
                     <div className="text-[14px] text-[#60646C] font-[500] flex justify-between">
-                      <p>
-                        Creator
-                      </p>
+                      <p>Creator</p>
                       <div className="flex items-center gap-2">
                         {jobData.creatorAvatar ? (
-                          <img 
-                            src={jobData.creatorAvatar} 
-                            alt={jobData.creatorName || "Creator"} 
+                          <img
+                            src={jobData.creatorAvatar}
+                            alt={jobData.creatorName || "Creator"}
                             className="w-6 h-6 rounded-full object-cover"
                           />
                         ) : (
                           <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center text-xs font-medium text-gray-700">
-                            {jobData.creatorName ? getInitials(jobData.creatorName) : "U"}
+                            {jobData.creatorName
+                              ? getInitials(jobData.creatorName)
+                              : "U"}
                           </div>
                         )}
                       </div>
@@ -437,9 +449,9 @@ export default function AddJobPage() {
                       <p>PM</p>
                       <div className="flex items-center gap-2">
                         {jobData.pmAvatar ? (
-                          <img 
-                            src={jobData.pmAvatar} 
-                            alt={jobData.pmName || "PM"} 
+                          <img
+                            src={jobData.pmAvatar}
+                            alt={jobData.pmName || "PM"}
                             className="w-6 h-6 rounded-full object-cover"
                           />
                         ) : (
@@ -465,7 +477,13 @@ export default function AddJobPage() {
                 )}
               </section>
               {/* Client Info Section */}
-              <section className={`h-full w-full flex p-[16px] ${hasClientData ? 'justify-start items-start' : 'justify-center items-center'}`}>
+              <section
+                className={`h-full w-full flex p-[16px] ${
+                  hasClientData
+                    ? "justify-start items-start"
+                    : "justify-center items-center"
+                }`}
+              >
                 {hasClientData ? (
                   <div className="flex flex-col gap-[24px] w-full">
                     <h2 className="text-[18px] font-[600] text-[#15191E]">
