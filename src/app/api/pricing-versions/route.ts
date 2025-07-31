@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
       .insert({
         job_id,
         version_no: 1,
-        revision_no: 1,
+        revision_no: 0,
         creator_id,
         status: "Draft",
         signed_at: null,
