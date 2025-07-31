@@ -289,6 +289,7 @@ const SignsPage = () => {
         }
 
         type SignRaw = {
+          id: string;
           sign_image?: string;
           sign_name?: string;
           sign_description?: string;
@@ -305,8 +306,8 @@ const SignsPage = () => {
           options?: { option_name?: string; input_type?: string }[];
         };
 
-        const transformedData = (selectedBrand.signs as SignRaw[]).map(
-          (sign) => {
+        const transformedData = await Promise.all(
+          (selectedBrand.signs as SignRaw[]).map(async (sign) => {
             const createdDate = new Date(sign.created_at);
             const day = createdDate.getDate();
             const suffix =
@@ -317,20 +318,28 @@ const SignsPage = () => {
               month: "short",
             })} ${day}${suffix}, ${createdDate.getFullYear()}`;
 
-            // Parse pricing data and ensure values are numbers for AG-Grid
-            console.log("Raw sign_pricing data:", sign.sign_pricing); // Debug log
-
-            const details: PricingDetail[] =
-              sign.sign_pricing && Array.isArray(sign.sign_pricing)
-                ? sign.sign_pricing.map((p) => ({
-                    size: p.size || "",
-                    signPrice: p.sign_price ?? 0,
-                    installPrice: p.install_price ?? 0,
-                    signBudget: p.sign_budget ?? 0,
-                    installBudget: p.install_budget ?? 0,
-                    raceway: p.raceway ?? 0,
-                  }))
-                : [];
+            // Fetch pricing data for this sign
+            let details: any[] = [];
+            try {
+              const pricingResponse = await fetch(
+                `/api/sign-pricing/get-by-signId?sign_id=${sign.id}`
+              );
+              if (pricingResponse.ok) {
+                const pricingData = await pricingResponse.json();
+                if (pricingData.data && Array.isArray(pricingData.data)) {
+                  details = pricingData.data.map((pricing: any) => ({
+                    size: pricing.size || "",
+                    signPrice: formatCurrency(pricing.sign_price),
+                    installPrice: formatCurrency(pricing.install_price),
+                    signBudget: formatCurrency(pricing.sign_budget),
+                    installBudget: formatCurrency(pricing.install_budget),
+                    raceway: formatCurrency(pricing.raceway),
+                  }));
+                }
+              }
+            } catch (error) {
+              console.error(`Error fetching pricing for sign ${sign.id}:`, error);
+            }
 
             // Convert to ISignDetail format for the interface
             const signDetails: ISignDetail[] = details.map((d) => ({
@@ -400,7 +409,7 @@ const SignsPage = () => {
               signOptions: signOptions,
               details: signDetails, // Use the converted ISignDetail array
             };
-          }
+          })
         );
 
         setSignData(transformedData);

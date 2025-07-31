@@ -1,53 +1,97 @@
 "use client";
+import { useState, useEffect } from "react";
 import { SignOption } from "./AddSignServiceSidebar";
 
 interface SignageTabProps {
   onSignSelect: (sign: SignOption) => void;
 }
 
+interface SignData {
+  id: string;
+  sign_name: string;
+  sign_description: string;
+  sign_image?: string;
+  status: string;
+}
+
 export const SignageTab = ({ onSignSelect }: SignageTabProps) => {
-  const signageOptions: SignOption[] = [
-    {
-      id: "1",
-      name: "Channel Letters",
-      image: "/images/dave1.png",
-      description: "Single line channel letters",
-    },
-    {
-      id: "2",
-      name: "2-Line Channel Letters",
-      image: "/images/dave2.png",
-      description: "Two line channel letters",
-    },
-    {
-      id: "3",
-      name: "Channel Letters on a Backer Panel",
-      image: "/images/dave3.png",
-      description: "Channel letters mounted on backer panel",
-    },
-    {
-      id: "4",
-      name: "2-Line Channel Letters on Backer Panels",
-      image: "/images/dave4.png",
-      description: "Two line channel letters on backer panel",
-    },
-    {
-      id: "5",
-      name: "Circular Logo",
-      image: "/images/dave5.png",
-      description: "Circular logo design",
-    },
-    {
-      id: "6",
-      name: "Blade Sign",
-      image: "/images/dave6.png",
-      description: "Projecting blade sign",
-    },
-  ];
+  const [signs, setSigns] = useState<SignOption[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchSigns = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const response = await fetch("/api/signs/get-all");
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch signs: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (!result.data) {
+          throw new Error("No data received from API");
+        }
+
+        // Transform the API data to match SignOption interface
+        const transformedSigns: SignOption[] = result.data.map((sign: SignData) => ({
+          id: sign.id,
+          name: sign.sign_name,
+          image: sign.sign_image || "/images/dave1.png", // fallback image
+          description: sign.sign_description,
+        }));
+
+        setSigns(transformedSigns);
+      } catch (err) {
+        console.error("Error fetching signs:", err);
+        setError(err instanceof Error ? err.message : "Failed to fetch signs");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSigns();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-2 gap-4">
+        {[...Array(6)].map((_, index) => (
+          <div
+            key={index}
+            className="animate-pulse cursor-pointer flex flex-col justify-between group w-full border-b border-r border-[#DEE1EA] p-5 h-[240px]"
+          >
+            <div className="bg-gray-200 flex-1 rounded-[8px] mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded"></div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-40">
+        <p className="text-red-500">Error: {error}</p>
+      </div>
+    );
+  }
+
+  if (signs.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-40">
+        <p className="text-gray-500">No signs available</p>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-2">
-      {signageOptions.map((option) => (
+      {signs.map((option) => (
         <button
           key={option.id}
           onClick={() => onSignSelect(option)}
