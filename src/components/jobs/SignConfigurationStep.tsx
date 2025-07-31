@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SignOption, SignData } from "./AddSignServiceSidebar";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface SignConfigurationStepProps {
   selectedSign: SignOption | null;
@@ -18,6 +18,17 @@ interface SignConfigurationStepProps {
   setSignData: (data: SignData) => void;
   onBack: () => void;
   onClose: () => void;
+}
+
+interface SignPricing {
+  id: string;
+  sign_id: string;
+  size: string;
+  sign_price: number;
+  install_price: number;
+  sign_budget: number;
+  install_budget: number;
+  raceway: number;
 }
 
 export const SignConfigurationStep = ({
@@ -29,11 +40,123 @@ export const SignConfigurationStep = ({
 }: SignConfigurationStepProps) => {
   const [isEditingPrices, setIsEditingPrices] = useState(false);
   const [editablePrices, setEditablePrices] = useState({
-    signPrice: "3520.00",
-    installPrice: "1970.00",
-    signBudget: "1936.00",
-    installBudget: "1083.00",
+    signPrice: "0.00",
+    installPrice: "0.00",
+    signBudget: "0.00",
+    installBudget: "0.00",
   });
+  const [currentPricing, setCurrentPricing] = useState<SignPricing | null>(null);
+  const [loadingPricing, setLoadingPricing] = useState(false);
+  const [availableSizes, setAvailableSizes] = useState<string[]>([]);
+  const [loadingSizes, setLoadingSizes] = useState(false);
+
+  // Fetch available sizes when sign changes
+  useEffect(() => {
+    const fetchSizes = async () => {
+      if (!selectedSign?.id) {
+        setAvailableSizes([]);
+        return;
+      }
+
+      try {
+        setLoadingSizes(true);
+        const response = await fetch(
+          `/api/sign-pricing/get-sizes-by-signId?sign_id=${selectedSign.id}`
+        );
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch sizes: ${response.status}`);
+        }
+
+        const result = await response.json();
+        
+        if (result.data && result.data.length > 0) {
+          // Extract just the numbers from sizes like "12"", "18"", etc.
+          const sizes = result.data.map((size: string) => size.replace('"', ''));
+          setAvailableSizes(sizes);
+          
+          // Set the first available size as default if no size is selected
+          if (!signData.size && sizes.length > 0) {
+            setSignData({ ...signData, size: sizes[0] });
+          }
+        } else {
+          setAvailableSizes([]);
+        }
+      } catch (error) {
+        console.error("Error fetching sizes:", error);
+        setAvailableSizes([]);
+      } finally {
+        setLoadingSizes(false);
+      }
+    };
+
+    fetchSizes();
+  }, [selectedSign?.id]);
+
+  // Fetch pricing data when sign or size changes
+  useEffect(() => {
+    const fetchPricing = async () => {
+      if (!selectedSign?.id || !signData.size || signData.size === "loading" || signData.size === "no-sizes") {
+        setCurrentPricing(null);
+        setEditablePrices({
+          signPrice: "0.00",
+          installPrice: "0.00",
+          signBudget: "0.00",
+          installBudget: "0.00",
+        });
+        return;
+      }
+
+      try {
+        setLoadingPricing(true);
+        const url = `/api/sign-pricing/get-by-signId?sign_id=${selectedSign.id}&size=${signData.size}`;
+        console.log("Component Debug - selectedSign.id:", selectedSign.id);
+        console.log("Component Debug - signData.size:", signData.size);
+        console.log("Component Debug - Fetching URL:", url);
+        
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch pricing: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log("Component Debug - API Response:", result);
+        
+        if (result.data && result.data.length > 0) {
+          const pricing = result.data[0];
+          setCurrentPricing(pricing);
+          setEditablePrices({
+            signPrice: pricing.sign_price.toFixed(2),
+            installPrice: pricing.install_price.toFixed(2),
+            signBudget: pricing.sign_budget.toFixed(2),
+            installBudget: pricing.install_budget.toFixed(2),
+          });
+        } else {
+          setCurrentPricing(null);
+          setEditablePrices({
+            signPrice: "0.00",
+            installPrice: "0.00",
+            signBudget: "0.00",
+            installBudget: "0.00",
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching pricing:", error);
+        setCurrentPricing(null);
+        setEditablePrices({
+          signPrice: "0.00",
+          installPrice: "0.00",
+          signBudget: "0.00",
+          installBudget: "0.00",
+        });
+      } finally {
+        setLoadingPricing(false);
+      }
+    };
+
+    fetchPricing();
+  }, [selectedSign?.id, signData.size]);
 
   const handleSizeChange = (value: string) => {
     setSignData({ ...signData, size: value });
@@ -83,7 +206,7 @@ export const SignConfigurationStep = ({
       {/* Sign Preview */}
       <section className="p-4 flex items-center">
         <div className="h-20 w-[130px] p-3 bg-[#F3F4F8] rounded-lg flex items-center justify-center">
-          {selectedSign && <img src={selectedSign.image} alt="" />}
+          {selectedSign && <img src={selectedSign?.image} alt="" />}
         </div>
         <span className="text-[14px] ml-3 font-medium">
           {selectedSign?.name}
@@ -101,7 +224,7 @@ export const SignConfigurationStep = ({
             <Label className="text-[14px] font-[500] text-[#60646C]">
               Size
             </Label>
-            <Select value={signData.size} onValueChange={handleSizeChange}>
+            <Select value={signData?.size || ""} onValueChange={handleSizeChange}>
               <SelectTrigger className="h-9 w-auto min-w-[80px] border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0">
                 <SelectValue />
               </SelectTrigger>
@@ -111,11 +234,17 @@ export const SignConfigurationStep = ({
                 side="bottom"
                 align="end"
               >
-                <SelectItem value="12">12</SelectItem>
-                <SelectItem value="18">18</SelectItem>
-                <SelectItem value="24">24</SelectItem>
-                <SelectItem value="36">36</SelectItem>
-                <SelectItem value="48">48</SelectItem>
+                {loadingSizes ? (
+                  <SelectItem value="loading" disabled>Loading...</SelectItem>
+                ) : availableSizes?.length > 0 ? (
+                  availableSizes?.map((size) => (
+                    <SelectItem key={size} value={size}>
+                      {size}″
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="no-sizes" disabled>No sizes available</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -292,6 +421,11 @@ export const SignConfigurationStep = ({
       </section>
       {/* Footer */}
       <section className="p-4 bg-black text-white">
+        {loadingPricing && (
+          <div className="text-center text-gray-300 mb-4">
+            Loading pricing...
+          </div>
+        )}
         <div className="space-y-4 mb-4">
           <div className="flex justify-between items-center">
             <span className="text-[14px] font-[500]">Sign Price</span>
