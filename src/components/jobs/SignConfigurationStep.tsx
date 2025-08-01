@@ -78,6 +78,7 @@ export const SignConfigurationStep = ({
   const [savedPrices, setSavedPrices] = useState<{
     signPrice: string;
     signBudget: string;
+    installPrice: string;
     installBudget: string;
   } | null>(null);
   const [selectedSignData, setSelectedSignData] = useState<any>(null);
@@ -411,6 +412,7 @@ export const SignConfigurationStep = ({
     setSavedPrices({
       signPrice: editablePrices.signPrice,
       signBudget: editablePrices.signBudget,
+      installPrice: editablePrices.installPrice,
       installBudget: editablePrices.installBudget,
     });
     setIsEditingPrices(false);
@@ -544,7 +546,9 @@ export const SignConfigurationStep = ({
     if (!currentPricing) return { signPrice: "0.00", signBudget: "0.00", installBudget: "0.00" };
     
     const baseSignPrice = currentPricing.sign_price;
-    let totalModifier = 0;
+    const baseInstallPrice = currentPricing.install_price;
+    let signPriceModifier = 0;
+    let installPriceModifier = 0;
     
     // Calculate modifiers from selected options
     Object.keys(dynamicOptions).forEach((key) => {
@@ -554,10 +558,20 @@ export const SignConfigurationStep = ({
       if (value && options) {
         const selectedOption = options.find((opt: OptionValue) => opt.display_label === value);
         if (selectedOption && selectedOption.price_modifier_value) {
-          if (selectedOption.price_modifier_type === 'Percentage') {
-            totalModifier += (baseSignPrice * selectedOption.price_modifier_value) / 100;
+          // Special case: Mounting Surface affects Install Price instead of Sign Price
+          if (key.includes('mounting') || key.includes('surface')) {
+            if (selectedOption.price_modifier_type === 'Percentage') {
+              installPriceModifier += (baseInstallPrice * selectedOption.price_modifier_value) / 100;
+            } else {
+              installPriceModifier += selectedOption.price_modifier_value;
+            }
           } else {
-            totalModifier += selectedOption.price_modifier_value;
+            // All other options affect Sign Price
+            if (selectedOption.price_modifier_type === 'Percentage') {
+              signPriceModifier += (baseSignPrice * selectedOption.price_modifier_value) / 100;
+            } else {
+              signPriceModifier += selectedOption.price_modifier_value;
+            }
           }
         }
       }
@@ -565,10 +579,11 @@ export const SignConfigurationStep = ({
     
     // Add raceway value from pricing data if raceway is selected
     if (signData.raceway && currentPricing.raceway) {
-      totalModifier += currentPricing.raceway;
+      signPriceModifier += currentPricing.raceway;
     }
     
-    const finalSignPrice = baseSignPrice + totalModifier;
+    const finalSignPrice = baseSignPrice + signPriceModifier;
+    const finalInstallPrice = baseInstallPrice + installPriceModifier;
     
     // Calculate modified budgets using multipliers from sign data
     const signBudgetMultiplier = selectedSignData?.sign_budget_multiplier || 0;
@@ -576,8 +591,10 @@ export const SignConfigurationStep = ({
     
     console.log("Component Debug - Budget calculation:", {
       finalSignPrice,
+      finalInstallPrice,
+      signPriceModifier,
+      installPriceModifier,
       signBudgetMultiplier,
-      installPrice: currentPricing?.install_price,
       installBudgetMultiplier,
       selectedSignData
     });
@@ -585,7 +602,7 @@ export const SignConfigurationStep = ({
     // Sign Budget = Sign Price × Sign Budget Multiplier
     const modifiedSignBudget = finalSignPrice * signBudgetMultiplier;
     // Install Budget = Install Price × Install Budget Multiplier
-    const modifiedInstallBudget = currentPricing.install_price * installBudgetMultiplier;
+    const modifiedInstallBudget = finalInstallPrice * installBudgetMultiplier;
     
     return {
       signPrice: finalSignPrice.toFixed(2),
@@ -964,7 +981,7 @@ export const SignConfigurationStep = ({
               </div>
             ) : (
               <span className="text-[16px] font-[800]">
-                ${editablePrices.installPrice}
+                ${savedPrices?.installPrice || editablePrices.installPrice}
               </span>
             )}
           </div>
