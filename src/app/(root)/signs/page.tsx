@@ -106,7 +106,6 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       headerName: "Size",
       width: 150,
       minWidth: 120,
-      maxWidth: 200,
       cellClass: "font-medium text-center",
       headerClass: "text-center",
     },
@@ -115,7 +114,6 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       headerName: "Sign Price",
       flex: 1,
       minWidth: 120,
-      maxWidth: 200,
       valueFormatter: (p: ValueFormatterParams) => formatCurrency(p.value),
       valueParser: (p: ValueParserParams) =>
         Number(String(p.newValue).replace(/[^0-9.-]+/g, "")),
@@ -127,7 +125,6 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       headerName: "Install Price",
       flex: 1,
       minWidth: 120,
-      maxWidth: 200,
       valueFormatter: (p: ValueFormatterParams) => formatCurrency(p.value),
       valueParser: (p: ValueParserParams) =>
         Number(String(p.newValue).replace(/[^0-9.-]+/g, "")),
@@ -139,7 +136,6 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       headerName: "Sign Budget",
       flex: 1,
       minWidth: 120,
-      maxWidth: 200,
       valueFormatter: (p: ValueFormatterParams) => formatCurrency(p.value),
       valueParser: (p: ValueParserParams) =>
         Number(String(p.newValue).replace(/[^0-9.-]+/g, "")),
@@ -151,7 +147,6 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       headerName: "Install Budget",
       flex: 1,
       minWidth: 120,
-      maxWidth: 200,
       valueFormatter: (p: ValueFormatterParams) => formatCurrency(p.value),
       valueParser: (p: ValueParserParams) =>
         Number(String(p.newValue).replace(/[^0-9.-]+/g, "")),
@@ -163,7 +158,6 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       headerName: "Raceway",
       flex: 1,
       minWidth: 120,
-      maxWidth: 200,
       valueFormatter: (p: ValueFormatterParams) => formatCurrency(p.value),
       valueParser: (p: ValueParserParams) =>
         Number(String(p.newValue).replace(/[^0-9.-]+/g, "")),
@@ -378,7 +372,7 @@ const SignsPage = () => {
     <div className="bg-white">
       <h1 className="text-2xl font-bold p-5">Signs</h1>
       <PageTabs tabs={brands} activeTab={tab} onTabChange={setTab} />
-      <div className="border border-[#DEE1EA] rounded-lg overflow-hidden">
+      <div className="border border-[#DEE1EA] overflow-hidden">
         {(() => {
           if (loading)
             return <div className="p-8 text-center">Loading sign data...</div>;
