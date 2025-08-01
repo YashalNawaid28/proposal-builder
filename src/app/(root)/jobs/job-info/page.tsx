@@ -15,6 +15,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { generateProposalHTML } from "@/lib/generate-proposal-html";
+import { generatePricingSheetHTML } from "@/lib/generate-pricing-sheet-html";
 
 export default function AddJobPage() {
   const searchParams = useSearchParams();
@@ -491,6 +499,96 @@ export default function AddJobPage() {
     }
   }, [selectedVersion, jobId, fetchPricingData]);
 
+  // Function to download proposal PDF
+  const downloadProposal = async () => {
+    if (!selectedVersion || !pricingData.lines.length) {
+      alert("No pricing data available for download");
+      return;
+    }
+
+    try {
+      const htmlContent = generateProposalHTML(
+        jobData,
+        clientData,
+        pricingData,
+        { version_no: selectedVersion.version_no, revision_no: selectedVersion.revision_no }
+      );
+
+      const response = await fetch("/api/generate-proposal-pdf", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          htmlContent,
+          fileName: `proposal-${jobData.jobNumber || 'job'}-v${selectedVersion.version_no}.${selectedVersion.revision_no}`,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate PDF");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `proposal-${jobData.jobNumber || 'job'}-v${selectedVersion.version_no}.${selectedVersion.revision_no}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Error downloading proposal:", error);
+      alert("Failed to download proposal");
+    }
+  };
+
+  // Function to download pricing sheet
+  const downloadPricingSheet = async () => {
+    if (!selectedVersion || !pricingData.lines.length) {
+      alert("No pricing data available for download");
+      return;
+    }
+
+    try {
+      const htmlContent = generatePricingSheetHTML(
+        jobData,
+        clientData,
+        pricingData,
+        { version_no: selectedVersion.version_no, revision_no: selectedVersion.revision_no }
+      );
+
+      const response = await fetch("/api/generate-pricing-sheet-pdf", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          htmlContent,
+          fileName: `pricing-sheet-${jobData.jobNumber || 'job'}-v${selectedVersion.version_no}.${selectedVersion.revision_no}`,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate PDF");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `pricing-sheet-${jobData.jobNumber || 'job'}-v${selectedVersion.version_no}.${selectedVersion.revision_no}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Error downloading pricing sheet:", error);
+      alert("Failed to download pricing sheet");
+    }
+  };
+
   const hasJobData =
     Object.keys(jobData).length > 0 &&
     (jobData.brand ||
@@ -568,10 +666,22 @@ export default function AddJobPage() {
               <Plus className="size-4" />
               New Version
             </button>
-            <button className="h-10 bg-black flex items-center text-white justify-center px-3 gap-2 rounded-md">
-              Download
-              <ChevronDown className="size-4" />
-            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="h-10 bg-black flex items-center text-white justify-center px-3 gap-2 rounded-md hover:bg-gray-800">
+                  Download
+                  <ChevronDown className="size-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={downloadProposal}>
+                  Download Proposal
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={downloadPricingSheet}>
+                  Download Pricing Sheet
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </section>
         </div>
       </div>
