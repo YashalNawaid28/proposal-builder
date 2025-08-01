@@ -10,8 +10,6 @@ import {
 import type { BrandData } from "../brands/page";
 import { IAccount, ISignDetail, ISignOption } from "@/lib/interfaces";
 import { PageTabs } from "@/components/ui/page-tabs";
-
-// AG-Grid Imports
 import { AgGridReact } from "ag-grid-react";
 import {
   ColDef,
@@ -19,23 +17,29 @@ import {
   ValueParserParams,
   GetRowIdParams,
   RowClassParams,
-  AllCommunityModule,
+  ClientSideRowModelModule,
+  NumberEditorModule,
+  TextEditorModule,
+  ValidationModule,
   ModuleRegistry,
 } from "ag-grid-community";
-import "ag-grid-community/styles/ag-grid.css"; // Core grid CSS
-import "ag-grid-community/styles/ag-theme-quartz.css"; // Modern theme
+import { CellSelectionModule } from "ag-grid-enterprise";
+import "ag-grid-community/styles/ag-grid.css";
+import "ag-grid-community/styles/ag-theme-quartz.css";
 import { LicenseManager } from "ag-grid-enterprise";
 
-// Register all Community features
-ModuleRegistry.registerModules([AllCommunityModule]);
+ModuleRegistry.registerModules([
+  NumberEditorModule,
+  TextEditorModule,
+  ClientSideRowModelModule,
+  CellSelectionModule,
+  ...(process.env.NODE_ENV !== "production" ? [ValidationModule] : []),
+]);
 
-// --- IMPORTANT: Set your AG-Grid Enterprise license key here ---
-// You can get a trial key from the AG-Grid website.
 LicenseManager.setLicenseKey(
-  "Using_this_AG_Grid_Enterprise_key_(https://ag-grid.com/legal/license/enterprise)_in_excess_of_the_licenses_granted_is_not_permitted___Please_report_misuse_to_(legal@ag-grid.com)___For_help_with_changing_this_key_please_contact_info@ag-grid.com__"
+  "[TRIAL]_this_{AG_Charts_and_AG_Grid}_Enterprise_key_{AG-090575}_is_granted_for_evaluation_only___Use_in_production_is_not_permitted___Please_report_misuse_to_legal@ag-grid.com___For_help_with_purchasing_a_production_key_please_contact_info@ag-grid.com___You_are_granted_a_{Single_Application}_Developer_License_for_one_application_only___All_Front-End_JavaScript_developers_working_on_the_application_would_need_to_be_licensed___This_key_will_deactivate_on_{14 August 2025}____[v3]_[0102]_MTc1NTEyNjAwMDAwMA==2bf724e243e12a2673a0da27840ab6db"
 );
 
-// Helper to format currency
 const formatCurrency = (value: string | number | undefined | null) => {
   if (value === null || value === undefined || isNaN(Number(value)))
     return "$0.00";
@@ -49,7 +53,6 @@ const formatCurrency = (value: string | number | undefined | null) => {
   }).format(num);
 };
 
-// A map for dynamic icons in the "Sign Options" section
 const optionIcons: { [key: string]: React.ReactNode } = {
   default: <Asterisk size={30} />,
   "Sign Budget": <Asterisk size={25} />,
@@ -59,10 +62,6 @@ const optionIcons: { [key: string]: React.ReactNode } = {
   Color: <Rows3 size={20} />,
   "Fabrication Type": <Rows3 size={20} />,
 };
-
-// ## New Component: PricingGrid with AG-Grid Enterprise ##
-// This component replaces the nested HTML table for pricing details.
-// -----------------------------------------------------------------
 
 interface PricingDetail {
   size: string;
@@ -106,7 +105,9 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       field: "size",
       headerName: "Size",
       width: 150,
-      cellClass: "font-medium text-center border-r border-[#DEE1EA]",
+      minWidth: 120,
+      maxWidth: 200,
+      cellClass: "font-medium text-center",
       headerClass: "text-center",
     },
     {
@@ -114,11 +115,11 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       headerName: "Sign Price",
       flex: 1,
       minWidth: 120,
-      editable: true,
+      maxWidth: 200,
       valueFormatter: (p: ValueFormatterParams) => formatCurrency(p.value),
       valueParser: (p: ValueParserParams) =>
         Number(String(p.newValue).replace(/[^0-9.-]+/g, "")),
-      cellClass: "text-center border-r border-[#DEE1EA]",
+      cellClass: "text-center",
       headerClass: "text-center",
     },
     {
@@ -126,11 +127,11 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       headerName: "Install Price",
       flex: 1,
       minWidth: 120,
-      editable: true,
+      maxWidth: 200,
       valueFormatter: (p: ValueFormatterParams) => formatCurrency(p.value),
       valueParser: (p: ValueParserParams) =>
         Number(String(p.newValue).replace(/[^0-9.-]+/g, "")),
-      cellClass: "text-center border-r border-[#DEE1EA]",
+      cellClass: "text-center",
       headerClass: "text-center",
     },
     {
@@ -138,11 +139,11 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       headerName: "Sign Budget",
       flex: 1,
       minWidth: 120,
-      editable: true,
+      maxWidth: 200,
       valueFormatter: (p: ValueFormatterParams) => formatCurrency(p.value),
       valueParser: (p: ValueParserParams) =>
         Number(String(p.newValue).replace(/[^0-9.-]+/g, "")),
-      cellClass: "text-center border-r border-[#DEE1EA]",
+      cellClass: "text-center",
       headerClass: "text-center",
     },
     {
@@ -150,11 +151,11 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       headerName: "Install Budget",
       flex: 1,
       minWidth: 120,
-      editable: true,
+      maxWidth: 200,
       valueFormatter: (p: ValueFormatterParams) => formatCurrency(p.value),
       valueParser: (p: ValueParserParams) =>
         Number(String(p.newValue).replace(/[^0-9.-]+/g, "")),
-      cellClass: "text-center border-r border-[#DEE1EA]",
+      cellClass: "text-center",
       headerClass: "text-center",
     },
     {
@@ -162,89 +163,26 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       headerName: "Raceway",
       flex: 1,
       minWidth: 120,
-      editable: true,
+      maxWidth: 200,
       valueFormatter: (p: ValueFormatterParams) => formatCurrency(p.value),
       valueParser: (p: ValueParserParams) =>
         Number(String(p.newValue).replace(/[^0-9.-]+/g, "")),
-      cellClass: "text-center", // No right border on the last column
+      cellClass: "text-center",
       headerClass: "text-center",
     },
   ];
 
-  // Default column definitions
+  // FIX 1: The problematic `cellStyle` is removed.
   const defaultColDef: ColDef = {
     sortable: false,
     filter: false,
     resizable: true,
     suppressMovable: true,
-    // 👇 Replace the previous cellStyle with this one
-    cellStyle: {
-      display: "flex",
-      alignItems: "center",      // Vertically center
-      justifyContent: "center", // Horizontally center
-    },
+    editable: true,
   };
 
   return (
-    <div className="ag-theme-quartz bg-red-300 w-full h-full flex-1">
-      <style>{`
-        /* Center header text */
-        .ag-theme-quartz .ag-header-cell-label {
-          justify-content: center !important;
-          text-align: center !important;
-          font-size: 13px !important;
-          font-weight: 600 !important;
-        }
-        .ag-theme-quartz .ag-header-cell {
-          text-align: center !important;
-          height: 40px !important;
-          font-size: 13px !important;
-          font-weight: 600 !important;
-        }
-        
-        /* Match borders with main table */
-        .ag-theme-quartz .ag-header-cell {
-          border-right: 1px solid #DEE1EA !important;
-          border-bottom: none !important;
-        }
-        .ag-theme-quartz .ag-cell {
-          border-right: 1px solid #DEE1EA !important;
-        }
-        .ag-theme-quartz .ag-row {
-          border-bottom: 1px solid #DEE1EA !important;
-        }
-        .ag-theme-quartz .ag-header-cell:last-child {
-          border-right: none !important;
-        }
-        .ag-theme-quartz .ag-cell:last-child {
-          border-right: none !important;
-        }
-        
-        /* Remove main border from AG Grid */
-        .ag-theme-quartz {
-          border: none !important;
-        }
-        .ag-theme-quartz .ag-root-wrapper {
-          border: none !important;
-        }
-        .ag-theme-quartz .ag-root {
-          border: none !important;
-        }
-        
-        /* Match background with sign options table */
-        .ag-theme-quartz .ag-header {
-          background-color: #F9F9FB !important;
-        }
-        .ag-theme-quartz .ag-header-cell {
-          background-color: #F9F9FB !important;
-        }
-        .ag-theme-quartz .ag-row {
-          background-color: #F9F9FB !important;
-        }
-        .ag-theme-quartz .ag-cell {
-          background-color: #F9F9FB !important;
-        }
-      `}</style>
+    <div className="ag-theme-quartz h-full w-full flex-1">
       <AgGridReact
         ref={gridRef}
         rowData={gridData}
@@ -252,20 +190,13 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
         defaultColDef={defaultColDef}
         rowHeight={60}
         headerHeight={50}
-        domLayout="normal"
-        enableFillHandle={true}
-        enableRangeSelection={true}
-        suppressCellFocus={false}
+        domLayout="autoHeight"
         getRowId={(params: GetRowIdParams) => params.data.size}
+        /* FIX 3: Use the modern, recommended props to enable the fill handle. */
+        enableRangeSelection={true}
+        enableFillHandle={true}
         onGridReady={(params) => {
-          setTimeout(() => {
-            params.api.sizeColumnsToFit();
-          }, 100);
-        }}
-        rowClassRules={{
-          "border-b border-[#DEE1EA]": (params: RowClassParams) => {
-            return params.rowIndex === params.api.getLastDisplayedRowIndex();
-          },
+          params.api.sizeColumnsToFit();
         }}
       />
     </div>
@@ -582,7 +513,7 @@ const SignsPage = () => {
                                                       option.label,
                                                       option.checked
                                                     )
-                                                      ? "bg-green-500"
+                                                      ? "bg-[#17B26A"
                                                       : "bg-gray-300"
                                                   }`}
                                                   onClick={() =>
