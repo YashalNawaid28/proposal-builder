@@ -513,7 +513,24 @@ export default function AddJobPage() {
                 {loadingVersions ? (
                   "Loading..."
                 ) : selectedVersion ? (
-                  `${selectedVersion.version_no}.${selectedVersion.revision_no}`
+                  versions.length > 1 ? (
+                    <select
+                      value={selectedVersion.id}
+                      onChange={(e) => {
+                        const version = versions.find(v => v.id === e.target.value);
+                        setSelectedVersion(version);
+                      }}
+                      className="bg-transparent text-[#60646C] text-sm border-none focus:ring-0 focus:outline-none cursor-pointer"
+                    >
+                      {versions.map((version) => (
+                        <option key={version.id} value={version.id}>
+                          {version.version_no}.{version.revision_no}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    `${selectedVersion.version_no}.${selectedVersion.revision_no}`
+                  )
                 ) : (
                   "No versions"
                 )}
@@ -521,22 +538,6 @@ export default function AddJobPage() {
             </section>
           </div>
           <section className="flex items-center text-[16px] text-[#60646C] gap-2 font-semibold">
-            {versions.length > 0 && (
-              <select
-                value={selectedVersion?.id || ""}
-                onChange={(e) => {
-                  const version = versions.find(v => v.id === e.target.value);
-                  setSelectedVersion(version);
-                }}
-                className="h-10 px-3 border border-[#E0E0E0] rounded-md bg-white text-sm"
-              >
-                {versions.map((version) => (
-                  <option key={version.id} value={version.id}>
-                    Version {version.version_no}.{version.revision_no}
-                  </option>
-                ))}
-              </select>
-            )}
             <button 
               onClick={createNewVersion}
               className="bg-[#F9F9FB] h-10 flex items-center justify-center px-3 gap-2 border border-[#E0E0E0] rounded-md hover:bg-gray-100"
