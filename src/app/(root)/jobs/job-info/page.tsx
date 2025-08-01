@@ -933,8 +933,8 @@ export default function AddJobPage() {
         onClose={() => {
           setAddSignSidebarOpen(false);
           // Refresh pricing data when sidebar closes (in case a new sign was added)
-          if (jobId) {
-            fetchPricingData(jobId);
+          if (jobId && selectedVersion) {
+            fetchPricingData(jobId, selectedVersion.id);
           }
         }}
         jobId={jobId || ""}
