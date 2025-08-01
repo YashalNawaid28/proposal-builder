@@ -205,7 +205,10 @@ button[aria-haspopup="menu"].stack-scope .stack-scope {
   height: 60px !important;
 }
 
-.ag-theme-quartz .ag-header-cell:last-child,
+.ag-theme-quartz .ag-header-cell:last-child {
+  border-right: none !important;
+}
+
 .ag-theme-quartz .ag-cell:last-child {
   border-right: none !important;
 }
@@ -249,16 +252,119 @@ button[aria-haspopup="menu"].stack-scope .stack-scope {
   border: 2px solid var(--ag-range-selection-border-color) !important;
 }
 
-/* Override any border removal for selected cells */
-.ag-theme-quartz .ag-range-selection .ag-cell {
+/* Comprehensive fix for selected cells and fill handle borders */
+.ag-theme-quartz .ag-range-selection .ag-cell,
+.ag-theme-quartz .ag-range-selection-fill .ag-cell {
+  border: 1px solid #dee1ea !important;
+}
+
+.ag-theme-quartz .ag-range-selection .ag-cell:last-child,
+.ag-theme-quartz .ag-range-selection-fill .ag-cell:last-child {
+  border-right: 2px solid var(--ag-range-selection-border-color) !important;
+}
+
+/* Override the general last-child rule for selected cells */
+.ag-theme-quartz .ag-range-selection .ag-cell:last-child,
+.ag-theme-quartz .ag-range-selection-fill .ag-cell:last-child {
+  border-right: 2px solid var(--ag-range-selection-border-color) !important;
+}
+
+/* Force all borders to be visible for selected cells with maximum specificity */
+.ag-theme-quartz .ag-range-selection .ag-cell,
+.ag-theme-quartz .ag-range-selection-fill .ag-cell,
+.ag-theme-quartz .ag-range-selection-range .ag-cell {
+  border: 1px solid #dee1ea !important;
+  border-right: 1px solid #dee1ea !important;
+  border-left: 1px solid #dee1ea !important;
+  border-top: 1px solid #dee1ea !important;
+  border-bottom: 1px solid #dee1ea !important;
+}
+
+.ag-theme-quartz .ag-range-selection .ag-cell:last-child,
+.ag-theme-quartz .ag-range-selection-fill .ag-cell:last-child,
+.ag-theme-quartz .ag-range-selection-range .ag-cell:last-child {
+  border-right: 2px solid var(--ag-range-selection-border-color) !important;
+}
+
+/* Override any border removal with maximum specificity */
+.ag-theme-quartz .ag-range-selection .ag-cell:last-child,
+.ag-theme-quartz .ag-range-selection-fill .ag-cell:last-child,
+.ag-theme-quartz .ag-range-selection-range .ag-cell:last-child {
+  border-right: 2px solid var(--ag-range-selection-border-color) !important;
+}
+
+/* Debug: Add visual indicator for selected cells */
+.ag-theme-quartz .ag-range-selection .ag-cell,
+.ag-theme-quartz .ag-range-selection-fill .ag-cell,
+.ag-theme-quartz .ag-range-selection-range .ag-cell {
+  position: relative;
+}
+
+/* Additional AG Grid specific classes that might be used */
+.ag-theme-quartz .ag-cell-range-selected,
+.ag-theme-quartz .ag-cell-range-selected:last-child {
+  border-right: 2px solid var(--ag-range-selection-border-color) !important;
+}
+
+.ag-theme-quartz .ag-cell-range-selected {
+  border: 1px solid #dee1ea !important;
+}
+
+/* Nuclear option: Force all possible AG Grid selection classes */
+.ag-theme-quartz .ag-cell.ag-cell-range-selected,
+.ag-theme-quartz .ag-cell.ag-cell-range-selected:last-child,
+.ag-theme-quartz .ag-cell.ag-range-selection,
+.ag-theme-quartz .ag-cell.ag-range-selection:last-child,
+.ag-theme-quartz .ag-cell.ag-range-selection-fill,
+.ag-theme-quartz .ag-cell.ag-range-selection-fill:last-child {
+  border-right: 2px solid var(--ag-range-selection-border-color) !important;
+}
+
+.ag-theme-quartz .ag-cell.ag-cell-range-selected,
+.ag-theme-quartz .ag-cell.ag-range-selection,
+.ag-theme-quartz .ag-cell.ag-range-selection-fill {
+  border: 1px solid #dee1ea !important;
+}
+
+/* Custom class for debugging and forcing borders */
+.ag-theme-quartz .ag-cell-custom.ag-cell-range-selected,
+.ag-theme-quartz .ag-cell-custom.ag-range-selection,
+.ag-theme-quartz .ag-cell-custom.ag-range-selection-fill {
+  border: 1px solid #dee1ea !important;
+}
+
+.ag-theme-quartz .ag-cell-custom.ag-cell-range-selected:last-child,
+.ag-theme-quartz .ag-cell-custom.ag-range-selection:last-child,
+.ag-theme-quartz .ag-cell-custom.ag-range-selection-fill:last-child {
+  border-right: 2px solid var(--ag-range-selection-border-color) !important;
+}
+
+/* Custom row class for additional specificity */
+.ag-theme-quartz .ag-row-custom .ag-cell.ag-cell-range-selected,
+.ag-theme-quartz .ag-row-custom .ag-cell.ag-range-selection,
+.ag-theme-quartz .ag-row-custom .ag-cell.ag-range-selection-fill {
+  border: 1px solid #dee1ea !important;
+}
+
+.ag-theme-quartz .ag-row-custom .ag-cell.ag-cell-range-selected:last-child,
+.ag-theme-quartz .ag-row-custom .ag-cell.ag-range-selection:last-child,
+.ag-theme-quartz .ag-row-custom .ag-cell.ag-range-selection-fill:last-child {
+  border-right: 2px solid var(--ag-range-selection-border-color) !important;
+}
+
+/* Final attempt: Target all possible AG Grid selection states */
+.ag-theme-quartz .ag-cell-range-selected,
+.ag-theme-quartz .ag-cell-range-selected:last-child,
+.ag-theme-quartz .ag-cell-range-selected.ag-cell-last-column {
   border-right: 1px solid #dee1ea !important;
 }
 
-.ag-theme-quartz .ag-range-selection .ag-cell:last-child {
-  border-right: 2px solid var(--ag-range-selection-border-color) !important;
+.ag-theme-quartz .ag-cell-range-selected.ag-cell-last-column {
+  border-right: 2px solid #007bff !important;
 }
 
-/* Ensure the fill handle border is always visible */
-.ag-theme-quartz .ag-range-selection-fill .ag-cell {
-  border-right: 2px solid var(--ag-range-selection-border-color) !important;
+/* Override any border removal for selected cells */
+.ag-theme-quartz .ag-cell-range-selected:last-child,
+.ag-theme-quartz .ag-cell-range-selected.ag-cell-last-column {
+  border-right: 2px solid #007bff !important;
 }
