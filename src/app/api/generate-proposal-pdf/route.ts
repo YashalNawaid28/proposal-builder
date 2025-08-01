@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
         "Content-Type": "application/json"
       },
       data: {
-        user_credentials: process.env.DOCRAPTOR_API_KEY,
+        user_credentials: 'bj336uFebAcxuGWoTgb4',
         doc: {
           test: process.env.NODE_ENV !== 'production',
           document_type: "pdf",
