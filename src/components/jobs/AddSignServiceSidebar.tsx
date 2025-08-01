@@ -16,18 +16,15 @@ export interface SignOption {
 }
 
 export interface SignData {
-  size: string;
-  color: string;
-  fabType: string;
-  raceway: string;
-  racewaySize: {
-    height: {
-      feet: string;
-      inches: string;
+  [key: string]: any; // Dynamic properties based on sign description
+  racewaySize?: {
+    height?: {
+      feet?: string;
+      inches?: string;
     };
-    width: {
-      feet: string;
-      inches: string;
+    width?: {
+      feet?: string;
+      inches?: string;
     };
   };
 }
@@ -47,16 +44,7 @@ export const AddSignServiceSidebar = ({
   const [activeTab, setActiveTab] = useState<"signage" | "services">("signage");
   const [step, setStep] = useState<1 | 2>(1);
   const [selectedSign, setSelectedSign] = useState<SignOption | null>(null);
-  const [signData, setSignData] = useState<SignData>({
-    size: "",
-    color: "",
-    fabType: "",
-    raceway: "",
-    racewaySize: {
-      height: { feet: "", inches: "" },
-      width: { feet: "", inches: "" },
-    },
-  });
+  const [signData, setSignData] = useState<SignData>({});
 
   const handleSignSelect = (sign: SignOption) => {
     setSelectedSign(sign);
@@ -73,16 +61,7 @@ export const AddSignServiceSidebar = ({
   const handleClose = () => {
     setStep(1);
     setSelectedSign(null);
-    setSignData({
-      size: "",
-      color: "",
-      fabType: "",
-      raceway: "",
-      racewaySize: {
-        height: { feet: "", inches: "" },
-        width: { feet: "", inches: "" },
-      },
-    });
+    setSignData({});
     onClose();
   };
 
