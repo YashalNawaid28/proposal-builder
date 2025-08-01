@@ -8,6 +8,13 @@ import Link from "next/link";
 import { PageTabs } from "@/components/ui/page-tabs";
 import { useSearchParams } from "next/navigation";
 import { useUser } from "@stackframe/stack";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function AddJobPage() {
   const searchParams = useSearchParams();
@@ -524,22 +531,26 @@ export default function AddJobPage() {
                   "Loading..."
                 ) : selectedVersion ? (
                   versions.length > 1 ? (
-                    <select
+                    <Select
                       value={selectedVersion.id}
-                      onChange={(e) => {
-                        const version = versions.find(
-                          (v) => v.id === e.target.value
-                        );
+                      onValueChange={(value) => {
+                        const version = versions.find((v) => v.id === value);
                         setSelectedVersion(version);
                       }}
-                      className="bg-transparent text-[#60646C] text-sm border-none focus:ring-0 focus:outline-none cursor-pointer"
                     >
-                      {versions.map((version) => (
-                        <option key={version.id} value={version.id}>
-                          {version.version_no}.{version.revision_no}
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger className="bg-transparent text-[#60646C] text-sm border-none focus:ring-0 focus:outline-none shadow-none cursor-pointer h-auto p-0 w-auto">
+                        <SelectValue
+                          placeholder={`${selectedVersion.version_no}.${selectedVersion.revision_no}`}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {versions.map((version) => (
+                          <SelectItem key={version.id} value={version.id}>
+                            {version.version_no}.{version.revision_no}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   ) : (
                     `${selectedVersion.version_no}.${selectedVersion.revision_no}`
                   )
@@ -763,7 +774,10 @@ export default function AddJobPage() {
                       <h2 className="text-[18px] font-[600] text-[#15191E]">
                         Job Info
                       </h2>
-                      <button className="text-[14px] font-[500 underline underline-offset-2">
+                      <button
+                        onClick={() => setJobInfoOpen(true)}
+                        className="text-[14px] font-[500] underline underline-offset-2 hover:text-[#15191E]"
+                      >
                         Edit
                       </button>
                     </div>
@@ -849,7 +863,10 @@ export default function AddJobPage() {
                       <h2 className="text-[18px] font-[600] text-[#15191E]">
                         Client Info
                       </h2>
-                      <button className="text-[14px] font-[500 underline underline-offset-2">
+                      <button
+                        onClick={() => setClientInfoOpen(true)}
+                        className="text-[14px] font-[500] underline underline-offset-2 hover:text-[#15191E]"
+                      >
                         Edit
                       </button>
                     </div>
