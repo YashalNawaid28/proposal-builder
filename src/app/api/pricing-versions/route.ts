@@ -4,7 +4,7 @@ import { getServerSupabase } from "@/lib/supabase";
 export async function POST(request: NextRequest) {
   try {
     const supabase = getServerSupabase();
-    const { job_id, creator_id } = await request.json();
+    const { job_id, creator_id, version_no, revision_no } = await request.json();
 
     if (!job_id || !creator_id) {
       return NextResponse.json(
@@ -17,8 +17,8 @@ export async function POST(request: NextRequest) {
       .from("pricing_versions")
       .insert({
         job_id,
-        version_no: 1,
-        revision_no: 1,
+        version_no: version_no || 1,
+        revision_no: revision_no || 0,
         creator_id,
         status: "Draft",
         signed_at: null,
