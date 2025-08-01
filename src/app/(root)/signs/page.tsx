@@ -105,7 +105,7 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       field: "size",
       headerName: "Size",
       width: 150,
-      cellClass: "font-medium text-center border-r border-[#DEE1EA]",
+      cellClass: "font-medium text-center",
       headerClass: "text-center",
     },
     {
@@ -113,11 +113,10 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       headerName: "Sign Price",
       flex: 1,
       minWidth: 120,
-      editable: true,
       valueFormatter: (p: ValueFormatterParams) => formatCurrency(p.value),
       valueParser: (p: ValueParserParams) =>
         Number(String(p.newValue).replace(/[^0-9.-]+/g, "")),
-      cellClass: "text-center border-r border-[#DEE1EA]",
+      cellClass: "text-center",
       headerClass: "text-center",
     },
     {
@@ -125,11 +124,10 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       headerName: "Install Price",
       flex: 1,
       minWidth: 120,
-      editable: true,
       valueFormatter: (p: ValueFormatterParams) => formatCurrency(p.value),
       valueParser: (p: ValueParserParams) =>
         Number(String(p.newValue).replace(/[^0-9.-]+/g, "")),
-      cellClass: "text-center border-r border-[#DEE1EA]",
+      cellClass: "text-center",
       headerClass: "text-center",
     },
     {
@@ -137,11 +135,10 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       headerName: "Sign Budget",
       flex: 1,
       minWidth: 120,
-      editable: true,
       valueFormatter: (p: ValueFormatterParams) => formatCurrency(p.value),
       valueParser: (p: ValueParserParams) =>
         Number(String(p.newValue).replace(/[^0-9.-]+/g, "")),
-      cellClass: "text-center border-r border-[#DEE1EA]",
+      cellClass: "text-center",
       headerClass: "text-center",
     },
     {
@@ -149,11 +146,10 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       headerName: "Install Budget",
       flex: 1,
       minWidth: 120,
-      editable: true,
       valueFormatter: (p: ValueFormatterParams) => formatCurrency(p.value),
       valueParser: (p: ValueParserParams) =>
         Number(String(p.newValue).replace(/[^0-9.-]+/g, "")),
-      cellClass: "text-center border-r border-[#DEE1EA]",
+      cellClass: "text-center",
       headerClass: "text-center",
     },
     {
@@ -161,7 +157,6 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       headerName: "Raceway",
       flex: 1,
       minWidth: 120,
-      editable: true,
       valueFormatter: (p: ValueFormatterParams) => formatCurrency(p.value),
       valueParser: (p: ValueParserParams) =>
         Number(String(p.newValue).replace(/[^0-9.-]+/g, "")),
@@ -170,23 +165,48 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
     },
   ];
 
-  // Default column definitions
+  // FIX 1: The problematic `cellStyle` is removed.
   const defaultColDef: ColDef = {
     sortable: false,
     filter: false,
     resizable: true,
     suppressMovable: true,
     editable: true,
-    cellDataType: false,
-    cellStyle: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-    },
   };
 
   return (
-    <div className="ag-theme-quartz bg-red-300 w-full h-full flex-1">
+    <div className="ag-theme-quartz h-full w-full flex-1">
+      <style>{`
+        .ag-theme-quartz {
+          --ag-font-family: var(--font-inter), sans-serif;
+          --ag-background-color: #F9F9FB;
+          --ag-header-background-color: #F9F9FB;
+          --ag-row-border-color: #DEE1EA;
+          --ag-header-column-separator-color: #DEE1EA;
+          
+          /* FIX 2: Explicitly set a visible selection border color. */
+          --ag-range-selection-border-color: #007BFF;
+
+          border: none !important;
+        }
+        .ag-theme-quartz .ag-header-container {
+          border-bottom: 1px solid var(--ag-row-border-color) !important;
+        }
+        .ag-theme-quartz .ag-cell,
+        .ag-theme-quartz .ag-header-cell {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .ag-theme-quartz .ag-header-cell {
+          font-size: 13px !important;
+          font-weight: 600 !important;
+        }
+        .ag-theme-quartz .ag-header-cell:last-child,
+        .ag-theme-quartz .ag-cell:last-child {
+          border-right: none !important;
+        }
+      `}</style>
       <AgGridReact
         ref={gridRef}
         rowData={gridData}
@@ -194,21 +214,13 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
         defaultColDef={defaultColDef}
         rowHeight={60}
         headerHeight={50}
-        domLayout="normal"
-        suppressCellFocus={false}
+        domLayout="autoHeight"
         getRowId={(params: GetRowIdParams) => params.data.size}
-        cellSelection={{
-          handle: { mode: "fill" },
-        }}
+        /* FIX 3: Use the modern, recommended props to enable the fill handle. */
+        enableRangeSelection={true}
+        enableFillHandle={true}
         onGridReady={(params) => {
-          setTimeout(() => {
-            params.api.sizeColumnsToFit();
-          }, 100);
-        }}
-        rowClassRules={{
-          "border-b border-[#DEE1EA]": (params: RowClassParams) => {
-            return params.rowIndex === params.api.getLastDisplayedRowIndex();
-          },
+          params.api.sizeColumnsToFit();
         }}
       />
     </div>
