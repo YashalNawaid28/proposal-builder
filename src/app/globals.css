@@ -155,6 +155,12 @@ button[aria-haspopup="menu"].stack-scope .stack-scope {
 .ag-theme-quartz {
   font-family: var(--font-inter), sans-serif !important;
   border: none !important;
+  --ag-font-family: var(--font-inter), sans-serif;
+  --ag-background-color: #f9f9fb;
+  --ag-header-background-color: #f9f9fb;
+  --ag-row-border-color: #dee1ea;
+  --ag-header-column-separator-color: #dee1ea;
+  --ag-range-selection-border-color: #007bff;
 }
 
 .ag-theme-quartz .ag-header-cell-label {
@@ -165,7 +171,7 @@ button[aria-haspopup="menu"].stack-scope .stack-scope {
 }
 
 .ag-theme-quartz .ag-header-container {
-  border-bottom: 1px solid #dee1ea !important;
+  border-bottom: 1px solid var(--ag-row-border-color) !important;
 }
 
 .ag-header {
@@ -180,11 +186,17 @@ button[aria-haspopup="menu"].stack-scope .stack-scope {
   border-right: 1px solid #dee1ea !important;
   border-bottom: none !important;
   background-color: #f9f9fb !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .ag-theme-quartz .ag-cell {
   border-right: 1px solid #dee1ea !important;
   background-color: #f9f9fb !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .ag-theme-quartz .ag-row {
@@ -193,10 +205,7 @@ button[aria-haspopup="menu"].stack-scope .stack-scope {
   height: 60px !important;
 }
 
-.ag-theme-quartz .ag-header-cell:last-child {
-  border-right: none !important;
-}
-
+.ag-theme-quartz .ag-header-cell:last-child,
 .ag-theme-quartz .ag-cell:last-child {
   border-right: none !important;
 }
@@ -211,4 +220,45 @@ button[aria-haspopup="menu"].stack-scope .stack-scope {
 
 .ag-theme-quartz .ag-header {
   background-color: #f9f9fb !important;
+}
+
+/* Fix for fill handle border visibility */
+.ag-theme-quartz .ag-range-selection {
+  border: 2px solid var(--ag-range-selection-border-color) !important;
+}
+
+.ag-theme-quartz .ag-range-selection-fill {
+  border: 2px solid var(--ag-range-selection-border-color) !important;
+}
+
+/* Ensure last child border is preserved for range selection */
+.ag-theme-quartz .ag-range-selection .ag-cell:last-child {
+  border-right: 2px solid var(--ag-range-selection-border-color) !important;
+}
+
+.ag-theme-quartz .ag-range-selection .ag-header-cell:last-child {
+  border-right: 2px solid var(--ag-range-selection-border-color) !important;
+}
+
+/* Additional fill handle specific styles */
+.ag-theme-quartz .ag-fill-handle {
+  border: 2px solid var(--ag-range-selection-border-color) !important;
+}
+
+.ag-theme-quartz .ag-range-selection-range {
+  border: 2px solid var(--ag-range-selection-border-color) !important;
+}
+
+/* Override any border removal for selected cells */
+.ag-theme-quartz .ag-range-selection .ag-cell {
+  border-right: 1px solid #dee1ea !important;
+}
+
+.ag-theme-quartz .ag-range-selection .ag-cell:last-child {
+  border-right: 2px solid var(--ag-range-selection-border-color) !important;
+}
+
+/* Ensure the fill handle border is always visible */
+.ag-theme-quartz .ag-range-selection-fill .ag-cell {
+  border-right: 2px solid var(--ag-range-selection-border-color) !important;
 }

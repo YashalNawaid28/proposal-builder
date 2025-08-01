@@ -105,6 +105,8 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       field: "size",
       headerName: "Size",
       width: 150,
+      minWidth: 120,
+      maxWidth: 200,
       cellClass: "font-medium text-center",
       headerClass: "text-center",
     },
@@ -113,6 +115,7 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       headerName: "Sign Price",
       flex: 1,
       minWidth: 120,
+      maxWidth: 200,
       valueFormatter: (p: ValueFormatterParams) => formatCurrency(p.value),
       valueParser: (p: ValueParserParams) =>
         Number(String(p.newValue).replace(/[^0-9.-]+/g, "")),
@@ -124,6 +127,7 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       headerName: "Install Price",
       flex: 1,
       minWidth: 120,
+      maxWidth: 200,
       valueFormatter: (p: ValueFormatterParams) => formatCurrency(p.value),
       valueParser: (p: ValueParserParams) =>
         Number(String(p.newValue).replace(/[^0-9.-]+/g, "")),
@@ -135,6 +139,7 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       headerName: "Sign Budget",
       flex: 1,
       minWidth: 120,
+      maxWidth: 200,
       valueFormatter: (p: ValueFormatterParams) => formatCurrency(p.value),
       valueParser: (p: ValueParserParams) =>
         Number(String(p.newValue).replace(/[^0-9.-]+/g, "")),
@@ -146,6 +151,7 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       headerName: "Install Budget",
       flex: 1,
       minWidth: 120,
+      maxWidth: 200,
       valueFormatter: (p: ValueFormatterParams) => formatCurrency(p.value),
       valueParser: (p: ValueParserParams) =>
         Number(String(p.newValue).replace(/[^0-9.-]+/g, "")),
@@ -157,6 +163,7 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       headerName: "Raceway",
       flex: 1,
       minWidth: 120,
+      maxWidth: 200,
       valueFormatter: (p: ValueFormatterParams) => formatCurrency(p.value),
       valueParser: (p: ValueParserParams) =>
         Number(String(p.newValue).replace(/[^0-9.-]+/g, "")),
@@ -176,37 +183,6 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
 
   return (
     <div className="ag-theme-quartz h-full w-full flex-1">
-      <style>{`
-        .ag-theme-quartz {
-          --ag-font-family: var(--font-inter), sans-serif;
-          --ag-background-color: #F9F9FB;
-          --ag-header-background-color: #F9F9FB;
-          --ag-row-border-color: #DEE1EA;
-          --ag-header-column-separator-color: #DEE1EA;
-          
-          /* FIX 2: Explicitly set a visible selection border color. */
-          --ag-range-selection-border-color: #007BFF;
-
-          border: none !important;
-        }
-        .ag-theme-quartz .ag-header-container {
-          border-bottom: 1px solid var(--ag-row-border-color) !important;
-        }
-        .ag-theme-quartz .ag-cell,
-        .ag-theme-quartz .ag-header-cell {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .ag-theme-quartz .ag-header-cell {
-          font-size: 13px !important;
-          font-weight: 600 !important;
-        }
-        .ag-theme-quartz .ag-header-cell:last-child,
-        .ag-theme-quartz .ag-cell:last-child {
-          border-right: none !important;
-        }
-      `}</style>
       <AgGridReact
         ref={gridRef}
         rowData={gridData}
@@ -537,7 +513,7 @@ const SignsPage = () => {
                                                       option.label,
                                                       option.checked
                                                     )
-                                                      ? "bg-green-500"
+                                                      ? "bg-[#17B26A"
                                                       : "bg-gray-300"
                                                   }`}
                                                   onClick={() =>
