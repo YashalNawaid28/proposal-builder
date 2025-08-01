@@ -351,9 +351,9 @@ const SignsPage = () => {
                 checked: true,
               },
               { label: "Raceway", type: "Dropdown", checked: true },
-              { label: "Raceway Size", type: "User Input", checked: false },
-              { label: "Color", type: "Dropdown", checked: false },
-              { label: "Fabrication Type", type: "Dropdown", checked: false },
+              { label: "Raceway Size", type: "User Input", checked: true },
+              { label: "Color", type: "Dropdown", checked: true },
+              { label: "Fabrication Type", type: "Dropdown", checked: true },
             ];
 
             return {
@@ -528,7 +528,7 @@ const SignsPage = () => {
                                                       option.label,
                                                       option.checked
                                                     )
-                                                      ? "bg-[#17B26A"
+                                                      ? "bg-[#17B26A]"
                                                       : "bg-gray-300"
                                                   }`}
                                                   onClick={() =>
