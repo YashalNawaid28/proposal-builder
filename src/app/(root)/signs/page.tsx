@@ -228,6 +228,9 @@ const SignsPage = () => {
   const [toggleStates, setToggleStates] = useState<{ [key: string]: boolean }>(
     {}
   );
+  const [editableValues, setEditableValues] = useState<{
+    [key: string]: string;
+  }>({});
 
   const getToggleState = (
     signName: string,
@@ -389,6 +392,15 @@ const SignsPage = () => {
     setToggleStates((prev) => ({ ...prev, [optionKey]: !prev[optionKey] }));
   };
 
+  const handleValueChange = (
+    signName: string,
+    optionLabel: string,
+    newValue: string
+  ) => {
+    const key = `${signName}-${optionLabel}`;
+    setEditableValues((prev) => ({ ...prev, [key]: newValue }));
+  };
+
   return (
     <div className="bg-white">
       <h1 className="text-2xl font-bold p-5">Signs</h1>
@@ -404,7 +416,7 @@ const SignsPage = () => {
               <table className="min-w-full border-collapse">
                 <thead className="bg-[#F9F9FB] text-xs font-semibold">
                   <tr className="border-b border-[#DEE1EA] h-[50px]">
-                    <th className="w-12 border-r border-[#DEE1EA]">
+                    <th className="w-16 border-r border-[#DEE1EA]">
                       <input
                         type="checkbox"
                         className="h-4 w-4 mt-1 border-[#DEE1EA]"
@@ -517,37 +529,35 @@ const SignsPage = () => {
                                             </section>
                                             <section className="flex items-center justify-center gap-2">
                                               {option.value ? (
-                                                <button className="bg-[#F9F9FB] h-10 flex items-center justify-center px-3 gap-2 border border-[#E0E0E0] rounded-md">
-                                                  {option.value}
-                                                </button>
-                                              ) : (
-                                                <button
-                                                  className={`relative w-12 h-6 rounded-full transition-colors duration-200 cursor-pointer ${
-                                                    getToggleState(
-                                                      sign.signName,
-                                                      option.label,
-                                                      option.checked
-                                                    )
-                                                      ? "bg-[#17B26A]"
-                                                      : "bg-gray-300"
-                                                  }`}
-                                                  onClick={() =>
-                                                    handleOptionToggle(
-                                                      `${sign.signName}-${option.label}`
-                                                    )
-                                                  }
-                                                >
-                                                  <div
-                                                    className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 ${
-                                                      getToggleState(
+                                                option.label ===
+                                                  "Sign Budget" ||
+                                                option.label ===
+                                                  "Install Budget" ? (
+                                                  <input
+                                                    type="text"
+                                                    value={
+                                                      editableValues[
+                                                        `${sign.signName}-${option.label}`
+                                                      ] || option.value
+                                                    }
+                                                    onChange={(e) =>
+                                                      handleValueChange(
                                                         sign.signName,
                                                         option.label,
-                                                        option.checked
+                                                        e.target.value
                                                       )
-                                                        ? "translate-x-7"
-                                                        : "translate-x-1"
-                                                    }`}
+                                                    }
+                                                    className="bg-[#F9F9FB] h-10 flex items-center justify-center px-3 gap-2 border border-[#E0E0E0] rounded-md text-center text-[14px] w-14"
+                                                    placeholder={option.value}
                                                   />
+                                                ) : (
+                                                  <button className="bg-[#F9F9FB] h-10 flex items-center justify-center px-3 gap-2 border border-[#E0E0E0] rounded-md">
+                                                    {option.value}
+                                                  </button>
+                                                )
+                                              ) : (
+                                                <button className="relative w-9 h-5 rounded-full transition-colors duration-200 bg-[#17B26A]">
+                                                  <div className="absolute top-[2px] size-4 bg-white rounded-full transition-transform duration-200 translate-x-[18px]" />
                                                 </button>
                                               )}
                                             </section>

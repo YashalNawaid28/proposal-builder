@@ -8,6 +8,13 @@ import Link from "next/link";
 import { PageTabs } from "@/components/ui/page-tabs";
 import { useSearchParams } from "next/navigation";
 import { useUser } from "@stackframe/stack";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function AddJobPage() {
   const searchParams = useSearchParams();
@@ -160,7 +167,9 @@ export default function AddJobPage() {
   // Function to fetch pricing lines for a pricing version
   const fetchPricingLines = async (pricingVersionId: string) => {
     try {
-      const response = await fetch(`/api/pricing-lines?pricing_version_id=${pricingVersionId}`);
+      const response = await fetch(
+        `/api/pricing-lines?pricing_version_id=${pricingVersionId}`
+      );
       if (response.ok) {
         const result = await response.json();
         return result.data || [];
@@ -177,7 +186,7 @@ export default function AddJobPage() {
       setLoadingVersions(true);
       const versions = await fetchPricingVersions(jobId);
       setVersions(versions);
-      
+
       // Set the latest version as selected (highest version_no, then highest revision_no)
       if (versions.length > 0) {
         const latestVersion = versions.sort((a: any, b: any) => {
@@ -198,7 +207,7 @@ export default function AddJobPage() {
   // Function to create new version
   const createNewVersion = async () => {
     if (!jobId || !user) return;
-    
+
     try {
       // Find the latest version to determine new version/revision numbers
       const latestVersion = versions.sort((a: any, b: any) => {
@@ -241,12 +250,12 @@ export default function AddJobPage() {
       if (response.ok) {
         const newVersion = await response.json();
         console.log("Created new version:", newVersion);
-        
+
         // Copy pricing lines from the latest version to the new version
         if (latestVersion) {
           const existingLines = await fetchPricingLines(latestVersion.id);
           console.log("Copying pricing lines:", existingLines.length);
-          
+
           // Create new pricing lines for the new version
           for (const line of existingLines) {
             const lineResponse = await fetch("/api/pricing-lines", {
@@ -265,16 +274,16 @@ export default function AddJobPage() {
                 cost_install_budget: line.cost_install_budget,
               }),
             });
-            
+
             if (!lineResponse.ok) {
               console.error("Failed to copy pricing line:", line.id);
             }
           }
         }
-        
+
         // Refresh versions
         await fetchVersions(jobId);
-        
+
         // Set the new version as selected
         setSelectedVersion(newVersion.data);
       }
@@ -284,42 +293,50 @@ export default function AddJobPage() {
   };
 
   // Function to fetch all pricing data for a job
-  const fetchPricingData = useCallback(async (jobId: string, versionId?: string) => {
-    console.log("Job Info Page - fetchPricingData called for jobId:", jobId, "versionId:", versionId);
-    try {
-      setLoadingPricing(true);
-      
-      // If versionId is provided, fetch data for that specific version
-      if (versionId) {
-        const lines = await fetchPricingLines(versionId);
-        setPricingData({
-          versions: [],
-          lines: lines
-        });
-      } else {
-        // Fetch pricing versions
-        const versions = await fetchPricingVersions(jobId);
-        console.log("Job Info Page - Fetched versions:", versions.length);
-        
-        // Fetch pricing lines for each version
-        const allLines = [];
-        for (const version of versions) {
-          const lines = await fetchPricingLines(version.id);
-          allLines.push(...lines);
+  const fetchPricingData = useCallback(
+    async (jobId: string, versionId?: string) => {
+      console.log(
+        "Job Info Page - fetchPricingData called for jobId:",
+        jobId,
+        "versionId:",
+        versionId
+      );
+      try {
+        setLoadingPricing(true);
+
+        // If versionId is provided, fetch data for that specific version
+        if (versionId) {
+          const lines = await fetchPricingLines(versionId);
+          setPricingData({
+            versions: [],
+            lines: lines,
+          });
+        } else {
+          // Fetch pricing versions
+          const versions = await fetchPricingVersions(jobId);
+          console.log("Job Info Page - Fetched versions:", versions.length);
+
+          // Fetch pricing lines for each version
+          const allLines = [];
+          for (const version of versions) {
+            const lines = await fetchPricingLines(version.id);
+            allLines.push(...lines);
+          }
+          console.log("Job Info Page - Fetched total lines:", allLines.length);
+
+          setPricingData({
+            versions,
+            lines: allLines,
+          });
         }
-        console.log("Job Info Page - Fetched total lines:", allLines.length);
-        
-        setPricingData({
-          versions,
-          lines: allLines
-        });
+      } catch (error) {
+        console.error("Error fetching pricing data:", error);
+      } finally {
+        setLoadingPricing(false);
       }
-    } catch (error) {
-      console.error("Error fetching pricing data:", error);
-    } finally {
-      setLoadingPricing(false);
-    }
-  }, []);
+    },
+    []
+  );
 
   const handleJobInfoSave = async (data: any) => {
     setJobData(data);
@@ -450,11 +467,11 @@ export default function AddJobPage() {
 
         // Set the actual client data
         setClientData(clientData);
-        
+
         // Fetch versions for this job
         console.log("Job Info Page - Fetching versions for jobId:", jobId);
         await fetchVersions(jobId);
-        
+
         // Note: Pricing data will be fetched when selectedVersion is set
         // This prevents showing data from all versions initially
       } catch (error) {
@@ -514,20 +531,26 @@ export default function AddJobPage() {
                   "Loading..."
                 ) : selectedVersion ? (
                   versions.length > 1 ? (
-                    <select
+                    <Select
                       value={selectedVersion.id}
-                      onChange={(e) => {
-                        const version = versions.find(v => v.id === e.target.value);
+                      onValueChange={(value) => {
+                        const version = versions.find((v) => v.id === value);
                         setSelectedVersion(version);
                       }}
-                      className="bg-transparent text-[#60646C] text-sm border-none focus:ring-0 focus:outline-none cursor-pointer"
                     >
-                      {versions.map((version) => (
-                        <option key={version.id} value={version.id}>
-                          {version.version_no}.{version.revision_no}
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger className="bg-transparent text-[#60646C] text-sm border-none focus:ring-0 focus:outline-none shadow-none cursor-pointer h-auto p-0 w-auto">
+                        <SelectValue
+                          placeholder={`${selectedVersion.version_no}.${selectedVersion.revision_no}`}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {versions.map((version) => (
+                          <SelectItem key={version.id} value={version.id}>
+                            {version.version_no}.{version.revision_no}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   ) : (
                     `${selectedVersion.version_no}.${selectedVersion.revision_no}`
                   )
@@ -538,7 +561,7 @@ export default function AddJobPage() {
             </section>
           </div>
           <section className="flex items-center text-[16px] text-[#60646C] gap-2 font-semibold">
-            <button 
+            <button
               onClick={createNewVersion}
               className="bg-[#F9F9FB] h-10 flex items-center justify-center px-3 gap-2 border border-[#E0E0E0] rounded-md hover:bg-gray-100"
             >
@@ -586,16 +609,16 @@ export default function AddJobPage() {
                         <th className="text-left p-4 text-xs font-semibold w-96">
                           Description
                         </th>
-                        <th className="text-left p-4 text-xs font-semibold w-32">
+                        <th className="text-center p-4 text-xs font-semibold w-32">
                           Sign Price
                         </th>
-                        <th className="text-left p-4 text-xs font-semibold w-32">
+                        <th className="text-center p-4 text-xs font-semibold w-32">
                           Install Price
                         </th>
-                        <th className="text-left p-4 text-xs font-semibold w-32">
+                        <th className="text-center p-4 text-xs font-semibold w-32">
                           Sign Budget
                         </th>
-                        <th className="text-left p-4 text-xs font-semibold w-32">
+                        <th className="text-center p-4 text-xs font-semibold w-32">
                           Install Budget
                         </th>
                       </tr>
@@ -605,20 +628,25 @@ export default function AddJobPage() {
                         <tr>
                           <td colSpan={7} className="text-center py-8">
                             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 mx-auto mb-2"></div>
-                            <p className="text-gray-600 text-sm">Loading pricing data...</p>
+                            <p className="text-gray-600 text-sm">
+                              Loading pricing data...
+                            </p>
                           </td>
                         </tr>
                       ) : pricingData.lines.length > 0 ? (
                         pricingData.lines.map((line: any, index: number) => (
-                          <tr key={line.id} className="border-b border-[#EAEBEE] hover:bg-gray-50">
+                          <tr
+                            key={line.id}
+                            className="border-b border-[#EAEBEE] hover:bg-gray-50"
+                          >
                             <td className="p-4 text-sm">{line.qty || 1}</td>
-                            <td >
+                            <td>
                               <div className="flex items-center gap-3">
                                 <div className=" rounded-lg flex items-center justify-center px-[8px]">
                                   {line.signs?.sign_image ? (
-                                    <img 
-                                      src={line.signs.sign_image} 
-                                      alt={line.signs?.sign_name || "Sign"} 
+                                    <img
+                                      src={line.signs.sign_image}
+                                      alt={line.signs?.sign_name || "Sign"}
                                     />
                                   ) : (
                                     <div className="text-gray-400 text-xs text-center">
@@ -631,16 +659,16 @@ export default function AddJobPage() {
                             <td className="p-4 text-sm">
                               {line.description_resolved || "No description"}
                             </td>
-                            <td className="p-4 text-sm font-medium">
+                            <td className="p-4 text-sm font-medium text-center">
                               ${line.list_price?.toFixed(2) || "0.00"}
                             </td>
-                            <td className="p-4 text-sm font-medium">
+                            <td className="p-4 text-sm font-medium text-center">
                               ${line.list_install_price?.toFixed(2) || "0.00"}
                             </td>
-                            <td className="p-4 text-sm font-medium">
+                            <td className="p-4 text-sm font-medium text-center">
                               ${line.cost_budget?.toFixed(2) || "0.00"}
                             </td>
-                            <td className="p-4 text-sm font-medium">
+                            <td className="p-4 text-sm font-medium text-center">
                               ${line.cost_install_budget?.toFixed(2) || "0.00"}
                             </td>
                           </tr>
@@ -653,8 +681,8 @@ export default function AddJobPage() {
                                 Add your first sign.
                               </h3>
                               <p className="text-[#0D1216B2] text-[14px] mb-6 max-w-md">
-                                You&apos;ll use this section to add all the signs needed
-                                for this proposal.
+                                You&apos;ll use this section to add all the
+                                signs needed for this proposal.
                               </p>
                               <button
                                 onClick={() => setAddSignSidebarOpen(true)}
@@ -663,6 +691,65 @@ export default function AddJobPage() {
                                 Add Sign/Service
                               </button>
                             </div>
+                          </td>
+                        </tr>
+                      )}
+                      {/* Totals Row */}
+                      {pricingData.lines.length > 0 && (
+                        <tr>
+                          <td colSpan={2} className="p-4">
+                            <button
+                              onClick={() => setAddSignSidebarOpen(true)}
+                              className="h-10 flex items-center justify-center px-4 gap-2 font-semibold text-[14px] hover:bg-gray-50"
+                            >
+                              <Plus className="size-4" />
+                              Add Sign
+                            </button>
+                          </td>
+                          <td className="p-4">
+                            <p className="text-sm font-semibold text-right pr-10 w-full">
+                              Totals:
+                            </p>
+                          </td>
+                          <td className="p-4 text-sm font-semibold text-center">
+                            $
+                            {pricingData.lines
+                              .reduce(
+                                (sum: number, line: any) =>
+                                  sum + (line.list_price || 0),
+                                0
+                              )
+                              .toFixed(2)}
+                          </td>
+                          <td className="p-4 text-sm font-semibold text-center">
+                            $
+                            {pricingData.lines
+                              .reduce(
+                                (sum: number, line: any) =>
+                                  sum + (line.list_install_price || 0),
+                                0
+                              )
+                              .toFixed(2)}
+                          </td>
+                          <td className="p-4 text-sm font-semibold text-center">
+                            $
+                            {pricingData.lines
+                              .reduce(
+                                (sum: number, line: any) =>
+                                  sum + (line.cost_budget || 0),
+                                0
+                              )
+                              .toFixed(2)}
+                          </td>
+                          <td className="p-4 text-sm font-semibold text-center">
+                            $
+                            {pricingData.lines
+                              .reduce(
+                                (sum: number, line: any) =>
+                                  sum + (line.cost_install_budget || 0),
+                                0
+                              )
+                              .toFixed(2)}
                           </td>
                         </tr>
                       )}
@@ -683,9 +770,17 @@ export default function AddJobPage() {
               >
                 {hasJobData ? (
                   <div className="flex flex-col gap-[24px] w-full">
-                    <h2 className="text-[18px] font-[600] text-[#15191E]">
-                      Job Info
-                    </h2>
+                    <div className="flex items-center justify-between gap-2">
+                      <h2 className="text-[18px] font-[600] text-[#15191E]">
+                        Job Info
+                      </h2>
+                      <button
+                        onClick={() => setJobInfoOpen(true)}
+                        className="text-[14px] font-[500] underline underline-offset-2 hover:text-[#15191E]"
+                      >
+                        Edit
+                      </button>
+                    </div>
                     <div className="text-[14px] text-[#60646C] font-[500] flex justify-between">
                       <p>Brand</p>
                       <p className="font-[400]">
@@ -764,9 +859,17 @@ export default function AddJobPage() {
               >
                 {hasClientData ? (
                   <div className="flex flex-col gap-[24px] w-full">
-                    <h2 className="text-[18px] font-[600] text-[#15191E]">
-                      Client Info
-                    </h2>
+                    <div className="flex items-center justify-between gap-2">
+                      <h2 className="text-[18px] font-[600] text-[#15191E]">
+                        Client Info
+                      </h2>
+                      <button
+                        onClick={() => setClientInfoOpen(true)}
+                        className="text-[14px] font-[500] underline underline-offset-2 hover:text-[#15191E]"
+                      >
+                        Edit
+                      </button>
+                    </div>
                     <div className="text-[14px] text-[#60646C] font-[500] flex justify-between">
                       <p>Client</p>
                       <p className="font-[400]">
