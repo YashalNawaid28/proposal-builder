@@ -173,6 +173,10 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
     resizable: true,
     suppressMovable: true,
     editable: true,
+    cellClass: (params) => {
+      // Add custom class for debugging
+      return 'ag-cell-custom';
+    },
   };
 
   return (
@@ -189,8 +193,25 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
         /* FIX 3: Use the modern, recommended props to enable the fill handle. */
         enableRangeSelection={true}
         enableFillHandle={true}
+        getRowClass={(params) => {
+          return 'ag-row-custom';
+        }}
         onGridReady={(params) => {
           params.api.sizeColumnsToFit();
+        }}
+        onRangeSelectionChanged={(event) => {
+          // Force update of cell borders when selection changes
+          setTimeout(() => {
+            const selectedCells = document.querySelectorAll('.ag-cell-range-selected');
+            selectedCells.forEach((cell) => {
+              if (cell instanceof HTMLElement) {
+                cell.style.borderRight = '1px solid #dee1ea';
+                if (cell.classList.contains('ag-cell-last-column')) {
+                  cell.style.borderRight = '2px solid #007bff';
+                }
+              }
+            });
+          }, 0);
         }}
       />
     </div>
@@ -333,9 +354,9 @@ const SignsPage = () => {
                 checked: true,
               },
               { label: "Raceway", type: "Dropdown", checked: true },
-              { label: "Raceway Size", type: "User Input", checked: false },
-              { label: "Color", type: "Dropdown", checked: false },
-              { label: "Fabrication Type", type: "Dropdown", checked: false },
+              { label: "Raceway Size", type: "User Input", checked: true },
+              { label: "Color", type: "Dropdown", checked: true },
+              { label: "Fabrication Type", type: "Dropdown", checked: true },
             ];
 
             return {
