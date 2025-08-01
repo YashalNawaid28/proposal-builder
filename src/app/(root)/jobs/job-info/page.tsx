@@ -46,6 +46,9 @@ export default function AddJobPage() {
     lines: any[];
   }>({ versions: [], lines: [] });
   const [loadingPricing, setLoadingPricing] = useState(false);
+  const [versions, setVersions] = useState<any[]>([]);
+  const [selectedVersion, setSelectedVersion] = useState<any>(null);
+  const [loadingVersions, setLoadingVersions] = useState(false);
 
   // Function to generate initials from display name
   const getInitials = (displayName: string) => {
@@ -168,28 +171,149 @@ export default function AddJobPage() {
     return [];
   };
 
+  // Function to fetch versions for a job
+  const fetchVersions = useCallback(async (jobId: string) => {
+    try {
+      setLoadingVersions(true);
+      const versions = await fetchPricingVersions(jobId);
+      setVersions(versions);
+      
+      // Set the latest version as selected (highest version_no, then highest revision_no)
+      if (versions.length > 0) {
+        const latestVersion = versions.sort((a: any, b: any) => {
+          if (a.version_no !== b.version_no) {
+            return b.version_no - a.version_no;
+          }
+          return b.revision_no - a.revision_no;
+        })[0];
+        setSelectedVersion(latestVersion);
+      }
+    } catch (error) {
+      console.error("Error fetching versions:", error);
+    } finally {
+      setLoadingVersions(false);
+    }
+  }, []);
+
+  // Function to create new version
+  const createNewVersion = async () => {
+    if (!jobId || !user) return;
+    
+    try {
+      // Find the latest version to determine new version/revision numbers
+      const latestVersion = versions.sort((a: any, b: any) => {
+        if (a.version_no !== b.version_no) {
+          return b.version_no - a.version_no;
+        }
+        return b.revision_no - a.revision_no;
+      })[0];
+
+      let newVersionNo = 1;
+      let newRevisionNo = 0;
+
+      if (latestVersion) {
+        if (latestVersion.revision_no < 9) {
+          newVersionNo = latestVersion.version_no;
+          newRevisionNo = latestVersion.revision_no + 1;
+        } else {
+          newVersionNo = latestVersion.version_no + 1;
+          newRevisionNo = 0;
+        }
+      } else {
+        // If no versions exist yet, start with 1.0
+        newVersionNo = 1;
+        newRevisionNo = 0;
+      }
+
+      const response = await fetch("/api/pricing-versions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          job_id: jobId,
+          version_no: newVersionNo,
+          revision_no: newRevisionNo,
+          creator_id: user.id,
+        }),
+      });
+
+      if (response.ok) {
+        const newVersion = await response.json();
+        console.log("Created new version:", newVersion);
+        
+        // Copy pricing lines from the latest version to the new version
+        if (latestVersion) {
+          const existingLines = await fetchPricingLines(latestVersion.id);
+          console.log("Copying pricing lines:", existingLines.length);
+          
+          // Create new pricing lines for the new version
+          for (const line of existingLines) {
+            const lineResponse = await fetch("/api/pricing-lines", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                pricing_version_id: newVersion.data.id,
+                sign_id: line.sign_id,
+                description_resolved: line.description_resolved,
+                qty: line.qty,
+                list_price: line.list_price,
+                cost_budget: line.cost_budget,
+                list_install_price: line.list_install_price,
+                cost_install_budget: line.cost_install_budget,
+              }),
+            });
+            
+            if (!lineResponse.ok) {
+              console.error("Failed to copy pricing line:", line.id);
+            }
+          }
+        }
+        
+        // Refresh versions
+        await fetchVersions(jobId);
+        
+        // Set the new version as selected
+        setSelectedVersion(newVersion.data);
+      }
+    } catch (error) {
+      console.error("Error creating new version:", error);
+    }
+  };
+
   // Function to fetch all pricing data for a job
-  const fetchPricingData = useCallback(async (jobId: string) => {
-    console.log("Job Info Page - fetchPricingData called for jobId:", jobId);
+  const fetchPricingData = useCallback(async (jobId: string, versionId?: string) => {
+    console.log("Job Info Page - fetchPricingData called for jobId:", jobId, "versionId:", versionId);
     try {
       setLoadingPricing(true);
       
-      // Fetch pricing versions
-      const versions = await fetchPricingVersions(jobId);
-      console.log("Job Info Page - Fetched versions:", versions.length);
-      
-      // Fetch pricing lines for each version
-      const allLines = [];
-      for (const version of versions) {
-        const lines = await fetchPricingLines(version.id);
-        allLines.push(...lines);
+      // If versionId is provided, fetch data for that specific version
+      if (versionId) {
+        const lines = await fetchPricingLines(versionId);
+        setPricingData({
+          versions: [],
+          lines: lines
+        });
+      } else {
+        // Fetch pricing versions
+        const versions = await fetchPricingVersions(jobId);
+        console.log("Job Info Page - Fetched versions:", versions.length);
+        
+        // Fetch pricing lines for each version
+        const allLines = [];
+        for (const version of versions) {
+          const lines = await fetchPricingLines(version.id);
+          allLines.push(...lines);
+        }
+        console.log("Job Info Page - Fetched total lines:", allLines.length);
+        
+        setPricingData({
+          versions,
+          lines: allLines
+        });
       }
-      console.log("Job Info Page - Fetched total lines:", allLines.length);
-      
-      setPricingData({
-        versions,
-        lines: allLines
-      });
     } catch (error) {
       console.error("Error fetching pricing data:", error);
     } finally {
@@ -327,9 +451,12 @@ export default function AddJobPage() {
         // Set the actual client data
         setClientData(clientData);
         
-        // Fetch pricing data for this job
-        console.log("Job Info Page - Fetching pricing data for jobId:", jobId);
-        await fetchPricingData(jobId);
+        // Fetch versions for this job
+        console.log("Job Info Page - Fetching versions for jobId:", jobId);
+        await fetchVersions(jobId);
+        
+        // Note: Pricing data will be fetched when selectedVersion is set
+        // This prevents showing data from all versions initially
       } catch (error) {
         console.error("Error loading job data:", error);
       } finally {
@@ -339,6 +466,13 @@ export default function AddJobPage() {
 
     loadJobData();
   }, [jobId, user, fetchPricingData]);
+
+  // Fetch pricing data when selected version changes
+  useEffect(() => {
+    if (selectedVersion && jobId) {
+      fetchPricingData(jobId, selectedVersion.id);
+    }
+  }, [selectedVersion, jobId, fetchPricingData]);
 
   const hasJobData =
     Object.keys(jobData).length > 0 &&
@@ -375,12 +509,38 @@ export default function AddJobPage() {
                 <span className="font-semibold">Last Updated:</span>
                 {loading ? "Loading..." : "Jun 13th, 10:07 am"}
                 <div className="size-2 bg-gray-300 rounded-full" />
-                <span className="font-semibold">Version:</span> 1.0
+                <span className="font-semibold">Version:</span>
+                {loadingVersions ? (
+                  "Loading..."
+                ) : selectedVersion ? (
+                  `${selectedVersion.version_no}.${selectedVersion.revision_no}`
+                ) : (
+                  "No versions"
+                )}
               </div>
             </section>
           </div>
           <section className="flex items-center text-[16px] text-[#60646C] gap-2 font-semibold">
-            <button className="bg-[#F9F9FB] h-10 flex items-center justify-center px-3 gap-2 border border-[#E0E0E0] rounded-md">
+            {versions.length > 0 && (
+              <select
+                value={selectedVersion?.id || ""}
+                onChange={(e) => {
+                  const version = versions.find(v => v.id === e.target.value);
+                  setSelectedVersion(version);
+                }}
+                className="h-10 px-3 border border-[#E0E0E0] rounded-md bg-white text-sm"
+              >
+                {versions.map((version) => (
+                  <option key={version.id} value={version.id}>
+                    Version {version.version_no}.{version.revision_no}
+                  </option>
+                ))}
+              </select>
+            )}
+            <button 
+              onClick={createNewVersion}
+              className="bg-[#F9F9FB] h-10 flex items-center justify-center px-3 gap-2 border border-[#E0E0E0] rounded-md hover:bg-gray-100"
+            >
               <Plus className="size-4" />
               New Version
             </button>
