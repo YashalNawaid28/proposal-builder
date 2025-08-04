@@ -89,9 +89,15 @@ export default function JobsPage() {
       setLoading(true);
       setError(null);
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+        
         const res = await fetch("/api/jobs?page=1&limit=10", {
           headers: { "request.user.id": user.id },
+          signal: controller.signal,
         });
+        
+        clearTimeout(timeoutId);
 
         if (!res.ok) {
           throw new Error("Failed to fetch jobs");
@@ -101,9 +107,13 @@ export default function JobsPage() {
         setJobs(data.data || []);
       } catch (error) {
         console.error("Error fetching jobs:", error);
-        setError(
-          error instanceof Error ? error.message : "An unknown error occurred"
-        );
+        if (error instanceof Error && error.name === 'AbortError') {
+          setError("Request timed out. Please try again.");
+        } else {
+          setError(
+            error instanceof Error ? error.message : "An unknown error occurred"
+          );
+        }
       } finally {
         setLoading(false);
       }

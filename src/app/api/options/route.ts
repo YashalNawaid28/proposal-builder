@@ -58,7 +58,10 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const sign_id = searchParams.get("sign_id");
 
-    let query = supabase.from("options").select("*");
+    let query = supabase.from("options").select(`
+      *,
+      option_values (*)
+    `);
 
     if (sign_id) {
       query = query.eq("sign_id", sign_id);
@@ -70,7 +73,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ data });
+    return NextResponse.json({ data }, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+      },
+    });
   } catch (error) {
     console.error("GET /options error:", error);
     return NextResponse.json(

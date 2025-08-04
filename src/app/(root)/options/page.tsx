@@ -229,9 +229,15 @@ const OptionsPage = () => {
       setLoading(true);
       setError(null);
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+        
         const res = await fetch("/api/options", {
           headers: { "request.user.id": user.id },
+          signal: controller.signal,
         });
+        
+        clearTimeout(timeoutId);
         if (!res.ok) {
           throw new Error("Failed to fetch options");
         }
@@ -239,26 +245,21 @@ const OptionsPage = () => {
         const optionsData = data.data || [];
         setOptions(optionsData);
 
-        // Fetch option values for each option
+        // Extract option values from the optimized response
         const valuesData: { [optionId: string]: OptionValue[] } = {};
-        for (const option of optionsData) {
-          try {
-            const valuesRes = await fetch(`/api/option-values/get-by-optionId?option_id=${option.id}`);
-            if (valuesRes.ok) {
-              const valuesDataRes = await valuesRes.json();
-              valuesData[option.id] = valuesDataRes.data || [];
-            }
-          } catch (error) {
-            console.error(`Error fetching values for option ${option.id}:`, error);
-            valuesData[option.id] = [];
-          }
-        }
+        optionsData.forEach((option: any) => {
+          valuesData[option.id] = option.option_values || [];
+        });
         setOptionValues(valuesData);
       } catch (error) {
         console.error("Error fetching options:", error);
-        setError(
-          error instanceof Error ? error.message : "An unknown error occurred"
-        );
+        if (error instanceof Error && error.name === 'AbortError') {
+          setError("Request timed out. Please try again.");
+        } else {
+          setError(
+            error instanceof Error ? error.message : "An unknown error occurred"
+          );
+        }
       } finally {
         setLoading(false);
       }
