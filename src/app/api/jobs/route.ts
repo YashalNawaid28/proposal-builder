@@ -34,6 +34,9 @@ export async function GET(request: NextRequest) {
       query = query.or(`job_name.ilike.%${search}%,job_no.ilike.%${search}%,site_city.ilike.%${search}%`);
     }
     
+    // Add ordering for better performance
+    query = query.order('created_at', { ascending: false });
+    
     // Add pagination
     query = query.range(offset, offset + limit - 1);
     
@@ -61,6 +64,10 @@ export async function GET(request: NextRequest) {
         nextPage: hasNextPage ? page + 1 : null,
         previousPage: hasPreviousPage ? page - 1 : null,
       }
+    }, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+      },
     });
     
   } catch (error) {
