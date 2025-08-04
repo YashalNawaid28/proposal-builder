@@ -44,7 +44,7 @@ interface EditOptionValueDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onUpdate: (valueName: string, addPrice: string) => void;
-  initialValue: string;
+  initialValue: OptionValue | null;
 }
 
 const EditOptionValueDialog = ({
@@ -53,14 +53,14 @@ const EditOptionValueDialog = ({
   onUpdate,
   initialValue,
 }: EditOptionValueDialogProps) => {
-  const [valueName, setValueName] = useState(initialValue);
-  const [addPrice, setAddPrice] = useState("");
+  const [valueName, setValueName] = useState(initialValue?.display_label || "");
+  const [addPrice, setAddPrice] = useState(initialValue?.price_modifier_value?.toString() || "");
   const valueNameRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (isOpen) {
-      setValueName(initialValue);
-      setAddPrice("");
+    if (isOpen && initialValue) {
+      setValueName(initialValue.display_label || "");
+      setAddPrice(initialValue.price_modifier_value?.toString() || "");
       setTimeout(() => {
         if (valueNameRef.current) {
           valueNameRef.current.blur();
@@ -100,13 +100,14 @@ const EditOptionValueDialog = ({
           </div>
           <div>
             <Label htmlFor="addPrice" className="text-sm font-medium">
-              Add Price
+              Add Price {initialValue?.price_modifier_type === 'Percentage' ? '(%)' : '(Fixed Amount)'}
             </Label>
             <Input
               id="addPrice"
               value={addPrice}
               onChange={(e) => setAddPrice(e.target.value)}
               className="mt-1 w-full border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0"
+              placeholder={initialValue?.price_modifier_type === 'Percentage' ? 'Enter percentage' : 'Enter amount'}
             />
           </div>
         </div>
@@ -187,7 +188,7 @@ const ValuesCell = ({
   onValueClick,
 }: {
   values: { display_label: string; price_modifier_value?: number; price_modifier_type?: string }[];
-  onValueClick: (value: string) => void;
+  onValueClick: (value: any) => void;
 }) => (
   <div className="flex flex-wrap justify-start gap-1">
     {values && values.length > 0 ? (
@@ -200,7 +201,7 @@ const ValuesCell = ({
           <button
             key={idx}
             className="bg-[#F9F9FB] px-2 py-1 rounded text-xs font-medium border border-[#E0E0E0] cursor-pointer hover:bg-gray-200 transition-colors"
-            onClick={() => onValueClick(displayText)}
+            onClick={() => onValueClick(val)}
           >
             {displayText}
           </button>
@@ -221,7 +222,7 @@ const OptionsPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [selectedValue, setSelectedValue] = useState("");
+  const [selectedValue, setSelectedValue] = useState<OptionValue | null>(null);
 
   useEffect(() => {
     const fetchOptions = async () => {
@@ -302,7 +303,7 @@ const OptionsPage = () => {
     );
   };
 
-  const handleValueClick = (value: string) => {
+  const handleValueClick = (value: any) => {
     setSelectedValue(value);
     setEditDialogOpen(true);
   };
