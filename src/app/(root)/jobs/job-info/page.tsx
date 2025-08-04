@@ -51,6 +51,7 @@ export default function AddJobPage() {
     pmName?: string; // Add PM name field
     pmAvatar?: string | null; // Add PM avatar field
     createdDate?: string; // Add created date field
+    updatedAt?: string; // Add updated_at field
   }>({});
   const [clientData, setClientData] = useState<{
     clientName?: string;
@@ -100,6 +101,70 @@ export default function AddJobPage() {
     };
 
     return `${month} ${day}${getOrdinalSuffix(day)}, ${year}`;
+  };
+
+  // Function to format date with time like "Jun 13th, 10:07 am"
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const month = date.toLocaleDateString("en-US", { month: "short" });
+    const day = date.getDate();
+    const year = date.getFullYear();
+    const time = date.toLocaleTimeString("en-US", { 
+      hour: "numeric", 
+      minute: "2-digit",
+      hour12: true 
+    });
+
+    // Add ordinal suffix to day
+    const getOrdinalSuffix = (day: number) => {
+      if (day > 3 && day < 21) return "th";
+      switch (day % 10) {
+        case 1:
+          return "st";
+        case 2:
+          return "nd";
+        case 3:
+          return "rd";
+        default:
+          return "th";
+      }
+    };
+
+    return `${month} ${day}${getOrdinalSuffix(day)}, ${time}`;
+  };
+
+  // Function to update the job's updated_at field
+  const updateJobLastModified = async () => {
+    if (!jobId) return;
+    
+    console.log("Job Info Page - updateJobLastModified called for jobId:", jobId);
+    
+    try {
+      const response = await fetch("/api/jobs/update-last-modified", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ jobId }),
+      });
+
+      console.log("Job Info Page - updateJobLastModified response status:", response.status);
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log("Job Info Page - updateJobLastModified result:", result);
+        
+        // Instead of just updating local state, refresh the entire job data
+        await reloadJobData();
+        
+        console.log("Job updated_at updated successfully:", result.updated_at);
+      } else {
+        const errorText = await response.text();
+        console.error("Failed to update job updated_at:", response.status, errorText);
+      }
+    } catch (error) {
+      console.error("Error updating job updated_at:", error);
+    }
   };
 
   // Function to fetch brand name by ID
@@ -302,6 +367,9 @@ export default function AddJobPage() {
 
         // Set the new version as selected
         setSelectedVersion(newVersion.data);
+
+        // Update the job's updated_at field
+        await updateJobLastModified();
       }
     } catch (error) {
       console.error("Error creating new version:", error);
@@ -375,6 +443,12 @@ export default function AddJobPage() {
         if (!res.ok) {
           throw new Error("Failed to update job");
         }
+
+        // Update the job's updated_at field
+        await updateJobLastModified();
+        
+        // Refresh the job data to get the updated information
+        await reloadJobData();
       } catch (error) {
         console.error("Error updating job:", error);
       }
@@ -404,6 +478,12 @@ export default function AddJobPage() {
         if (!res.ok) {
           throw new Error("Failed to update job client info");
         }
+
+        // Update the job's updated_at field
+        await updateJobLastModified();
+        
+        // Refresh the job data to get the updated information
+        await reloadJobData();
       } catch (error) {
         console.error("Error updating job client info:", error);
       }
@@ -427,6 +507,8 @@ export default function AddJobPage() {
         }
 
         const job = await res.json();
+        console.log("Job Info Page - Raw job data:", job);
+        console.log("Job Info Page - updated_at field:", job.updated_at);
 
         // Collect unique user IDs to fetch
         const userIds = [];
@@ -468,6 +550,7 @@ export default function AddJobPage() {
           pmName: pmData.displayName, // Add the PM name
           pmAvatar: pmData.avatarUrl, // Add the PM avatar
           createdDate: formattedDate, // Add the created date
+          updatedAt: job.updated_at, // Add the updated_at field
         });
 
         // Set the actual client data (handle null case)
@@ -498,6 +581,8 @@ export default function AddJobPage() {
   const reloadJobData = async () => {
     if (!jobId || !user) return;
 
+    console.log("Job Info Page - reloadJobData called for jobId:", jobId);
+
     try {
       const res = await fetch(`/api/jobs/${jobId}`, {
         headers: { "request.user.id": user.id },
@@ -508,6 +593,8 @@ export default function AddJobPage() {
       }
 
       const job = await res.json();
+      console.log("Job Info Page - reloadJobData - raw job data:", job);
+      console.log("Job Info Page - reloadJobData - updated_at field:", job.updated_at);
 
       // Collect unique user IDs to fetch
       const userIds = [];
@@ -534,7 +621,7 @@ export default function AddJobPage() {
       const formattedDate = formatDate(job.created_at);
 
       // Update job data with refreshed values
-      setJobData({
+      const updatedJobData = {
         jobName: job.job_name,
         jobNumber: job.job_no,
         jobLocation: `${job.site_street}, ${job.site_city}, ${job.site_state} ${job.site_postcode}`,
@@ -548,7 +635,11 @@ export default function AddJobPage() {
         pmName: pmData.displayName, // Add the PM name
         pmAvatar: pmData.avatarUrl, // Add the PM avatar
         createdDate: formattedDate, // Add the created date
-      });
+        updatedAt: job.updated_at, // Add the updated_at field
+      };
+      
+      console.log("Job Info Page - reloadJobData - setting job data:", updatedJobData);
+      setJobData(updatedJobData);
 
       // Update client data
       setClientData(clientData || {
@@ -616,6 +707,9 @@ export default function AddJobPage() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+
+      // Update the job's updated_at field
+      await updateJobLastModified();
     } catch (error) {
       console.error("Error downloading proposal:", error);
       alert("Failed to download proposal");
@@ -668,6 +762,9 @@ export default function AddJobPage() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+
+      // Update the job's updated_at field
+      await updateJobLastModified();
     } catch (error) {
       console.error("Error downloading pricing sheet:", error);
       alert("Failed to download pricing sheet");
@@ -707,7 +804,7 @@ export default function AddJobPage() {
               </h1>
               <div className="text-sm text-[#60646C] flex items-center gap-2">
                 <span className="font-semibold">Last Updated:</span>
-                {loading ? "Loading..." : "Jun 13th, 10:07 am"}
+                {loading ? "Loading..." : jobData.updatedAt ? formatDateTime(jobData.updatedAt) : "Never"}
                 <div className="size-2 bg-gray-300 rounded-full" />
                 <span className="font-semibold">Version:</span>
                 {loadingVersions ? (
@@ -1117,7 +1214,12 @@ export default function AddJobPage() {
         setJobData={setJobData}
         isEditing={!!jobId}
         jobId={jobId || undefined}
-        onUpdateSuccess={reloadJobData}
+        onUpdateSuccess={async () => {
+          // Refresh job data
+          await reloadJobData();
+          // Update the job's updated_at field
+          await updateJobLastModified();
+        }}
       />
       <ClientInfoDialog
         isOpen={clientInfoOpen}
@@ -1135,6 +1237,14 @@ export default function AddJobPage() {
           }
         }}
         jobId={jobId || ""}
+        onSignAdded={async () => {
+          // Refresh pricing data for the current version
+          if (jobId && selectedVersion) {
+            await fetchPricingData(jobId, selectedVersion.id);
+          }
+          // Update the job's updated_at field
+          await updateJobLastModified();
+        }}
       />
     </div>
   );
