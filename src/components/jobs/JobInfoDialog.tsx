@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { useUser } from "@stackframe/stack";
 import { toast } from "sonner";
+import { generateProposalNumber } from "@/lib/utils";
 
 interface Brand {
   id: string;
@@ -167,6 +168,7 @@ export const JobInfoDialog = ({
         const updateData = {
           job_name: jobData.jobName || '',
           job_no: jobData.jobNumber || '',
+          proposal_no: generateProposalNumber(jobData.jobName || ''),
           site_street: addressComponents.siteStreet,
           site_city: addressComponents.siteCity,
           site_state: addressComponents.siteState,
@@ -197,9 +199,13 @@ export const JobInfoDialog = ({
         }
       } else {
         // Create new job
+        const proposalNo = generateProposalNumber(jobData.jobName || '');
+        console.log('Generated proposal number:', proposalNo);
+        
         const formData = new FormData();
         formData.append('job_name', jobData.jobName || '');
         formData.append('job_number', jobData.jobNumber || '');
+        formData.append('proposal_no', proposalNo);
         formData.append('site_street', addressComponents.siteStreet);
         formData.append('site_city', addressComponents.siteCity);
         formData.append('site_state', addressComponents.siteState);
@@ -257,6 +263,11 @@ export const JobInfoDialog = ({
               }
               className="mt-1 w-full border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0"
             />
+            {!isEditing && jobData.jobName && (
+              <div className="text-xs text-gray-500 mt-1">
+                Proposal No: {generateProposalNumber(jobData.jobName)}
+              </div>
+            )}
           </div>
           <div>
             <Label htmlFor="jobNumber" className="text-sm font-medium">
