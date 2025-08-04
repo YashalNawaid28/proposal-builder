@@ -16,7 +16,7 @@ export interface SignOption {
 }
 
 export interface SignData {
-  [key: string]: any; // Dynamic properties based on sign description
+  [key: string]: any;
   racewaySize?: {
     height?: {
       feet?: string;
@@ -29,7 +29,6 @@ export interface SignData {
   };
 }
 
-// Add Sign/Service Sidebar Component
 interface AddSignServiceSidebarProps {
   isOpen: boolean;
   onClose: () => void;
