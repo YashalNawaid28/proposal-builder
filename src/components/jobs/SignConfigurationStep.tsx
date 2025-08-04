@@ -19,6 +19,7 @@ interface SignConfigurationStepProps {
   setSignData: (data: SignData) => void;
   onBack: () => void;
   onClose: () => void;
+  onSignAdded?: () => void; // Callback when sign is successfully added
   jobId: string;
 }
 
@@ -50,6 +51,7 @@ export const SignConfigurationStep = ({
   setSignData,
   onBack,
   onClose,
+  onSignAdded,
   jobId,
 }: SignConfigurationStepProps) => {
   const user = useUser();
@@ -488,8 +490,12 @@ export const SignConfigurationStep = ({
       }
 
       console.log("Sign added successfully!");
-      // Close the sidebar or navigate away
-      onClose();
+      // Call onSignAdded callback if provided, otherwise just close
+      if (onSignAdded) {
+        onSignAdded();
+      } else {
+        onClose();
+      }
     } catch (error) {
       console.error("Error adding sign:", error);
       // You might want to show an error message to the user
@@ -578,7 +584,12 @@ export const SignConfigurationStep = ({
     });
     
     // Add raceway value from pricing data if raceway is selected
-    if (signData.raceway && currentPricing.raceway) {
+    // Check for any raceway-related field in signData
+    const racewayField = Object.keys(signData).find(key => 
+      key.includes('raceway') && !key.includes('size') && signData[key]
+    );
+    if (racewayField && currentPricing.raceway) {
+      console.log("Component Debug - Raceway selected, adding raceway value:", currentPricing.raceway);
       signPriceModifier += currentPricing.raceway;
     }
     
@@ -678,7 +689,7 @@ export const SignConfigurationStep = ({
                 ) : availableSizes?.length > 0 ? (
                   availableSizes?.map((size) => (
                     <SelectItem key={size} value={size}>
-                      {size}″
+                      {size}
                     </SelectItem>
                   ))
                 ) : (

@@ -33,12 +33,14 @@ interface AddSignServiceSidebarProps {
   isOpen: boolean;
   onClose: () => void;
   jobId: string;
+  onSignAdded?: () => void; // Callback when a sign is successfully added
 }
 
 export const AddSignServiceSidebar = ({
   isOpen,
   onClose,
   jobId,
+  onSignAdded,
 }: AddSignServiceSidebarProps) => {
   const [activeTab, setActiveTab] = useState<"signage" | "services">("signage");
   const [step, setStep] = useState<1 | 2>(1);
@@ -61,6 +63,19 @@ export const AddSignServiceSidebar = ({
     setStep(1);
     setSelectedSign(null);
     setSignData({});
+    onClose();
+  };
+
+  const handleSignAdded = () => {
+    setStep(1);
+    setSelectedSign(null);
+    setSignData({});
+    
+    // Call the onSignAdded callback
+    if (onSignAdded) {
+      onSignAdded();
+    }
+    
     onClose();
   };
 
@@ -129,6 +144,7 @@ export const AddSignServiceSidebar = ({
       setSignData={setSignData}
       onBack={handleBack}
       onClose={handleClose}
+      onSignAdded={handleSignAdded}
       jobId={jobId}
     />
   );
