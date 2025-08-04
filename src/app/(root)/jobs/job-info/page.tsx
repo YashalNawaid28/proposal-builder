@@ -511,7 +511,10 @@ export default function AddJobPage() {
         jobData,
         clientData,
         pricingData,
-        { version_no: selectedVersion.version_no, revision_no: selectedVersion.revision_no }
+        {
+          version_no: selectedVersion.version_no,
+          revision_no: selectedVersion.revision_no,
+        }
       );
 
       const response = await fetch("/api/generate-proposal-pdf", {
@@ -521,7 +524,9 @@ export default function AddJobPage() {
         },
         body: JSON.stringify({
           htmlContent,
-          fileName: `proposal-${jobData.jobNumber || 'job'}-v${selectedVersion.version_no}.${selectedVersion.revision_no}`,
+          fileName: `proposal-${jobData.jobNumber || "job"}-v${
+            selectedVersion.version_no
+          }.${selectedVersion.revision_no}`,
         }),
       });
 
@@ -533,7 +538,9 @@ export default function AddJobPage() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `proposal-${jobData.jobNumber || 'job'}-v${selectedVersion.version_no}.${selectedVersion.revision_no}.pdf`;
+      a.download = `proposal-${jobData.jobNumber || "job"}-v${
+        selectedVersion.version_no
+      }.${selectedVersion.revision_no}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -556,7 +563,10 @@ export default function AddJobPage() {
         jobData,
         clientData,
         pricingData,
-        { version_no: selectedVersion.version_no, revision_no: selectedVersion.revision_no }
+        {
+          version_no: selectedVersion.version_no,
+          revision_no: selectedVersion.revision_no,
+        }
       );
 
       const response = await fetch("/api/generate-pricing-sheet-pdf", {
@@ -566,7 +576,9 @@ export default function AddJobPage() {
         },
         body: JSON.stringify({
           htmlContent,
-          fileName: `pricing-sheet-${jobData.jobNumber || 'job'}-v${selectedVersion.version_no}.${selectedVersion.revision_no}`,
+          fileName: `pricing-sheet-${jobData.jobNumber || "job"}-v${
+            selectedVersion.version_no
+          }.${selectedVersion.revision_no}`,
         }),
       });
 
@@ -578,7 +590,9 @@ export default function AddJobPage() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `pricing-sheet-${jobData.jobNumber || 'job'}-v${selectedVersion.version_no}.${selectedVersion.revision_no}.pdf`;
+      a.download = `pricing-sheet-${jobData.jobNumber || "job"}-v${
+        selectedVersion.version_no
+      }.${selectedVersion.revision_no}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -1042,7 +1056,6 @@ export default function AddJobPage() {
         isOpen={addSignSidebarOpen}
         onClose={() => {
           setAddSignSidebarOpen(false);
-          // Refresh pricing data when sidebar closes (in case a new sign was added)
           if (jobId && selectedVersion) {
             fetchPricingData(jobId, selectedVersion.id);
           }
