@@ -278,10 +278,10 @@ export default function JobsPage() {
                   {row.date}
                 </td>
                 <td className="p-4 border-r border-[#DEE1EA] text-center text-[14px]">
-                  <UserInfo user={row.creator} label="Creator" />
+                  <UserInfo user={row.creator} />
                 </td>
                 <td className="p-4 text-center text-[14px]">
-                  <UserInfo user={row.manager} label="Manager" />
+                  <UserInfo user={row.manager} />
                 </td>
               </tr>
             ))}
