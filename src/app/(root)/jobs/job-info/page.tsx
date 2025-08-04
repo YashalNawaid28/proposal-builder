@@ -115,24 +115,30 @@ export default function AddJobPage() {
     return "Unknown Brand";
   };
 
-  // Function to fetch user name by ID
-  const fetchUserName = async (userId: string) => {
+  // Function to fetch multiple users by IDs
+  const fetchUsers = async (userIds: string[]) => {
     try {
-      const response = await fetch(`/api/users/${userId}`);
+      // Use bulk API to fetch all users in one call
+      const response = await fetch(`/api/users?ids=${userIds.join(",")}`);
       if (response.ok) {
-        const user = await response.json();
-        return {
-          displayName: user.display_name || "Unknown User",
-          avatarUrl: user.avatar_url || null,
-        };
+        const result = await response.json();
+        const users = result.data || [];
+        
+        // Convert to map for easy lookup
+        const userMap = new Map();
+        users.forEach((user: any) => {
+          userMap.set(user.id, {
+            displayName: user.display_name || "Unknown User",
+            avatarUrl: user.avatar_url || null,
+          });
+        });
+        
+        return userMap;
       }
     } catch (error) {
-      console.error("Error fetching user:", error);
+      console.error("Error fetching users:", error);
     }
-    return {
-      displayName: "Unknown User",
-      avatarUrl: null,
-    };
+    return new Map();
   };
 
   // Function to fetch client data by ID
@@ -420,11 +426,15 @@ export default function AddJobPage() {
 
         const job = await res.json();
 
+        // Collect unique user IDs to fetch
+        const userIds = [];
+        if (job.creator_id) userIds.push(job.creator_id);
+        if (job.pm_id) userIds.push(job.pm_id);
+        
         // Fetch all related data in parallel
-        const [brandName, creatorData, pmData, clientData] = await Promise.all([
+        const [brandName, usersMap, clientData] = await Promise.all([
           job.brand_id ? fetchBrandName(job.brand_id) : Promise.resolve("Unknown Brand"),
-          job.creator_id ? fetchUserName(job.creator_id) : Promise.resolve({ displayName: "Unknown User", avatarUrl: null }),
-          job.pm_id ? fetchUserName(job.pm_id) : Promise.resolve({ displayName: "Unknown PM", avatarUrl: null }),
+          userIds.length > 0 ? fetchUsers(userIds) : Promise.resolve(new Map()),
           job.client_id ? fetchClientData(job.client_id) : Promise.resolve({
             clientName: "Unknown Client",
             clientLocation: "Unknown Location", 
@@ -432,6 +442,10 @@ export default function AddJobPage() {
             clientPhone: "Unknown Phone",
           })
         ]);
+        
+        // Extract user data from the map
+        const creatorData = usersMap.get(job.creator_id) || { displayName: "Unknown User", avatarUrl: null };
+        const pmData = usersMap.get(job.pm_id) || { displayName: "Unknown PM", avatarUrl: null };
 
         // Format the created_at date
         const createdAt = new Date(job.created_at);
