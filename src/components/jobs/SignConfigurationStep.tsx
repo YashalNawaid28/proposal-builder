@@ -578,7 +578,12 @@ export const SignConfigurationStep = ({
     });
     
     // Add raceway value from pricing data if raceway is selected
-    if (signData.raceway && currentPricing.raceway) {
+    // Check for any raceway-related field in signData
+    const racewayField = Object.keys(signData).find(key => 
+      key.includes('raceway') && !key.includes('size') && signData[key]
+    );
+    if (racewayField && currentPricing.raceway) {
+      console.log("Component Debug - Raceway selected, adding raceway value:", currentPricing.raceway);
       signPriceModifier += currentPricing.raceway;
     }
     
