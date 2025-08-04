@@ -40,8 +40,10 @@ export default function AddJobPage() {
     jobNumber?: string;
     jobLocation?: string;
     brand?: string;
+    brandId?: string; // For JobInfoDialog
     brandName?: string; // Add brand name field
     manager?: string;
+    managerId?: string; // For JobInfoDialog
     creator?: string;
     creatorName?: string; // Add creator name field
     creatorAvatar?: string | null; // Add creator avatar field
@@ -456,9 +458,9 @@ export default function AddJobPage() {
           jobName: job.job_name,
           jobNumber: job.job_no,
           jobLocation: `${job.site_street}, ${job.site_city}, ${job.site_state} ${job.site_postcode}`,
-          brand: job.brand_id, // Keep the ID for reference
+          brandId: job.brand_id, // Use brandId for JobInfoDialog
           brandName: brandName, // Add the brand name
-          manager: job.manager_id,
+          managerId: job.pm_id, // Use managerId for JobInfoDialog
           creator: job.creator_id, // Keep the ID for reference
           creatorName: creatorData.displayName, // Add the creator name
           creatorAvatar: creatorData.avatarUrl, // Add the creator avatar
@@ -491,6 +493,75 @@ export default function AddJobPage() {
 
     loadJobData();
   }, [jobId, user, fetchPricingData]);
+
+  // Function to reload job data after update
+  const reloadJobData = async () => {
+    if (!jobId || !user) return;
+
+    try {
+      const res = await fetch(`/api/jobs/${jobId}`, {
+        headers: { "request.user.id": user.id },
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch job data");
+      }
+
+      const job = await res.json();
+
+      // Collect unique user IDs to fetch
+      const userIds = [];
+      if (job.creator_id) userIds.push(job.creator_id);
+      if (job.pm_id) userIds.push(job.pm_id);
+      
+      // Fetch all related data in parallel
+      const [brandName, usersMap, clientData] = await Promise.all([
+        job.brand_id ? fetchBrandName(job.brand_id) : Promise.resolve("Unknown Brand"),
+        userIds.length > 0 ? fetchUsers(userIds) : Promise.resolve(new Map()),
+        job.client_id ? fetchClientData(job.client_id) : Promise.resolve({
+          clientName: "Unknown Client",
+          clientLocation: "Unknown Location", 
+          clientContact: "Unknown Contact",
+          clientPhone: "Unknown Phone",
+        })
+      ]);
+      
+      // Extract user data from the map
+      const creatorData = usersMap.get(job.creator_id) || { displayName: "Unknown User", avatarUrl: null };
+      const pmData = usersMap.get(job.pm_id) || { displayName: "Unknown PM", avatarUrl: null };
+
+      // Format the created_at date
+      const formattedDate = formatDate(job.created_at);
+
+      // Update job data with refreshed values
+      setJobData({
+        jobName: job.job_name,
+        jobNumber: job.job_no,
+        jobLocation: `${job.site_street}, ${job.site_city}, ${job.site_state} ${job.site_postcode}`,
+        brandId: job.brand_id, // Use brandId for JobInfoDialog
+        brandName: brandName, // Add the brand name
+        managerId: job.pm_id, // Use managerId for JobInfoDialog
+        creator: job.creator_id, // Keep the ID for reference
+        creatorName: creatorData.displayName, // Add the creator name
+        creatorAvatar: creatorData.avatarUrl, // Add the creator avatar
+        pm: job.pm_id,
+        pmName: pmData.displayName, // Add the PM name
+        pmAvatar: pmData.avatarUrl, // Add the PM avatar
+        createdDate: formattedDate, // Add the created date
+      });
+
+      // Update client data
+      setClientData(clientData || {
+        clientName: "Unknown Client",
+        clientLocation: "Unknown Location",
+        clientContact: "Unknown Contact", 
+        clientPhone: "Unknown Phone",
+      });
+
+    } catch (error) {
+      console.error("Error reloading job data:", error);
+    }
+  };
 
   // Fetch pricing data when selected version changes
   useEffect(() => {
@@ -1044,6 +1115,9 @@ export default function AddJobPage() {
         onNext={handleJobInfoSave}
         jobData={jobData}
         setJobData={setJobData}
+        isEditing={!!jobId}
+        jobId={jobId || undefined}
+        onUpdateSuccess={reloadJobData}
       />
       <ClientInfoDialog
         isOpen={clientInfoOpen}
