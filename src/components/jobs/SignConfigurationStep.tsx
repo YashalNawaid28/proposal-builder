@@ -678,7 +678,7 @@ export const SignConfigurationStep = ({
                 ) : availableSizes?.length > 0 ? (
                   availableSizes?.map((size) => (
                     <SelectItem key={size} value={size}>
-                      {size}″
+                      {size}
                     </SelectItem>
                   ))
                 ) : (
