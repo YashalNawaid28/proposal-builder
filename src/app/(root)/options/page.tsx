@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 export interface OptionData {
   id: string;
@@ -224,47 +225,48 @@ const OptionsPage = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedValue, setSelectedValue] = useState<OptionValue | null>(null);
 
-  useEffect(() => {
-    const fetchOptions = async () => {
-      if (!user) return;
-      setLoading(true);
-      setError(null);
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
-        
-        const res = await fetch("/api/options", {
-          headers: { "request.user.id": user.id },
-          signal: controller.signal,
-        });
-        
-        clearTimeout(timeoutId);
-        if (!res.ok) {
-          throw new Error("Failed to fetch options");
-        }
-        const data = await res.json();
-        const optionsData = data.data || [];
-        setOptions(optionsData);
-
-        // Extract option values from the optimized response
-        const valuesData: { [optionId: string]: OptionValue[] } = {};
-        optionsData.forEach((option: any) => {
-          valuesData[option.id] = option.option_values || [];
-        });
-        setOptionValues(valuesData);
-      } catch (error) {
-        console.error("Error fetching options:", error);
-        if (error instanceof Error && error.name === 'AbortError') {
-          setError("Request timed out. Please try again.");
-        } else {
-          setError(
-            error instanceof Error ? error.message : "An unknown error occurred"
-          );
-        }
-      } finally {
-        setLoading(false);
+  const fetchOptions = async () => {
+    if (!user) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+      
+      const res = await fetch("/api/options", {
+        headers: { "request.user.id": user.id },
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
+      if (!res.ok) {
+        throw new Error("Failed to fetch options");
       }
-    };
+      const data = await res.json();
+      const optionsData = data.data || [];
+      setOptions(optionsData);
+
+      // Extract option values from the optimized response
+      const valuesData: { [optionId: string]: OptionValue[] } = {};
+      optionsData.forEach((option: any) => {
+        valuesData[option.id] = option.option_values || [];
+      });
+      setOptionValues(valuesData);
+    } catch (error) {
+      console.error("Error fetching options:", error);
+      if (error instanceof Error && error.name === 'AbortError') {
+        setError("Request timed out. Please try again.");
+      } else {
+        setError(
+          error instanceof Error ? error.message : "An unknown error occurred"
+        );
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchOptions();
   }, [user]);
 
@@ -308,8 +310,49 @@ const OptionsPage = () => {
     setEditDialogOpen(true);
   };
 
-  const handleUpdateValue = (valueName: string, addPrice: string) => {
-    console.log("Updated value:", { valueName, addPrice });
+  const handleUpdateValue = async (valueName: string, addPrice: string) => {
+    if (!selectedValue) return;
+
+    try {
+      const response = await fetch(`/api/option-values/${selectedValue.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          display_label: valueName,
+          price_modifier_value: addPrice ? parseFloat(addPrice) : null,
+          price_modifier_type: selectedValue.price_modifier_type,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update option value");
+      }
+
+      const result = await response.json();
+      console.log("Updated option value:", result);
+
+      // Update the local state instead of re-fetching everything
+      if (selectedValue && result.data) {
+        setOptionValues(prevValues => {
+          const newValues = { ...prevValues };
+          // Find and update the specific option value
+          Object.keys(newValues).forEach(optionId => {
+            newValues[optionId] = newValues[optionId].map(value => 
+              value.id === selectedValue.id ? result.data : value
+            );
+          });
+          return newValues;
+        });
+      }
+      
+      // Show success message
+      toast.success("Option value updated successfully!");
+    } catch (error) {
+      console.error("Error updating option value:", error);
+      toast.error("Failed to update option value. Please try again.");
+    }
   };
 
   const isAllSelected =
