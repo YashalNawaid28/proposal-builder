@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useUser } from "@stackframe/stack";
+import { toast } from "sonner";
 
 interface Brand {
   id: string;
@@ -49,6 +50,9 @@ interface JobInfoDialogProps {
   onNext: (data: any) => void;
   jobData: any;
   setJobData: (data: any) => void;
+  isEditing?: boolean; // Add flag to determine if editing existing job
+  jobId?: string; // Add jobId for update operations
+  onUpdateSuccess?: () => void; // Callback to refresh job data after update
 }
 
 export const JobInfoDialog = ({
@@ -57,6 +61,9 @@ export const JobInfoDialog = ({
   onNext,
   jobData,
   setJobData,
+  isEditing = false,
+  jobId,
+  onUpdateSuccess,
 }: JobInfoDialogProps) => {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -92,6 +99,20 @@ export const JobInfoDialog = ({
     } catch (error) {
       console.error('Error fetching users:', error);
     }
+  };
+
+  // Function to format job location from individual address fields
+  const formatJobLocation = (jobData: any) => {
+    if (jobData.site_street || jobData.site_city || jobData.site_state || jobData.site_postcode) {
+      const parts = [
+        jobData.site_street,
+        jobData.site_city,
+        jobData.site_state,
+        jobData.site_postcode
+      ].filter(Boolean);
+      return parts.join(', ');
+    }
+    return "";
   };
 
   // Function to parse address into components
@@ -141,28 +162,64 @@ export const JobInfoDialog = ({
       // Parse the address into components
       const addressComponents = parseAddress(jobData.jobLocation || "");
 
-      const formData = new FormData();
-      formData.append('job_name', jobData.jobName || '');
-      formData.append('job_number', jobData.jobNumber || '');
-      formData.append('site_street', addressComponents.siteStreet);
-      formData.append('site_city', addressComponents.siteCity);
-      formData.append('site_state', addressComponents.siteState);
-      formData.append('site_postcode', addressComponents.sitePostcode);
-      formData.append('site_country', addressComponents.siteCountry);
-      formData.append('brand_id', jobData.brandId || '');
-      formData.append('pm_id', jobData.managerId || ''); // Store as pm_id instead of manager_id
+      if (isEditing && jobId) {
+        // Update existing job
+        const updateData = {
+          job_name: jobData.jobName || '',
+          job_no: jobData.jobNumber || '',
+          site_street: addressComponents.siteStreet,
+          site_city: addressComponents.siteCity,
+          site_state: addressComponents.siteState,
+          site_postcode: addressComponents.sitePostcode,
+          site_country: addressComponents.siteCountry,
+          brand_id: jobData.brandId || '',
+          pm_id: jobData.managerId || '',
+        };
 
-      const response = await fetch('/api/jobs/add-job-info', {
-        method: 'POST',
-        headers: { "request.user.id": user.id },
-        body: formData,
-      });
+        const response = await fetch(`/api/jobs/${jobId}`, {
+          method: 'PUT',
+          headers: { 
+            "Content-Type": "application/json",
+            "request.user.id": user.id 
+          },
+          body: JSON.stringify(updateData),
+        });
 
-      if (response.ok) {
-        const result = await response.json();
-        onNext({ ...jobData, jobId: result.data?.[0]?.id });
+        if (response.ok) {
+          const result = await response.json();
+          console.log('Job updated successfully:', result);
+          toast.success('Job updated successfully!');
+          onUpdateSuccess?.(); // Refresh job data
+          onClose(); // Close dialog after successful update
+        } else {
+          console.error('Error updating job:', await response.text());
+          toast.error('Failed to update job. Please try again.');
+        }
       } else {
-        console.error('Error saving job:', await response.text());
+        // Create new job
+        const formData = new FormData();
+        formData.append('job_name', jobData.jobName || '');
+        formData.append('job_number', jobData.jobNumber || '');
+        formData.append('site_street', addressComponents.siteStreet);
+        formData.append('site_city', addressComponents.siteCity);
+        formData.append('site_state', addressComponents.siteState);
+        formData.append('site_postcode', addressComponents.sitePostcode);
+        formData.append('site_country', addressComponents.siteCountry);
+        formData.append('brand_id', jobData.brandId || '');
+        formData.append('pm_id', jobData.managerId || '');
+
+        const response = await fetch('/api/jobs/add-job-info', {
+          method: 'POST',
+          headers: { "request.user.id": user.id },
+          body: formData,
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          onNext({ ...jobData, jobId: result.data?.[0]?.id });
+        } else {
+          console.error('Error saving job:', await response.text());
+        }
       }
     } catch (error) {
       console.error('Error saving job:', error);
@@ -194,7 +251,7 @@ export const JobInfoDialog = ({
             </Label>
             <Input
               id="jobName"
-              value={jobData.jobName || ""}
+              value={jobData.jobName || jobData.job_name || ""}
               onChange={(e) =>
                 setJobData({ ...jobData, jobName: e.target.value })
               }
@@ -207,7 +264,7 @@ export const JobInfoDialog = ({
             </Label>
             <Input
               id="jobNumber"
-              value={jobData.jobNumber || ""}
+              value={jobData.jobNumber || jobData.job_no || ""}
               onChange={(e) =>
                 setJobData({ ...jobData, jobNumber: e.target.value })
               }
@@ -220,7 +277,7 @@ export const JobInfoDialog = ({
             </Label>
             <Input
               id="jobLocation"
-              value={jobData.jobLocation || ""}
+              value={jobData.jobLocation || formatJobLocation(jobData) || ""}
               onChange={(e) =>
                 setJobData({ ...jobData, jobLocation: e.target.value })
               }
@@ -233,7 +290,7 @@ export const JobInfoDialog = ({
               Brand
             </Label>
             <Select
-              value={jobData.brandId || ""}
+              value={jobData.brandId || jobData.brand_id || ""}
               onValueChange={(value) =>
                 setJobData({ ...jobData, brandId: value })
               }
@@ -255,7 +312,7 @@ export const JobInfoDialog = ({
               Manager
             </Label>
             <Select
-              value={jobData.managerId || ""}
+              value={jobData.managerId || jobData.pm_id || ""}
               onValueChange={(value) =>
                 setJobData({ ...jobData, managerId: value })
               }
@@ -285,7 +342,7 @@ export const JobInfoDialog = ({
             disabled={loading}
             className="h-10 bg-black w-full flex items-center text-white justify-center px-3 gap-2 rounded-md disabled:opacity-50"
           >
-            {loading ? 'Saving...' : 'Next: Client Info'}
+            {loading ? 'Saving...' : isEditing ? 'Update' : 'Next: Client Info'}
           </button>
         </section>
       </DialogContent>
