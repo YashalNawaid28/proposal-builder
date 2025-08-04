@@ -174,8 +174,7 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
     suppressMovable: true,
     editable: true,
     cellClass: (params) => {
-      // Add custom class for debugging
-      return 'ag-cell-custom';
+      return "ag-cell-custom";
     },
   };
 
@@ -190,11 +189,10 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
         headerHeight={50}
         domLayout="autoHeight"
         getRowId={(params: GetRowIdParams) => params.data.size}
-        /* FIX 3: Use the modern, recommended props to enable the fill handle. */
         enableRangeSelection={true}
         enableFillHandle={true}
         getRowClass={(params) => {
-          return 'ag-row-custom';
+          return "ag-row-custom";
         }}
         onGridReady={(params) => {
           params.api.sizeColumnsToFit();
@@ -202,12 +200,14 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
         onRangeSelectionChanged={(event) => {
           // Force update of cell borders when selection changes
           setTimeout(() => {
-            const selectedCells = document.querySelectorAll('.ag-cell-range-selected');
+            const selectedCells = document.querySelectorAll(
+              ".ag-cell-range-selected"
+            );
             selectedCells.forEach((cell) => {
               if (cell instanceof HTMLElement) {
-                cell.style.borderRight = '1px solid #dee1ea';
-                if (cell.classList.contains('ag-cell-last-column')) {
-                  cell.style.borderRight = '2px solid #007bff';
+                cell.style.borderRight = "1px solid #dee1ea";
+                if (cell.classList.contains("ag-cell-last-column")) {
+                  cell.style.borderRight = "2px solid #007bff";
                 }
               }
             });
@@ -246,15 +246,15 @@ const SignsPage = () => {
       try {
         setLoading(true);
         setError(null);
-        
+
         // Add timeout for fetch request
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-        
+
         const response = await fetch("/api/signs", {
           signal: controller.signal,
         });
-        
+
         clearTimeout(timeoutId);
         if (!response.ok) {
           throw new Error(`API request failed with status: ${response.status}`);
@@ -296,7 +296,8 @@ const SignsPage = () => {
           }[];
           options?: { option_name?: string; input_type?: string }[];
         };
-        const transformedData = (selectedBrand.signs as SignRaw[]).map((sign) => {
+        const transformedData = (selectedBrand.signs as SignRaw[]).map(
+          (sign) => {
             const createdDate = new Date(sign.created_at);
             const day = createdDate.getDate();
             const suffix =
@@ -306,7 +307,7 @@ const SignsPage = () => {
             const formattedDate = `${createdDate.toLocaleDateString("en-US", {
               month: "short",
             })} ${day}${suffix}, ${createdDate.getFullYear()}`;
-            
+
             // Use pricing data that's already included in the sign object
             const details = (sign.sign_pricing || []).map((pricing: any) => ({
               size: pricing.size || "",
@@ -354,13 +355,14 @@ const SignsPage = () => {
               signOptions: signOptions,
               details: signDetails,
             };
-          });
+          }
+        );
         setSignData(transformedData);
         setExpandedRow(null);
         setError(null);
       } catch (err) {
         console.error("Error fetching signs:", err);
-        if (err instanceof Error && err.name === 'AbortError') {
+        if (err instanceof Error && err.name === "AbortError") {
           setError("Request timed out. Please try again.");
         } else {
           setError("Failed to load sign data. Please try again later.");
@@ -454,7 +456,7 @@ const SignsPage = () => {
                             <img
                               src={sign.signImage}
                               alt=""
-                              className="object-contain"
+                              className="object-contain w-[80%] h-[80%] max-h-16 max-w-[120px] mx-auto"
                             />
                           ) : (
                             <ImagePlus size={40} className="text-[#60646C]" />

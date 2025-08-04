@@ -1,14 +1,9 @@
 "use client";
 import { useEffect, useState, useMemo } from "react";
-import {
-  ListFilter,
-  ArrowUpDown,
-  ChevronLeft,
-  ChevronRight,
-  ChevronDown,
-} from "lucide-react";
+import { ListFilter, ArrowUpDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { PageTabs } from "@/components/ui/page-tabs";
+import { Pagination } from "@/components/ui/pagination";
 import { useUser } from "@stackframe/stack";
 
 export interface JobData {
@@ -26,6 +21,18 @@ export interface JobData {
   proposal_seq: number | null;
   creator_id: string | null;
   pm_id: string | null;
+  creator: {
+    id: string;
+    display_name: string;
+    avatar_url: string;
+    job_title: string;
+  } | null;
+  project_manager: {
+    id: string;
+    display_name: string;
+    avatar_url: string;
+    job_title: string;
+  } | null;
   created_at: string;
   updated_at: string;
   current_pricing_version_id: string | null;
@@ -37,23 +44,23 @@ export interface JobData {
 interface RowData {
   id: string;
   jobName: string;
-  status: string;
   proposalNo: string;
   date: string;
-  creator: string;
-  totalPrice: string;
+  creator: {
+    id: string;
+    display_name: string;
+    avatar_url: string;
+    job_title: string;
+  } | null;
+  manager: {
+    id: string;
+    display_name: string;
+    avatar_url: string;
+    job_title: string;
+  } | null;
   location: string;
   jobNo: string;
 }
-
-// StatusCell component that handles different statuses
-const StatusCell = ({ status }: { status: string }) => {
-  return (
-    <span className="bg-[#15191E1A] h-[24px] font-semibold px-3 py-1 rounded text-[14px]">
-      {status.charAt(0).toUpperCase() + status.slice(1)}
-    </span>
-  );
-};
 
 // Format date function
 const formatDate = (dateString: string): string => {
@@ -65,12 +72,26 @@ const formatDate = (dateString: string): string => {
   });
 };
 
+// Get initials from name
+const getInitials = (name: string): string => {
+  return name
+    .split(" ")
+    .map((word) => word.charAt(0))
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+};
+
 export default function JobsPage() {
   const [tab, setTab] = useState<"All" | "Drafts" | "Sent" | "Signed">("All");
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [jobs, setJobs] = useState<JobData[]>([]);
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [itemsPerPage, setItemsPerPage] = useState<number>(20);
+  const [totalItems, setTotalItems] = useState<number>(0);
+  const [totalPages, setTotalPages] = useState<number>(0);
   const router = useRouter();
 
   const user = useUser();
@@ -85,18 +106,21 @@ export default function JobsPage() {
 
   useEffect(() => {
     const fetchJobs = async () => {
-      if (!user) return; // Don't fetch if user is not available
+      if (!user) return;
       setLoading(true);
       setError(null);
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
-        
-        const res = await fetch("/api/jobs?page=1&limit=10", {
-          headers: { "request.user.id": user.id },
-          signal: controller.signal,
-        });
-        
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+        const res = await fetch(
+          `/api/jobs?page=${currentPage}&limit=${itemsPerPage}`,
+          {
+            headers: { "request.user.id": user.id },
+            signal: controller.signal,
+          }
+        );
+
         clearTimeout(timeoutId);
 
         if (!res.ok) {
@@ -105,9 +129,11 @@ export default function JobsPage() {
 
         const data = await res.json();
         setJobs(data.data || []);
+        setTotalItems(data.pagination?.total || 0);
+        setTotalPages(data.pagination?.totalPages || 0);
       } catch (error) {
         console.error("Error fetching jobs:", error);
-        if (error instanceof Error && error.name === 'AbortError') {
+        if (error instanceof Error && error.name === "AbortError") {
           setError("Request timed out. Please try again.");
         } else {
           setError(
@@ -120,7 +146,7 @@ export default function JobsPage() {
     };
 
     fetchJobs();
-  }, [user]);
+  }, [user, currentPage, itemsPerPage]);
 
   // Filter jobs based on the selected tab
   const filteredJobs = useMemo(() => {
@@ -133,11 +159,10 @@ export default function JobsPage() {
     return filteredJobs.map((job) => ({
       id: job.id,
       jobName: job.job_name,
-      status: job.status,
       proposalNo: job.proposal_no || "N/A",
       date: formatDate(job.created_at),
-      creator: job.creator_id || "N/A",
-      totalPrice: "$0.00", // Placeholder - you may need to calculate this from pricing data
+      creator: job.creator,
+      manager: job.project_manager,
       location: `${job.site_city}, ${job.site_state}`,
       jobNo: job.job_no,
     }));
@@ -160,6 +185,18 @@ export default function JobsPage() {
 
   const isAllSelected =
     rowData.length > 0 && selectedRows.length === rowData.length;
+
+  // Pagination handlers
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    setSelectedRows([]); // Clear selection when changing pages
+  };
+
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1); // Reset to first page when changing items per page
+    setSelectedRows([]); // Clear selection
+  };
 
   const renderTable = () => {
     if (loading) {
@@ -191,9 +228,6 @@ export default function JobsPage() {
                 Job Name
               </th>
               <th className="p-4 text-center text-[12px] font-semibold border-r border-[#DEE1EA]">
-                Status
-              </th>
-              <th className="p-4 text-center text-[12px] font-semibold border-r border-[#DEE1EA]">
                 Proposal No.
               </th>
               <th className="p-4 text-center text-[12px] font-semibold border-r border-[#DEE1EA]">
@@ -203,7 +237,7 @@ export default function JobsPage() {
                 Creator
               </th>
               <th className="p-4 text-center text-[12px] font-semibold">
-                Total Price
+                Manager
               </th>
             </tr>
           </thead>
@@ -237,9 +271,6 @@ export default function JobsPage() {
                     </div>
                   </div>
                 </td>
-                <td className="p-4 border-r border-[#DEE1EA] text-center">
-                  <StatusCell status={row.status} />
-                </td>
                 <td className="p-4 border-r text-center border-[#DEE1EA] text-[14px]">
                   {row.proposalNo}
                 </td>
@@ -247,15 +278,53 @@ export default function JobsPage() {
                   {row.date}
                 </td>
                 <td className="p-4 border-r border-[#DEE1EA] text-center text-[14px]">
-                  {row.creator}
+                  <UserInfo user={row.creator} label="Creator" />
                 </td>
                 <td className="p-4 text-center text-[14px]">
-                  {row.totalPrice}
+                  <UserInfo user={row.manager} label="Manager" />
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+      </div>
+    );
+  };
+
+  // User info component
+  const UserInfo = ({
+    user,
+  }: {
+    user: {
+      id: string;
+      display_name: string;
+      avatar_url: string;
+      job_title: string;
+    } | null;
+  }) => {
+    if (!user) return <div className="text-center text-gray-400">N/A</div>;
+
+    return (
+      <div className="flex items-center gap-3">
+        <div className="flex-shrink-0">
+          {user.avatar_url ? (
+            <img
+              src={user.avatar_url}
+              alt={user.display_name}
+              className="w-8 h-8 rounded-full object-cover"
+            />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600">
+              {getInitials(user.display_name)}
+            </div>
+          )}
+        </div>
+        <div className="flex flex-col">
+          <div className="font-medium text-sm">{user.display_name}</div>
+          {user.job_title && (
+            <div className="text-xs text-gray-500">{user.job_title}</div>
+          )}
+        </div>
       </div>
     );
   };
@@ -323,25 +392,15 @@ export default function JobsPage() {
       )}
 
       {/* Pagination Section */}
-      {rowData.length > 0 && (
-        <div className="flex items-center justify-between px-6 h-16 text-[12px] font-medium py-4 border-t border-[#DEE1EA] bg-white">
-          <div>Showing 1-25 of 321 Jobs</div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <button className="p-2 hover:bg-gray-100 rounded">
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <span>1 of 13</span>
-              <button className="p-2 hover:bg-gray-100 rounded">
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <span>25 Jobs per page</span>
-            <ChevronDown className="w-4 h-4" />
-          </div>
-        </div>
+      {rowData.length > 0 && totalPages > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
+          onPageChange={handlePageChange}
+          onItemsPerPageChange={handleItemsPerPageChange}
+        />
       )}
     </div>
   );
