@@ -245,7 +245,17 @@ const SignsPage = () => {
     const fetchSigns = async () => {
       try {
         setLoading(true);
-        const response = await fetch("/api/signs");
+        setError(null);
+        
+        // Add timeout for fetch request
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+        
+        const response = await fetch("/api/signs", {
+          signal: controller.signal,
+        });
+        
+        clearTimeout(timeoutId);
         if (!response.ok) {
           throw new Error(`API request failed with status: ${response.status}`);
         }
@@ -286,8 +296,7 @@ const SignsPage = () => {
           }[];
           options?: { option_name?: string; input_type?: string }[];
         };
-        const transformedData = await Promise.all(
-          (selectedBrand.signs as SignRaw[]).map(async (sign) => {
+        const transformedData = (selectedBrand.signs as SignRaw[]).map((sign) => {
             const createdDate = new Date(sign.created_at);
             const day = createdDate.getDate();
             const suffix =
@@ -297,34 +306,16 @@ const SignsPage = () => {
             const formattedDate = `${createdDate.toLocaleDateString("en-US", {
               month: "short",
             })} ${day}${suffix}, ${createdDate.getFullYear()}`;
-            let details: any[] = [];
-            try {
-              const pricingResponse = await fetch(
-                `/api/sign-pricing/get-by-signId?sign_id=${sign.id}`
-              );
-              if (pricingResponse.ok) {
-                const pricingData = await pricingResponse.json();
-                console.log(
-                  `Raw pricing data for sign ${sign.id}:`,
-                  pricingData
-                );
-                if (pricingData.data && Array.isArray(pricingData.data)) {
-                  details = pricingData.data.map((pricing: any) => ({
-                    size: pricing.size || "",
-                    signPrice: pricing.sign_price || 0,
-                    installPrice: pricing.install_price || 0,
-                    signBudget: pricing.sign_budget || 0,
-                    installBudget: pricing.install_budget || 0,
-                    raceway: pricing.raceway || 0,
-                  }));
-                }
-              }
-            } catch (error) {
-              console.error(
-                `Error fetching pricing for sign ${sign.id}:`,
-                error
-              );
-            }
+            
+            // Use pricing data that's already included in the sign object
+            const details = (sign.sign_pricing || []).map((pricing: any) => ({
+              size: pricing.size || "",
+              signPrice: pricing.sign_price || 0,
+              installPrice: pricing.install_price || 0,
+              signBudget: pricing.sign_budget || 0,
+              installBudget: pricing.install_budget || 0,
+              raceway: pricing.raceway || 0,
+            }));
 
             const signDetails: ISignDetail[] = details.map((d) => ({
               size: d.size,
@@ -334,11 +325,6 @@ const SignsPage = () => {
               installBudget: formatCurrency(d.installBudget),
               raceway: formatCurrency(d.raceway),
             }));
-            if (signDetails.length === 0) {
-              console.log(
-                `No pricing data found for sign ${sign.id}, using empty array`
-              );
-            }
 
             const signOptions: ISignOption[] = [
               {
@@ -368,14 +354,17 @@ const SignsPage = () => {
               signOptions: signOptions,
               details: signDetails,
             };
-          })
-        );
+          });
         setSignData(transformedData);
         setExpandedRow(null);
         setError(null);
       } catch (err) {
         console.error("Error fetching signs:", err);
-        setError("Failed to load sign data. Please try again later.");
+        if (err instanceof Error && err.name === 'AbortError') {
+          setError("Request timed out. Please try again.");
+        } else {
+          setError("Failed to load sign data. Please try again later.");
+        }
         setSignData([]);
       } finally {
         setLoading(false);
