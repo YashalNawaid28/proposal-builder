@@ -420,37 +420,18 @@ export default function AddJobPage() {
 
         const job = await res.json();
 
-        // Fetch brand name if brand_id exists
-        let brandName = "Unknown Brand";
-        if (job.brand_id) {
-          brandName = await fetchBrandName(job.brand_id);
-        }
-
-        // Fetch creator name and avatar if creator_id exists
-        let creatorData = { displayName: "Unknown User", avatarUrl: null };
-        if (job.creator_id) {
-          creatorData = await fetchUserName(job.creator_id);
-        }
-
-        // Fetch PM name and avatar if pm_id exists
-        let pmData = { displayName: "Unknown PM", avatarUrl: null };
-        if (job.pm_id) {
-          pmData = await fetchUserName(job.pm_id);
-        }
-
-        // Fetch client data if client_id exists
-        let clientData = {
-          clientName: "Unknown Client",
-          clientLocation: "Unknown Location",
-          clientContact: "Unknown Contact",
-          clientPhone: "Unknown Phone",
-        };
-        if (job.client_id) {
-          const fetchedClientData = await fetchClientData(job.client_id);
-          if (fetchedClientData) {
-            clientData = fetchedClientData;
-          }
-        }
+        // Fetch all related data in parallel
+        const [brandName, creatorData, pmData, clientData] = await Promise.all([
+          job.brand_id ? fetchBrandName(job.brand_id) : Promise.resolve("Unknown Brand"),
+          job.creator_id ? fetchUserName(job.creator_id) : Promise.resolve({ displayName: "Unknown User", avatarUrl: null }),
+          job.pm_id ? fetchUserName(job.pm_id) : Promise.resolve({ displayName: "Unknown PM", avatarUrl: null }),
+          job.client_id ? fetchClientData(job.client_id) : Promise.resolve({
+            clientName: "Unknown Client",
+            clientLocation: "Unknown Location", 
+            clientContact: "Unknown Contact",
+            clientPhone: "Unknown Phone",
+          })
+        ]);
 
         // Format the created_at date
         const createdAt = new Date(job.created_at);
@@ -473,12 +454,17 @@ export default function AddJobPage() {
           createdDate: formattedDate, // Add the created date
         });
 
-        // Set the actual client data
-        setClientData(clientData);
+        // Set the actual client data (handle null case)
+        setClientData(clientData || {
+          clientName: "Unknown Client",
+          clientLocation: "Unknown Location",
+          clientContact: "Unknown Contact", 
+          clientPhone: "Unknown Phone",
+        });
 
-        // Fetch versions for this job
+        // Fetch versions for this job (can be done in parallel with other data)
         console.log("Job Info Page - Fetching versions for jobId:", jobId);
-        await fetchVersions(jobId);
+        fetchVersions(jobId); // Don't await this - let it run in background
 
         // Note: Pricing data will be fetched when selectedVersion is set
         // This prevents showing data from all versions initially
