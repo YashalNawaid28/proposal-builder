@@ -115,24 +115,30 @@ export default function AddJobPage() {
     return "Unknown Brand";
   };
 
-  // Function to fetch user name by ID
-  const fetchUserName = async (userId: string) => {
+  // Function to fetch multiple users by IDs
+  const fetchUsers = async (userIds: string[]) => {
     try {
-      const response = await fetch(`/api/users/${userId}`);
+      // Use bulk API to fetch all users in one call
+      const response = await fetch(`/api/users?ids=${userIds.join(",")}`);
       if (response.ok) {
-        const user = await response.json();
-        return {
-          displayName: user.display_name || "Unknown User",
-          avatarUrl: user.avatar_url || null,
-        };
+        const result = await response.json();
+        const users = result.data || [];
+        
+        // Convert to map for easy lookup
+        const userMap = new Map();
+        users.forEach((user: any) => {
+          userMap.set(user.id, {
+            displayName: user.display_name || "Unknown User",
+            avatarUrl: user.avatar_url || null,
+          });
+        });
+        
+        return userMap;
       }
     } catch (error) {
-      console.error("Error fetching user:", error);
+      console.error("Error fetching users:", error);
     }
-    return {
-      displayName: "Unknown User",
-      avatarUrl: null,
-    };
+    return new Map();
   };
 
   // Function to fetch client data by ID
@@ -420,37 +426,26 @@ export default function AddJobPage() {
 
         const job = await res.json();
 
-        // Fetch brand name if brand_id exists
-        let brandName = "Unknown Brand";
-        if (job.brand_id) {
-          brandName = await fetchBrandName(job.brand_id);
-        }
-
-        // Fetch creator name and avatar if creator_id exists
-        let creatorData = { displayName: "Unknown User", avatarUrl: null };
-        if (job.creator_id) {
-          creatorData = await fetchUserName(job.creator_id);
-        }
-
-        // Fetch PM name and avatar if pm_id exists
-        let pmData = { displayName: "Unknown PM", avatarUrl: null };
-        if (job.pm_id) {
-          pmData = await fetchUserName(job.pm_id);
-        }
-
-        // Fetch client data if client_id exists
-        let clientData = {
-          clientName: "Unknown Client",
-          clientLocation: "Unknown Location",
-          clientContact: "Unknown Contact",
-          clientPhone: "Unknown Phone",
-        };
-        if (job.client_id) {
-          const fetchedClientData = await fetchClientData(job.client_id);
-          if (fetchedClientData) {
-            clientData = fetchedClientData;
-          }
-        }
+        // Collect unique user IDs to fetch
+        const userIds = [];
+        if (job.creator_id) userIds.push(job.creator_id);
+        if (job.pm_id) userIds.push(job.pm_id);
+        
+        // Fetch all related data in parallel
+        const [brandName, usersMap, clientData] = await Promise.all([
+          job.brand_id ? fetchBrandName(job.brand_id) : Promise.resolve("Unknown Brand"),
+          userIds.length > 0 ? fetchUsers(userIds) : Promise.resolve(new Map()),
+          job.client_id ? fetchClientData(job.client_id) : Promise.resolve({
+            clientName: "Unknown Client",
+            clientLocation: "Unknown Location", 
+            clientContact: "Unknown Contact",
+            clientPhone: "Unknown Phone",
+          })
+        ]);
+        
+        // Extract user data from the map
+        const creatorData = usersMap.get(job.creator_id) || { displayName: "Unknown User", avatarUrl: null };
+        const pmData = usersMap.get(job.pm_id) || { displayName: "Unknown PM", avatarUrl: null };
 
         // Format the created_at date
         const createdAt = new Date(job.created_at);
@@ -473,12 +468,17 @@ export default function AddJobPage() {
           createdDate: formattedDate, // Add the created date
         });
 
-        // Set the actual client data
-        setClientData(clientData);
+        // Set the actual client data (handle null case)
+        setClientData(clientData || {
+          clientName: "Unknown Client",
+          clientLocation: "Unknown Location",
+          clientContact: "Unknown Contact", 
+          clientPhone: "Unknown Phone",
+        });
 
-        // Fetch versions for this job
+        // Fetch versions for this job (can be done in parallel with other data)
         console.log("Job Info Page - Fetching versions for jobId:", jobId);
-        await fetchVersions(jobId);
+        fetchVersions(jobId); // Don't await this - let it run in background
 
         // Note: Pricing data will be fetched when selectedVersion is set
         // This prevents showing data from all versions initially
