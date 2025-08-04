@@ -21,10 +21,10 @@ export function generateProposalNumber(jobName: string): string {
     return `${firstThree}-001`;
   }
   
-  // If initials are less than 3 characters, pad with first letter
+  // If initials are less than 3 characters, pad with 'P' for "Proposal"
   let proposalPrefix = initials;
   if (proposalPrefix.length < 3) {
-    proposalPrefix = proposalPrefix + proposalPrefix.charAt(0).repeat(3 - proposalPrefix.length);
+    proposalPrefix = proposalPrefix + 'P'.repeat(3 - proposalPrefix.length);
   }
   
   // For now, we'll use 001 as the sequence number
