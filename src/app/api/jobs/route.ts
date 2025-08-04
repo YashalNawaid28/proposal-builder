@@ -12,8 +12,9 @@ export async function GET(request: NextRequest) {
     const brand_id = searchParams.get("brand_id");
     const search = searchParams.get("search");
     const offset = (page - 1) * limit;
-    
+
     let query = supabase.from("jobs").select("*", { count: "exact" });
+
     if (status) {
       query = query.eq("status", status);
     }
@@ -32,13 +33,73 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    console.log("Raw data from query:", JSON.stringify(data, null, 2));
+
+    // Fetch user data for creators and project managers
+    const userIds = [
+      ...new Set([
+        ...(data?.map((job) => job.creator_id).filter(Boolean) || []),
+        ...(data?.map((job) => job.pm_id).filter(Boolean) || []),
+      ]),
+    ];
+
+    console.log("User IDs to fetch:", userIds);
+
+    let usersData: Record<
+      string,
+      {
+        id: string;
+        display_name: string;
+        avatar_url: string;
+        job_title: string;
+      }
+    > = {};
+    if (userIds.length > 0) {
+      const { data: users, error: usersError } = await supabase
+        .from("users")
+        .select("id, display_name, avatar_url, job_title")
+        .in("id", userIds);
+
+      console.log("Users query result:", { users, error: usersError });
+
+      if (!usersError && users) {
+        usersData = users.reduce((acc, user) => {
+          acc[user.id] = user;
+          return acc;
+        }, {} as Record<string, { id: string; display_name: string; avatar_url: string; job_title: string }>);
+      }
+    }
+
+    console.log("Users data lookup:", usersData);
+
+    const transformedData =
+      data?.map((job) => {
+        const creator = job.creator_id
+          ? usersData[job.creator_id] || null
+          : null;
+        const project_manager = job.pm_id ? usersData[job.pm_id] || null : null;
+
+        console.log(
+          `Job ${job.id}: creator_id=${job.creator_id}, pm_id=${job.pm_id}`
+        );
+        console.log(
+          `Job ${job.id}: creator=${creator}, project_manager=${project_manager}`
+        );
+
+        return {
+          ...job,
+          creator,
+          project_manager,
+        };
+      }) || [];
+
     const totalPages = Math.ceil((count || 0) / limit);
     const hasNextPage = page < totalPages;
     const hasPreviousPage = page > 1;
 
     return NextResponse.json(
       {
-        data,
+        data: transformedData,
         pagination: {
           page,
           limit,

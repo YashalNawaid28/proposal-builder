@@ -1,9 +1,6 @@
 "use client";
 import { useEffect, useState, useMemo } from "react";
-import {
-  ListFilter,
-  ArrowUpDown,
-} from "lucide-react";
+import { ListFilter, ArrowUpDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { PageTabs } from "@/components/ui/page-tabs";
 import { Pagination } from "@/components/ui/pagination";
@@ -24,6 +21,18 @@ export interface JobData {
   proposal_seq: number | null;
   creator_id: string | null;
   pm_id: string | null;
+  creator: {
+    id: string;
+    display_name: string;
+    avatar_url: string;
+    job_title: string;
+  } | null;
+  project_manager: {
+    id: string;
+    display_name: string;
+    avatar_url: string;
+    job_title: string;
+  } | null;
   created_at: string;
   updated_at: string;
   current_pricing_version_id: string | null;
@@ -37,8 +46,18 @@ interface RowData {
   jobName: string;
   proposalNo: string;
   date: string;
-  creator: string;
-  manager: string;
+  creator: {
+    id: string;
+    display_name: string;
+    avatar_url: string;
+    job_title: string;
+  } | null;
+  manager: {
+    id: string;
+    display_name: string;
+    avatar_url: string;
+    job_title: string;
+  } | null;
   location: string;
   jobNo: string;
 }
@@ -51,6 +70,16 @@ const formatDate = (dateString: string): string => {
     day: "numeric",
     year: "numeric",
   });
+};
+
+// Get initials from name
+const getInitials = (name: string): string => {
+  return name
+    .split(" ")
+    .map((word) => word.charAt(0))
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 };
 
 export default function JobsPage() {
@@ -84,10 +113,13 @@ export default function JobsPage() {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-        const res = await fetch(`/api/jobs?page=${currentPage}&limit=${itemsPerPage}`, {
-          headers: { "request.user.id": user.id },
-          signal: controller.signal,
-        });
+        const res = await fetch(
+          `/api/jobs?page=${currentPage}&limit=${itemsPerPage}`,
+          {
+            headers: { "request.user.id": user.id },
+            signal: controller.signal,
+          }
+        );
 
         clearTimeout(timeoutId);
 
@@ -129,8 +161,8 @@ export default function JobsPage() {
       jobName: job.job_name,
       proposalNo: job.proposal_no || "N/A",
       date: formatDate(job.created_at),
-      creator: job.creator_id || "N/A",
-      manager: job.pm_id || "N/A",
+      creator: job.creator,
+      manager: job.project_manager,
       location: `${job.site_city}, ${job.site_state}`,
       jobNo: job.job_no,
     }));
@@ -246,13 +278,53 @@ export default function JobsPage() {
                   {row.date}
                 </td>
                 <td className="p-4 border-r border-[#DEE1EA] text-center text-[14px]">
-                  {row.creator}
+                  <UserInfo user={row.creator} label="Creator" />
                 </td>
-                <td className="p-4 text-center text-[14px]">{row.manager}</td>
+                <td className="p-4 text-center text-[14px]">
+                  <UserInfo user={row.manager} label="Manager" />
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
+      </div>
+    );
+  };
+
+  // User info component
+  const UserInfo = ({
+    user,
+  }: {
+    user: {
+      id: string;
+      display_name: string;
+      avatar_url: string;
+      job_title: string;
+    } | null;
+  }) => {
+    if (!user) return <div className="text-center text-gray-400">N/A</div>;
+
+    return (
+      <div className="flex items-center gap-3">
+        <div className="flex-shrink-0">
+          {user.avatar_url ? (
+            <img
+              src={user.avatar_url}
+              alt={user.display_name}
+              className="w-8 h-8 rounded-full object-cover"
+            />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600">
+              {getInitials(user.display_name)}
+            </div>
+          )}
+        </div>
+        <div className="flex flex-col">
+          <div className="font-medium text-sm">{user.display_name}</div>
+          {user.job_title && (
+            <div className="text-xs text-gray-500">{user.job_title}</div>
+          )}
+        </div>
       </div>
     );
   };
