@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { useUser } from "@stackframe/stack";
 import { PageTabs } from "@/components/ui/page-tabs";
 import {
@@ -225,7 +225,7 @@ const OptionsPage = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedValue, setSelectedValue] = useState<OptionValue | null>(null);
 
-  const fetchOptions = async () => {
+  const fetchOptions = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     setError(null);
@@ -264,11 +264,11 @@ const OptionsPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchOptions();
-  }, [user, fetchOptions]);
+  }, [fetchOptions]);
 
   const filteredOptions = useMemo(() => {
     if (tab === "all") return options;
