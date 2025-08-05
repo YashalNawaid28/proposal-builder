@@ -6,14 +6,16 @@ import { UserInfoDialog } from "@/components/users/UserInfoDialog";
 // Define interfaces for our data structures
 export interface UserData {
   id: string;
-  user_image: string;
-  user_name: string;
+  display_name: string;
   email: string;
-  job_title: string;
+  avatar_url?: string;
+  last_active_at?: string;
+  created_at: string;
+  updated_at?: string;
   status: string;
-  role: string;
-  jobs: number;
-  date_added: string;
+  role?: string;
+  job_count?: number;
+  job_title?: string;
 }
 
 // Simplified row data structure for the table
@@ -111,48 +113,19 @@ const UsersPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [userInfoOpen, setUserInfoOpen] = useState(false);
 
-  // Mock data for users
+  // Fetch real users data
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         setLoading(true);
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        const mockUsers: UserData[] = [
-          {
-            id: "1",
-            user_image: "",
-            user_name: "John Doe",
-            email: "john.doe@example.com",
-            job_title: "Project Manager",
-            status: "Active",
-            role: "Manager",
-            jobs: 5,
-            date_added: "Jan 15, 2024",
-          },
-          {
-            id: "2",
-            user_image: "",
-            user_name: "Jane Smith",
-            email: "jane.smith@example.com",
-            job_title: "Designer",
-            status: "Active",
-            role: "Employee",
-            jobs: 3,
-            date_added: "Feb 20, 2024",
-          },
-          {
-            id: "3",
-            user_image: "",
-            user_name: "Mike Johnson",
-            email: "mike.johnson@example.com",
-            job_title: "Developer",
-            status: "Disabled",
-            role: "Employee",
-            jobs: 0,
-            date_added: "Mar 10, 2024",
-          },
-        ];
-        setUsers(mockUsers);
+        const response = await fetch('/api/users');
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch users');
+        }
+        
+        const result = await response.json();
+        setUsers(result.data || []);
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
         console.error("Error fetching users:", err);
@@ -173,14 +146,18 @@ const UsersPage = () => {
   const rowData: RowData[] = useMemo(() => {
     return filteredUsers.map((user) => ({
       id: user.id,
-      userImage: user.user_image,
-      userName: user.user_name,
+      userImage: user.avatar_url || '',
+      userName: user.display_name,
       email: user.email,
-      jobTitle: user.job_title,
+      jobTitle: user.job_title || 'Not Set',
       status: user.status,
-      role: user.role,
-      jobs: user.jobs,
-      dateAdded: user.date_added,
+      role: user.role || 'Not Set',
+      jobs: user.job_count || 0,
+      dateAdded: new Date(user.created_at).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      }),
     }));
   }, [filteredUsers]);
 
@@ -200,6 +177,29 @@ const UsersPage = () => {
 
   const handleUserInfoComplete = () => {
     console.log("User creation completed");
+  };
+
+  const handleUserCreated = () => {
+    // Refresh the users list
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/users');
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch users');
+        }
+        
+        const result = await response.json();
+        setUsers(result.data || []);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+        console.error("Error fetching users:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUsers();
   };
 
   const isAllSelected =
@@ -345,6 +345,7 @@ const UsersPage = () => {
         isOpen={userInfoOpen}
         onClose={() => setUserInfoOpen(false)}
         onComplete={handleUserInfoComplete}
+        onUserCreated={handleUserCreated}
       />
     </div>
   );

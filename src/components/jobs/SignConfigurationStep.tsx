@@ -628,7 +628,7 @@ export const SignConfigurationStep = ({
     setModifiedSignPrice(modifiedValues.signPrice);
     setModifiedSignBudget(modifiedValues.signBudget);
     setModifiedInstallBudget(modifiedValues.installBudget);
-  }, [currentPricing, signData, dynamicOptions, selectedSignData]);
+  }, [currentPricing, signData, dynamicOptions, selectedSignData, calculateModifiedValues]);
 
   const handlePriceChange = (
     field: keyof typeof editablePrices,
