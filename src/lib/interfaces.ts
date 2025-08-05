@@ -16,6 +16,7 @@ export interface ISignOption {
 }
 
 export interface IAccount {
+  signId?: string; // Include sign ID for multiplier updates
   signImage: string;
   signName: string;
   signDescription: string;
@@ -26,10 +27,13 @@ export interface IAccount {
 }
 
 export interface ISignDetail {
+  id?: string; // Optional ID for database updates
   size: string;
   signPrice: string;
   installPrice: string;
   signBudget: string;
   installBudget: string;
   raceway: string;
+  signBudgetMultiplier?: number;
+  installBudgetMultiplier?: number;
 }

@@ -64,12 +64,15 @@ const optionIcons: { [key: string]: React.ReactNode } = {
 };
 
 interface PricingDetail {
+  id?: string;
   size: string;
   signPrice: number;
   installPrice: number;
   signBudget: number;
   installBudget: number;
   raceway: number;
+  signBudgetMultiplier?: number;
+  installBudgetMultiplier?: number;
 }
 
 const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
@@ -77,6 +80,7 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
 
   // Grid API reference - must be before any early returns
   const gridRef = useRef<AgGridReact>(null);
+  const [localGridData, setLocalGridData] = useState<any[]>([]);
 
   if (!rowData || rowData.length === 0) {
     return (
@@ -87,17 +91,38 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
   }
 
   // Convert ISignDetail[] to PricingDetail[] for AG Grid
-  const gridData = rowData.map((item) => ({
-    size: item.size,
-    signPrice: parseFloat(item.signPrice.replace(/[^0-9.-]+/g, "")) || 0,
-    installPrice: parseFloat(item.installPrice.replace(/[^0-9.-]+/g, "")) || 0,
-    signBudget: parseFloat(item.signBudget.replace(/[^0-9.-]+/g, "")) || 0,
-    installBudget:
-      parseFloat(item.installBudget.replace(/[^0-9.-]+/g, "")) || 0,
-    raceway: parseFloat(item.raceway.replace(/[^0-9.-]+/g, "")) || 0,
-  }));
+  const convertedGridData = rowData.map((item) => {
+    // Extract multipliers from the original data
+    const signBudgetMultiplier = (item as any).signBudgetMultiplier || 0.55;
+    const installBudgetMultiplier = (item as any).installBudgetMultiplier || 0.55;
+    
+    return {
+      id: item.id, // Include the pricing ID for updates
+      size: item.size,
+      signPrice: parseFloat(item.signPrice.replace(/[^0-9.-]+/g, "")) || 0,
+      installPrice: parseFloat(item.installPrice.replace(/[^0-9.-]+/g, "")) || 0,
+      signBudget: parseFloat(item.signBudget.replace(/[^0-9.-]+/g, "")) || 0,
+      installBudget:
+        parseFloat(item.installBudget.replace(/[^0-9.-]+/g, "")) || 0,
+      raceway: parseFloat(item.raceway.replace(/[^0-9.-]+/g, "")) || 0,
+      signBudgetMultiplier,
+      installBudgetMultiplier,
+    };
+  });
 
-  console.log("Converted grid data:", gridData);
+  // Update local grid data when rowData changes
+  useEffect(() => {
+    // Sort the data by size in ascending order
+    const sortedData = [...convertedGridData].sort((a, b) => {
+      // Extract numeric part from size strings (e.g., "12″" -> 12)
+      const aSize = parseInt(a.size.replace(/[^0-9]/g, '')) || 0;
+      const bSize = parseInt(b.size.replace(/[^0-9]/g, '')) || 0;
+      return aSize - bSize;
+    });
+    setLocalGridData(sortedData);
+  }, [rowData]);
+
+  console.log("Converted grid data:", convertedGridData);
 
   // Column Definitions for AG-Grid
   const colDefs: ColDef[] = [
@@ -106,6 +131,7 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       headerName: "Size",
       width: 150,
       minWidth: 120,
+      editable: false, // Make size column non-editable
       cellClass: "font-medium text-center",
       headerClass: "text-center",
     },
@@ -137,8 +163,7 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       flex: 1,
       minWidth: 120,
       valueFormatter: (p: ValueFormatterParams) => formatCurrency(p.value),
-      valueParser: (p: ValueParserParams) =>
-        Number(String(p.newValue).replace(/[^0-9.-]+/g, "")),
+      editable: false, // Make it read-only
       cellClass: "text-center",
       headerClass: "text-center",
     },
@@ -148,8 +173,7 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       flex: 1,
       minWidth: 120,
       valueFormatter: (p: ValueFormatterParams) => formatCurrency(p.value),
-      valueParser: (p: ValueParserParams) =>
-        Number(String(p.newValue).replace(/[^0-9.-]+/g, "")),
+      editable: false, // Make it read-only
       cellClass: "text-center",
       headerClass: "text-center",
     },
@@ -178,11 +202,13 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
     },
   };
 
+  console.log('Grid data for editing:', localGridData); // Debug log
+
   return (
     <div className="ag-theme-quartz h-full w-full flex-1">
       <AgGridReact
         ref={gridRef}
-        rowData={gridData}
+        rowData={localGridData}
         columnDefs={colDefs}
         defaultColDef={defaultColDef}
         rowHeight={60}
@@ -191,11 +217,15 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
         getRowId={(params: GetRowIdParams) => params.data.size}
         enableRangeSelection={true}
         enableFillHandle={true}
+
         getRowClass={(params) => {
           return "ag-row-custom";
         }}
         onGridReady={(params) => {
           params.api.sizeColumnsToFit();
+        }}
+        onCellClicked={(event) => {
+          console.log('Cell clicked:', event); // Debug log
         }}
         onRangeSelectionChanged={(event) => {
           // Force update of cell borders when selection changes
@@ -212,6 +242,110 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
               }
             });
           }, 0);
+        }}
+        onCellValueChanged={(event) => {
+          console.log('Cell value changed event:', event); // Debug log
+          
+          // Handle cell value changes and save to database
+          const { data, colDef, newValue } = event;
+          console.log('Data:', data, 'Field:', colDef.field, 'New Value:', newValue); // Debug log
+          
+          if (!data.id) {
+            console.error('No pricing ID found for update');
+            return;
+          }
+
+          const field = colDef.field;
+          if (!field) {
+            console.error('No field found in column definition');
+            return;
+          }
+
+          // Map field names to database column names
+          const fieldMapping: { [key: string]: string } = {
+            signPrice: 'sign_price',
+            installPrice: 'install_price',
+            raceway: 'raceway'
+          };
+
+          const dbField = fieldMapping[field];
+          if (!dbField) {
+            console.error('Unknown field for update:', field);
+            return;
+          }
+
+          console.log('Updating field:', field, 'to database field:', dbField, 'with value:', newValue); // Debug log
+
+          // Prepare update data
+          const updateData: any = { id: data.id };
+          updateData[dbField] = newValue;
+
+          // If price fields are updated, also update the calculated budgets
+          if (field === 'signPrice' || field === 'installPrice') {
+            const signBudgetMultiplier = data.signBudgetMultiplier || 0.55;
+            const installBudgetMultiplier = data.installBudgetMultiplier || 0.55;
+            
+            if (field === 'signPrice') {
+              const newSignBudget = newValue * signBudgetMultiplier;
+              updateData.sign_budget = newSignBudget;
+              console.log('Calculated new sign budget:', newSignBudget);
+            }
+            
+            if (field === 'installPrice') {
+              const newInstallBudget = newValue * installBudgetMultiplier;
+              updateData.install_budget = newInstallBudget;
+              console.log('Calculated new install budget:', newInstallBudget);
+            }
+          }
+
+          console.log('Sending update data:', updateData); // Debug log
+
+          // Save to database
+          fetch('/api/sign-pricing/update', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(updateData),
+          })
+          .then(response => {
+            console.log('Response status:', response.status); // Debug log
+            if (!response.ok) {
+              throw new Error('Failed to update pricing data');
+            }
+            return response.json();
+          })
+          .then(result => {
+            console.log('Pricing data updated successfully:', result);
+            
+            // Update the local grid data to reflect the new values
+            setLocalGridData(prevData => {
+              return prevData.map(row => {
+                if (row.size === data.size) {
+                  const updatedRow = { ...row };
+                  
+                  if (field === 'signPrice') {
+                    const newSignBudget = newValue * (data.signBudgetMultiplier || 0.55);
+                    updatedRow.signBudget = newSignBudget;
+                    console.log('Updated sign budget in grid:', newSignBudget);
+                  }
+                  
+                  if (field === 'installPrice') {
+                    const newInstallBudget = newValue * (data.installBudgetMultiplier || 0.55);
+                    updatedRow.installBudget = newInstallBudget;
+                    console.log('Updated install budget in grid:', newInstallBudget);
+                  }
+                  
+                  return updatedRow;
+                }
+                return row;
+              });
+            });
+          })
+          .catch(error => {
+            console.error('Error updating pricing data:', error);
+            // Optionally revert the cell value or show an error message
+          });
         }}
       />
     </div>
@@ -286,6 +420,8 @@ const SignsPage = () => {
           sign_description?: string;
           status?: string;
           created_at: string;
+          sign_budget_multiplier?: number;
+          install_budget_multiplier?: number;
           sign_pricing?: {
             size?: string;
             sign_price?: number;
@@ -308,23 +444,39 @@ const SignsPage = () => {
               month: "short",
             })} ${day}${suffix}, ${createdDate.getFullYear()}`;
 
+            // Get multipliers from sign data (default to 0.55 if not available)
+            const signBudgetMultiplier = sign.sign_budget_multiplier || 0.55;
+            const installBudgetMultiplier = sign.install_budget_multiplier || 0.55;
+
             // Use pricing data that's already included in the sign object
-            const details = (sign.sign_pricing || []).map((pricing: any) => ({
-              size: pricing.size || "",
-              signPrice: pricing.sign_price || 0,
-              installPrice: pricing.install_price || 0,
-              signBudget: pricing.sign_budget || 0,
-              installBudget: pricing.install_budget || 0,
-              raceway: pricing.raceway || 0,
-            }));
+            const details = (sign.sign_pricing || []).map((pricing: any) => {
+              // Calculate budgets based on multipliers
+              const calculatedSignBudget = (pricing.sign_price || 0) * signBudgetMultiplier;
+              const calculatedInstallBudget = (pricing.install_price || 0) * installBudgetMultiplier;
+              
+              return {
+                id: pricing.id, // Include the pricing ID for updates
+                size: pricing.size || "",
+                signPrice: pricing.sign_price || 0,
+                installPrice: pricing.install_price || 0,
+                signBudget: calculatedSignBudget,
+                installBudget: calculatedInstallBudget,
+                raceway: pricing.raceway || 0,
+                signBudgetMultiplier, // Include multipliers for future calculations
+                installBudgetMultiplier,
+              };
+            });
 
             const signDetails: ISignDetail[] = details.map((d) => ({
+              id: d.id, // Include the pricing ID
               size: d.size,
               signPrice: formatCurrency(d.signPrice),
               installPrice: formatCurrency(d.installPrice),
               signBudget: formatCurrency(d.signBudget),
               installBudget: formatCurrency(d.installBudget),
               raceway: formatCurrency(d.raceway),
+              signBudgetMultiplier: d.signBudgetMultiplier,
+              installBudgetMultiplier: d.installBudgetMultiplier,
             }));
 
             const signOptions: ISignOption[] = [
@@ -347,6 +499,7 @@ const SignsPage = () => {
             ];
 
             return {
+              signId: sign.id, // Include the sign ID for multiplier updates
               signImage: sign.sign_image || "",
               signName: sign.sign_name || "Unnamed Sign",
               signDescription: sign.sign_description || "",
@@ -390,6 +543,109 @@ const SignsPage = () => {
   ) => {
     const key = `${signName}-${optionLabel}`;
     setEditableValues((prev) => ({ ...prev, [key]: newValue }));
+  };
+
+  const handleMultiplierSave = async (
+    signName: string,
+    optionLabel: string,
+    newValue: string
+  ) => {
+    // Handle multiplier updates only when Enter is pressed
+    if (optionLabel === "Sign Budget" || optionLabel === "Install Budget") {
+      const sign = signData.find(s => s.signName === signName);
+      if (!sign?.signId) {
+        console.error('Sign ID not found for multiplier update');
+        return;
+      }
+
+      try {
+        const multiplierValue = parseFloat(newValue) || 0.55;
+        const updateData: any = { sign_id: sign.signId };
+
+        if (optionLabel === "Sign Budget") {
+          updateData.sign_budget_multiplier = multiplierValue;
+        } else if (optionLabel === "Install Budget") {
+          updateData.install_budget_multiplier = multiplierValue;
+        }
+
+        // Update the sign multipliers in the database
+        const response = await fetch('/api/signs/update-multipliers', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(updateData),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to update multipliers');
+        }
+
+        console.log('Multipliers updated successfully');
+
+        // Update all pricing data for this sign with new multipliers
+        const updatedSignData = signData.map(s => {
+          if (s.signName === signName) {
+            const updatedDetails = s.details.map(detail => {
+              const signPrice = parseFloat(detail.signPrice.replace(/[^0-9.-]+/g, "")) || 0;
+              const installPrice = parseFloat(detail.installPrice.replace(/[^0-9.-]+/g, "")) || 0;
+              
+              let newSignBudget = parseFloat(detail.signBudget.replace(/[^0-9.-]+/g, "")) || 0;
+              let newInstallBudget = parseFloat(detail.installBudget.replace(/[^0-9.-]+/g, "")) || 0;
+
+              if (optionLabel === "Sign Budget") {
+                newSignBudget = signPrice * multiplierValue;
+              } else if (optionLabel === "Install Budget") {
+                newInstallBudget = installPrice * multiplierValue;
+              }
+
+              return {
+                ...detail,
+                signBudget: formatCurrency(newSignBudget),
+                installBudget: formatCurrency(newInstallBudget),
+              };
+            });
+
+            return {
+              ...s,
+              details: updatedDetails,
+            };
+          }
+          return s;
+        });
+
+        setSignData(updatedSignData);
+
+        // Update all pricing records in the database
+        const updatedSign = updatedSignData.find(s => s.signName === signName);
+        if (updatedSign) {
+          for (const detail of updatedSign.details) {
+            if (detail.id) {
+              const pricingUpdateData: any = { id: detail.id };
+              
+              if (optionLabel === "Sign Budget") {
+                const newSignBudget = parseFloat(detail.signBudget.replace(/[^0-9.-]+/g, "")) || 0;
+                pricingUpdateData.sign_budget = newSignBudget;
+              } else if (optionLabel === "Install Budget") {
+                const newInstallBudget = parseFloat(detail.installBudget.replace(/[^0-9.-]+/g, "")) || 0;
+                pricingUpdateData.install_budget = newInstallBudget;
+              }
+
+              await fetch('/api/sign-pricing/update', {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(pricingUpdateData),
+              });
+            }
+          }
+        }
+
+      } catch (error) {
+        console.error('Error updating multipliers:', error);
+      }
+    }
   };
 
   return (
@@ -538,6 +794,18 @@ const SignsPage = () => {
                                                         e.target.value
                                                       )
                                                     }
+                                                    onKeyDown={(e) => {
+                                                      if (e.key === 'Enter') {
+                                                        const currentValue = editableValues[
+                                                          `${sign.signName}-${option.label}`
+                                                        ] || option.value || '';
+                                                        handleMultiplierSave(
+                                                          sign.signName,
+                                                          option.label,
+                                                          currentValue
+                                                        );
+                                                      }
+                                                    }}
                                                     className="bg-[#F9F9FB] h-10 flex items-center justify-center px-3 gap-2 border border-[#E0E0E0] rounded-md text-center text-[14px] w-14"
                                                     placeholder={option.value}
                                                   />
