@@ -15,6 +15,7 @@ export async function POST(request: NextRequest) {
       const formData = await request.formData();
       const job_name = formData.get("job_name") as string;
       const job_no = formData.get("job_number") as string;
+      const proposal_no = formData.get("proposal_no") as string;
       const site_street = formData.get("site_street") as string;
       const site_city = formData.get("site_city") as string;
       const site_state = formData.get("site_state") as string;
@@ -28,6 +29,7 @@ export async function POST(request: NextRequest) {
         .insert({
           job_name,
           job_no,
+          proposal_no,
           site_street,
           site_city,
           site_state,
