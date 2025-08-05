@@ -538,7 +538,7 @@ export default function AddJobPage() {
   const handleJobInfoSave = async (data: any) => {
     setJobData(data);
 
-    // If editing an existing job, save the changes
+    // If editing an existing job, save the changes and close dialog
     if (jobId) {
       try {
         const res = await fetch(`/api/jobs/${jobId}`, {
@@ -565,16 +565,20 @@ export default function AddJobPage() {
       } catch (error) {
         console.error("Error updating job:", error);
       }
+      
+      // For editing existing jobs, just close the dialog
+      setJobInfoOpen(false);
+    } else {
+      // For new jobs, proceed to client info dialog
+      setJobInfoOpen(false);
+      setClientInfoOpen(true);
     }
-
-    setJobInfoOpen(false);
-    setClientInfoOpen(true);
   };
 
   const handleClientInfoSave = async (data: any) => {
     setClientData(data);
 
-    // If editing an existing job, save the client changes
+    // If editing an existing job, save the client changes and close dialog
     if (jobId) {
       try {
         const res = await fetch(`/api/jobs/${jobId}`, {
@@ -599,6 +603,9 @@ export default function AddJobPage() {
       } catch (error) {
         console.error("Error updating job client info:", error);
       }
+      
+      // For editing existing jobs, just close the dialog
+      setClientInfoOpen(false);
     } else {
       // For new jobs, we need to create the job with the client ID
       try {
@@ -659,9 +666,10 @@ export default function AddJobPage() {
       } catch (error) {
         console.error("Error creating job with client:", error);
       }
+      
+      // For new jobs, close the dialog after creating the job
+      setClientInfoOpen(false);
     }
-
-    setClientInfoOpen(false);
   };
 
   // Load existing job data when jobId is provided
@@ -1492,6 +1500,7 @@ export default function AddJobPage() {
           }
         }}
         jobId={jobId || ""}
+        pricingVersionId={selectedVersion?.id}
         onSignAdded={async () => {
           // Refresh pricing data for the current version
           if (jobId && selectedVersion) {

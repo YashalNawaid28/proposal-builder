@@ -33,6 +33,7 @@ interface AddSignServiceSidebarProps {
   isOpen: boolean;
   onClose: () => void;
   jobId: string;
+  pricingVersionId?: string; // Current pricing version ID to add signs to
   onSignAdded?: () => void; // Callback when a sign is successfully added
 }
 
@@ -40,6 +41,7 @@ export const AddSignServiceSidebar = ({
   isOpen,
   onClose,
   jobId,
+  pricingVersionId,
   onSignAdded,
 }: AddSignServiceSidebarProps) => {
   const [activeTab, setActiveTab] = useState<"signage" | "services">("signage");
@@ -146,6 +148,7 @@ export const AddSignServiceSidebar = ({
       onClose={handleClose}
       onSignAdded={handleSignAdded}
       jobId={jobId}
+      pricingVersionId={pricingVersionId}
     />
   );
 
