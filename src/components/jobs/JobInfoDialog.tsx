@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -73,18 +73,7 @@ export const JobInfoDialog = ({
   const [brandNameCache, setBrandNameCache] = useState<Record<string, string | null>>({});
   const user = useUser();
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchBrands();
-      fetchUsers();
-      // Fetch brand name if editing and brand is already selected
-      if (isEditing && jobData.brandId) {
-        fetchBrandName(jobData.brandId);
-      }
-    }
-  }, [isOpen]);
-
-  const fetchBrands = async () => {
+  const fetchBrands = useCallback(async () => {
     try {
       const response = await fetch('/api/brands');
       const result = await response.json();
@@ -94,9 +83,9 @@ export const JobInfoDialog = ({
     } catch (error) {
       console.error('Error fetching brands:', error);
     }
-  };
+  }, []);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       const response = await fetch('/api/users');
       const result = await response.json();
@@ -106,9 +95,9 @@ export const JobInfoDialog = ({
     } catch (error) {
       console.error('Error fetching users:', error);
     }
-  };
+  }, []);
 
-  const fetchBrandName = async (brandId: string) => {
+  const fetchBrandName = useCallback(async (brandId: string) => {
     if (!brandId) {
       setSelectedBrandName('');
       return;
@@ -138,7 +127,18 @@ export const JobInfoDialog = ({
       setSelectedBrandName(null);
       setBrandNameCache(prev => ({ ...prev, [brandId]: null }));
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchBrands();
+      fetchUsers();
+      // Fetch brand name if editing and brand is already selected
+      if (isEditing && jobData.brandId) {
+        fetchBrandName(jobData.brandId);
+      }
+    }
+  }, [isOpen, isEditing, jobData.brandId, fetchBrands, fetchUsers, fetchBrandName]);
 
   // Function to format job location from individual address fields
   const formatJobLocation = (jobData: any) => {

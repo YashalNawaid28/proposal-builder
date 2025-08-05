@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, Fragment, useRef } from "react";
+import { useState, useEffect, Fragment, useRef, useMemo } from "react";
 import {
   ChevronRight,
   Asterisk,
@@ -82,36 +82,37 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
   const gridRef = useRef<AgGridReact>(null);
   const [localGridData, setLocalGridData] = useState<any[]>([]);
 
-  if (!rowData || rowData.length === 0) {
-    return (
-      <div className="p-4 text-center text-gray-500">
-        No pricing data available
-      </div>
-    );
-  }
-
   // Convert ISignDetail[] to PricingDetail[] for AG Grid
-  const convertedGridData = rowData.map((item) => {
-    // Extract multipliers from the original data
-    const signBudgetMultiplier = (item as any).signBudgetMultiplier || 0.55;
-    const installBudgetMultiplier = (item as any).installBudgetMultiplier || 0.55;
+  const convertedGridData = useMemo(() => {
+    if (!rowData || rowData.length === 0) return [];
     
-    return {
-      id: item.id, // Include the pricing ID for updates
-      size: item.size,
-      signPrice: parseFloat(item.signPrice.replace(/[^0-9.-]+/g, "")) || 0,
-      installPrice: parseFloat(item.installPrice.replace(/[^0-9.-]+/g, "")) || 0,
-      signBudget: parseFloat(item.signBudget.replace(/[^0-9.-]+/g, "")) || 0,
-      installBudget:
-        parseFloat(item.installBudget.replace(/[^0-9.-]+/g, "")) || 0,
-      raceway: parseFloat(item.raceway.replace(/[^0-9.-]+/g, "")) || 0,
-      signBudgetMultiplier,
-      installBudgetMultiplier,
-    };
-  });
+    return rowData.map((item) => {
+      // Extract multipliers from the original data
+      const signBudgetMultiplier = (item as any).signBudgetMultiplier || 0.55;
+      const installBudgetMultiplier = (item as any).installBudgetMultiplier || 0.55;
+      
+      return {
+        id: item.id, // Include the pricing ID for updates
+        size: item.size,
+        signPrice: parseFloat(item.signPrice.replace(/[^0-9.-]+/g, "")) || 0,
+        installPrice: parseFloat(item.installPrice.replace(/[^0-9.-]+/g, "")) || 0,
+        signBudget: parseFloat(item.signBudget.replace(/[^0-9.-]+/g, "")) || 0,
+        installBudget:
+          parseFloat(item.installBudget.replace(/[^0-9.-]+/g, "")) || 0,
+        raceway: parseFloat(item.raceway.replace(/[^0-9.-]+/g, "")) || 0,
+        signBudgetMultiplier,
+        installBudgetMultiplier,
+      };
+    });
+  }, [rowData]);
 
-  // Update local grid data when rowData changes
+  // Update local grid data when convertedGridData changes
   useEffect(() => {
+    if (convertedGridData.length === 0) {
+      setLocalGridData([]);
+      return;
+    }
+    
     // Sort the data by size in ascending order
     const sortedData = [...convertedGridData].sort((a, b) => {
       // Extract numeric part from size strings (e.g., "12″" -> 12)
@@ -120,7 +121,15 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       return aSize - bSize;
     });
     setLocalGridData(sortedData);
-  }, [rowData]);
+  }, [convertedGridData]);
+
+  if (!rowData || rowData.length === 0) {
+    return (
+      <div className="p-4 text-center text-gray-500">
+        No pricing data available
+      </div>
+    );
+  }
 
   console.log("Converted grid data:", convertedGridData);
 

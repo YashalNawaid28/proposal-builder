@@ -268,7 +268,7 @@ const OptionsPage = () => {
 
   useEffect(() => {
     fetchOptions();
-  }, [user]);
+  }, [user, fetchOptions]);
 
   const filteredOptions = useMemo(() => {
     if (tab === "all") return options;
