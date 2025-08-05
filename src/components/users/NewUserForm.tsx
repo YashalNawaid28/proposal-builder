@@ -40,21 +40,38 @@ export const NewUserForm = ({ onSubmit, onCancel }: NewUserFormProps) => {
     setError(null);
 
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          display_name: formData.display_name,
+          email: formData.email,
+          job_title: formData.job_title || null,
+          role: formData.role || 'employee',
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create user');
+      }
+
+      const result = await response.json();
       
-      // Map the form data to the format expected by the parent component
+      // Map the saved user data to the format expected by the parent component
       const mappedUserData = {
-        userName: formData.display_name,
-        userEmail: formData.email,
-        userJobTitle: formData.job_title,
-        userRole: formData.role,
+        userName: result.data[0].display_name,
+        userEmail: result.data[0].email,
+        userJobTitle: result.data[0].job_title,
+        userRole: result.data[0].role,
       };
 
       onSubmit(mappedUserData);
     } catch (error) {
       console.error('Error creating user:', error);
-      setError('Failed to create user');
+      setError(error instanceof Error ? error.message : 'Failed to create user');
     } finally {
       setLoading(false);
     }

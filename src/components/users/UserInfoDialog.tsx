@@ -11,17 +11,20 @@ interface UserInfoDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onComplete: () => void;
+  onUserCreated?: () => void; // Callback to refresh users list
 }
 
 export const UserInfoDialog = ({
   isOpen,
   onClose,
   onComplete,
+  onUserCreated,
 }: UserInfoDialogProps) => {
   const handleNewUserSubmit = (newUserData: any) => {
-    // Handle the new user data - just log it for now
+    // Handle the new user data
     console.log("New user created:", newUserData);
     onComplete();
+    onUserCreated?.(); // Refresh the users list
     onClose();
   };
 
