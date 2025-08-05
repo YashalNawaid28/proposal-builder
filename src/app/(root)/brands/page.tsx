@@ -80,7 +80,7 @@ const BrandImageCell = ({
     <img
       src={src}
       alt={`${brandName} Logo`}
-      className="object-contain"
+      className="object-contain w-[80%] h-[80%] max-h-16 max-w-[120px] mx-auto"
       onError={() => setImgError(true)}
     />
   );

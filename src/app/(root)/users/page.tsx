@@ -1,6 +1,7 @@
 "use client";
 import { useMemo, useState, useEffect } from "react";
 import { PageTabs } from "@/components/ui/page-tabs";
+import { UserInfoDialog } from "@/components/users/UserInfoDialog";
 
 // Define interfaces for our data structures
 export interface UserData {
@@ -108,56 +109,50 @@ const UsersPage = () => {
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [userInfoOpen, setUserInfoOpen] = useState(false);
 
-  // Fetch users from API
+  // Mock data for users
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         setLoading(true);
-        const response = await fetch("/api/users");
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch users");
-        }
-
-        const result = await response.json();
-
-        if (result.error) {
-          throw new Error(result.error);
-        }
-
-        // Transform the data to match our UserData interface with safe fallbacks
-        const transformedUsers: UserData[] = (result.data || []).map(
-          (user: any) => ({
-            id:
-              user?.id || `user-${Math.random().toString(36).substring(2, 11)}`,
-            user_image:
-              user?.user_image || user?.avatar_url || user?.profile_image || "",
-            user_name:
-              user?.user_name ||
-              user?.full_name ||
-              user?.name ||
-              user?.display_name ||
-              "Unknown User",
-            email: user?.email || user?.email_address || "",
-            job_title:
-              user?.job_title || user?.title || user?.position || "Employee",
-            status: user?.status || "Active",
-            role: user?.role || user?.user_role || "Employee",
-            jobs: typeof user?.jobs === "number" ? user.jobs : 0,
-            date_added:
-              user?.date_added ||
-              (user?.created_at
-                ? new Date(user.created_at).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  })
-                : "Unknown"),
-          })
-        );
-
-        setUsers(transformedUsers);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        const mockUsers: UserData[] = [
+          {
+            id: "1",
+            user_image: "",
+            user_name: "John Doe",
+            email: "john.doe@example.com",
+            job_title: "Project Manager",
+            status: "Active",
+            role: "Manager",
+            jobs: 5,
+            date_added: "Jan 15, 2024",
+          },
+          {
+            id: "2",
+            user_image: "",
+            user_name: "Jane Smith",
+            email: "jane.smith@example.com",
+            job_title: "Designer",
+            status: "Active",
+            role: "Employee",
+            jobs: 3,
+            date_added: "Feb 20, 2024",
+          },
+          {
+            id: "3",
+            user_image: "",
+            user_name: "Mike Johnson",
+            email: "mike.johnson@example.com",
+            job_title: "Developer",
+            status: "Disabled",
+            role: "Employee",
+            jobs: 0,
+            date_added: "Mar 10, 2024",
+          },
+        ];
+        setUsers(mockUsers);
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
         console.error("Error fetching users:", err);
@@ -165,11 +160,9 @@ const UsersPage = () => {
         setLoading(false);
       }
     };
-
     fetchUsers();
   }, []);
 
-  // Filter users based on the selected tab
   const filteredUsers = useMemo(() => {
     if (tab === "all") return users;
     return users.filter((user) =>
@@ -177,7 +170,6 @@ const UsersPage = () => {
     );
   }, [users, tab]);
 
-  // Transform API data to match the table structure
   const rowData: RowData[] = useMemo(() => {
     return filteredUsers.map((user) => ({
       id: user.id,
@@ -192,7 +184,6 @@ const UsersPage = () => {
     }));
   }, [filteredUsers]);
 
-  // --- Selection Handlers ---
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
       setSelectedRows(rowData.map((row) => row.id));
@@ -205,6 +196,10 @@ const UsersPage = () => {
     setSelectedRows((prev) =>
       prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
     );
+  };
+
+  const handleUserInfoComplete = () => {
+    console.log("User creation completed");
   };
 
   const isAllSelected =
@@ -329,8 +324,11 @@ const UsersPage = () => {
     <div className="bg-white">
       <div className="flex justify-between items-center p-5">
         <h1 className="text-2xl font-semibold">Users</h1>
-        <button className="bg-black text-white px-4 py-2 rounded-lg font-medium">
-          New Users
+        <button
+          onClick={() => setUserInfoOpen(true)}
+          className="bg-black text-white px-4 py-2 rounded-lg font-medium"
+        >
+          New User
         </button>
       </div>
       <PageTabs
@@ -341,6 +339,13 @@ const UsersPage = () => {
       <div className="border border-[#DEE1EA] overflow-hidden">
         <div>{renderTable()}</div>
       </div>
+
+      {/* User Info Dialog */}
+      <UserInfoDialog
+        isOpen={userInfoOpen}
+        onClose={() => setUserInfoOpen(false)}
+        onComplete={handleUserInfoComplete}
+      />
     </div>
   );
 };

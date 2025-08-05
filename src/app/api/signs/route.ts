@@ -56,6 +56,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    // Helper function to extract number from image URL
+    const getImageNumber = (imageUrl: string) => {
+      const decodedUrl = decodeURIComponent(imageUrl);
+      const regex = /sign\s*\((\d+)\)/;
+      const match = regex.exec(decodedUrl);
+      return match ? parseInt(match[1], 10) : null;
+    };
+
     // 👇 Reorder signs for each brand
     const PINNED_SIGN_ID = "0368b19e-4b92-4c2f-afe9-0b4e2d5b2c69";
 
@@ -65,9 +73,23 @@ export async function GET(request: NextRequest) {
       const pinned = brand.signs.find((s: any) => s.id === PINNED_SIGN_ID);
       const others = brand.signs.filter((s: any) => s.id !== PINNED_SIGN_ID);
 
+      // Sort the remaining signs based on image number
+      const itemsWithNumbers = others.filter(
+        (item: any) => getImageNumber(item.sign_image || "") !== null
+      );
+      const itemsWithoutNumbers = others.filter(
+        (item: any) => getImageNumber(item.sign_image || "") === null
+      );
+
+      const sortedItemsWithNumbers = itemsWithNumbers.sort((a: any, b: any) => {
+        const aNumber = getImageNumber(a.sign_image || "")!;
+        const bNumber = getImageNumber(b.sign_image || "")!;
+        return aNumber - bNumber;
+      });
+
       return {
         ...brand,
-        signs: pinned ? [pinned, ...others] : others
+        signs: pinned ? [pinned, ...sortedItemsWithNumbers, ...itemsWithoutNumbers] : [...sortedItemsWithNumbers, ...itemsWithoutNumbers]
       };
     });
 
