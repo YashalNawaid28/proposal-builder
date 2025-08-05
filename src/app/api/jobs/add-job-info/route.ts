@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
       const site_country = formData.get("site_country") as string;
       const brand_id = formData.get("brand_id") as string;
       const pm_id = formData.get("pm_id") as string;
+      const client_id = formData.get("client_id") as string;
 
       const { data, error } = await supabase
         .from("jobs")
@@ -37,6 +38,7 @@ export async function POST(request: NextRequest) {
           site_country,
           brand_id,
           pm_id, // Use pm_id instead of manager_id
+          client_id, // Add client_id to the job
           creator_id: userId, // Use the user ID from headers
         })
         .select();

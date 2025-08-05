@@ -95,6 +95,10 @@ export const ClientInfoDialog = ({
 
   const handleNewClientSubmit = (newClientData: any) => {
     setClientData({ ...clientData, ...newClientData });
+    // If the new client data includes a client ID, set it as selected
+    if (newClientData.clientId) {
+      setSelectedClient(newClientData.clientId);
+    }
     setShowClientForm(false);
   };
 
@@ -124,10 +128,14 @@ export const ClientInfoDialog = ({
         if (!response.ok) {
           throw new Error('Failed to update job with client');
         }
+      } else {
+        // For new jobs, we need to create the job first with the client ID
+        // This will be handled by the parent component when it receives the client data
+        console.log('New job - client will be associated when job is created');
       }
 
-      // Call the onComplete callback with the client data
-      onComplete(clientData);
+      // Call the onComplete callback with the client data including the client ID
+      onComplete({ ...clientData, clientId: selectedClient });
     } catch (error) {
       console.error('Error updating job with client:', error);
     }

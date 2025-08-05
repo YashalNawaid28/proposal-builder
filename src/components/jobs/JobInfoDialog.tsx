@@ -69,12 +69,18 @@ export const JobInfoDialog = ({
   const [brands, setBrands] = useState<Brand[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedBrandName, setSelectedBrandName] = useState<string | null>('');
+  const [brandNameCache, setBrandNameCache] = useState<Record<string, string | null>>({});
   const user = useUser();
 
   useEffect(() => {
     if (isOpen) {
       fetchBrands();
       fetchUsers();
+      // Fetch brand name if editing and brand is already selected
+      if (isEditing && jobData.brandId) {
+        fetchBrandName(jobData.brandId);
+      }
     }
   }, [isOpen]);
 
@@ -99,6 +105,38 @@ export const JobInfoDialog = ({
       }
     } catch (error) {
       console.error('Error fetching users:', error);
+    }
+  };
+
+  const fetchBrandName = async (brandId: string) => {
+    if (!brandId) {
+      setSelectedBrandName('');
+      return;
+    }
+    
+    // Check if brand name is already cached
+    if (brandNameCache[brandId] !== undefined) {
+      setSelectedBrandName(brandNameCache[brandId]);
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/brands/get-by-id?brand_id=${brandId}`);
+      if (response.ok) {
+        const result = await response.json();
+        const brandName = result.data?.brand_name || null;
+        
+        // Cache the result
+        setBrandNameCache(prev => ({ ...prev, [brandId]: brandName }));
+        setSelectedBrandName(brandName);
+      } else {
+        setSelectedBrandName(null);
+        setBrandNameCache(prev => ({ ...prev, [brandId]: null }));
+      }
+    } catch (error) {
+      console.error('Error fetching brand name:', error);
+      setSelectedBrandName(null);
+      setBrandNameCache(prev => ({ ...prev, [brandId]: null }));
     }
   };
 
@@ -163,12 +201,38 @@ export const JobInfoDialog = ({
       // Parse the address into components
       const addressComponents = parseAddress(jobData.jobLocation || "");
 
+      // Fetch brand name for proposal number generation
+      let brandName = '';
+      if (jobData.brandId) {
+        // Check cache first
+        if (brandNameCache[jobData.brandId] !== undefined) {
+          brandName = brandNameCache[jobData.brandId] || '';
+        } else {
+          try {
+            const brandResponse = await fetch(`/api/brands/get-by-id?brand_id=${jobData.brandId}`);
+            if (brandResponse.ok) {
+              const brandResult = await brandResponse.json();
+              brandName = brandResult.data?.brand_name || '';
+              // Cache the result
+              setBrandNameCache(prev => ({ ...prev, [jobData.brandId]: brandName }));
+            } else {
+              brandName = '';
+              setBrandNameCache(prev => ({ ...prev, [jobData.brandId]: null }));
+            }
+          } catch (error) {
+            console.error('Error fetching brand name:', error);
+            brandName = '';
+            setBrandNameCache(prev => ({ ...prev, [jobData.brandId]: null }));
+          }
+        }
+      }
+
       if (isEditing && jobId) {
         // Update existing job
         const updateData = {
           job_name: jobData.jobName || '',
           job_no: jobData.jobNumber || '',
-          proposal_no: generateProposalNumber(jobData.jobName || ''),
+          proposal_no: generateProposalNumber(brandName),
           site_street: addressComponents.siteStreet,
           site_city: addressComponents.siteCity,
           site_state: addressComponents.siteState,
@@ -199,7 +263,7 @@ export const JobInfoDialog = ({
         }
       } else {
         // Create new job
-        const proposalNo = generateProposalNumber(jobData.jobName || '');
+        const proposalNo = generateProposalNumber(brandName);
         console.log('Generated proposal number:', proposalNo);
         
         const formData = new FormData();
@@ -263,9 +327,9 @@ export const JobInfoDialog = ({
               }
               className="mt-1 w-full border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0"
             />
-            {!isEditing && jobData.jobName && (
+            {!isEditing && selectedBrandName && (
               <div className="text-xs text-gray-500 mt-1">
-                Proposal No: {generateProposalNumber(jobData.jobName)}
+                Proposal No: {generateProposalNumber(selectedBrandName)}
               </div>
             )}
           </div>
@@ -302,9 +366,10 @@ export const JobInfoDialog = ({
             </Label>
             <Select
               value={jobData.brandId || jobData.brand_id || ""}
-              onValueChange={(value) =>
-                setJobData({ ...jobData, brandId: value })
-              }
+              onValueChange={(value) => {
+                setJobData({ ...jobData, brandId: value });
+                fetchBrandName(value);
+              }}
             >
               <SelectTrigger className="mt-1 w-full border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0">
                 <SelectValue placeholder="Select brand" />
