@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { generateProposalHTML } from "@/lib/generate-proposal-html";
 import { generatePricingSheetHTML } from "@/lib/generate-pricing-sheet-html";
+import { generateProposalNumber } from "@/lib/utils";
 
 export default function AddJobPage() {
   const searchParams = useSearchParams();
@@ -76,6 +77,38 @@ export default function AddJobPage() {
       .join("")
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  // Function to parse address into components
+  const parseAddress = (address: string) => {
+    const parts = address.split(',').map(part => part.trim());
+    let siteStreet = '';
+    let siteCity = '';
+    let siteState = '';
+    let sitePostcode = '';
+    let siteCountry = '';
+
+    if (parts.length >= 1) siteStreet = parts[0];
+    if (parts.length >= 2) siteCity = parts[1];
+    if (parts.length >= 3) {
+      const statePostcode = parts[2];
+      const statePostcodeMatch = statePostcode.match(/^([A-Za-z\s]+)\s+(\d{5}(?:-\d{4})?)$/);
+      if (statePostcodeMatch) {
+        siteState = statePostcodeMatch[1];
+        sitePostcode = statePostcodeMatch[2];
+      } else {
+        siteState = statePostcode;
+      }
+    }
+    if (parts.length >= 4) siteCountry = parts[3];
+
+    return {
+      siteStreet,
+      siteCity,
+      siteState,
+      sitePostcode,
+      siteCountry
+    };
   };
 
   // Function to format date like "Jul 13th, 2025"
@@ -470,8 +503,7 @@ export default function AddJobPage() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            // Add client-related fields as needed
-            // This might need to be updated based on your database schema
+            client_id: data.clientId,
           }),
         });
 
@@ -486,6 +518,64 @@ export default function AddJobPage() {
         await reloadJobData();
       } catch (error) {
         console.error("Error updating job client info:", error);
+      }
+    } else {
+      // For new jobs, we need to create the job with the client ID
+      try {
+        // Parse the address into components
+        const addressComponents = parseAddress(jobData.jobLocation || "");
+
+        // Fetch brand name for proposal number generation
+        let brandName = '';
+        if (jobData.brandId) {
+          try {
+            const brandResponse = await fetch(`/api/brands/get-by-id?brand_id=${jobData.brandId}`);
+            if (brandResponse.ok) {
+              const brandResult = await brandResponse.json();
+              brandName = brandResult.data?.brand_name || '';
+            }
+          } catch (error) {
+            console.error('Error fetching brand name:', error);
+          }
+        }
+
+        const proposalNo = generateProposalNumber(brandName);
+        
+        const formData = new FormData();
+        formData.append('job_name', jobData.jobName || '');
+        formData.append('job_number', jobData.jobNumber || '');
+        formData.append('proposal_no', proposalNo);
+        formData.append('site_street', addressComponents.siteStreet);
+        formData.append('site_city', addressComponents.siteCity);
+        formData.append('site_state', addressComponents.siteState);
+        formData.append('site_postcode', addressComponents.sitePostcode);
+        formData.append('site_country', addressComponents.siteCountry);
+        formData.append('brand_id', jobData.brandId || '');
+        formData.append('pm_id', jobData.managerId || '');
+        formData.append('client_id', data.clientId || '');
+
+        if (!user) {
+          console.error('User not available');
+          return;
+        }
+
+        const response = await fetch('/api/jobs/add-job-info', {
+          method: 'POST',
+          headers: { "request.user.id": user.id },
+          body: formData,
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          const newJobId = result.data?.[0]?.id;
+          
+          // Redirect to the job info page with the new job ID
+          window.location.href = `/jobs/job-info?id=${newJobId}`;
+        } else {
+          console.error('Error creating job:', await response.text());
+        }
+      } catch (error) {
+        console.error('Error creating job with client:', error);
       }
     }
 

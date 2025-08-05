@@ -95,6 +95,7 @@ export const NewClientForm = ({ onSubmit, onCancel }: NewClientFormProps) => {
       
       // Map the saved client data to the format expected by the parent component
       const mappedClientData = {
+        clientId: result.data[0].id, // Include the client ID
         clientName: result.data[0].legal_name,
         clientLocation: formData.clientLocation,
         clientContact: result.data[0].client_contact || result.data[0].legal_name,
