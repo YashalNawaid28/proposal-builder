@@ -1,6 +1,14 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { ArrowLeft, Plus, ChevronDown, MapPinPlus, User } from "lucide-react";
+import {
+  ArrowLeft,
+  Plus,
+  ChevronDown,
+  MapPinPlus,
+  User,
+  Pencil,
+  Trash,
+} from "lucide-react";
 import { JobInfoDialog } from "@/components/jobs/JobInfoDialog";
 import { ClientInfoDialog } from "@/components/jobs/ClientInfoDialog";
 import { AddSignServiceSidebar } from "@/components/jobs/AddSignServiceSidebar";
@@ -68,6 +76,8 @@ export default function AddJobPage() {
   const [versions, setVersions] = useState<any[]>([]);
   const [selectedVersion, setSelectedVersion] = useState<any>(null);
   const [loadingVersions, setLoadingVersions] = useState(false);
+  const [clickedRow, setClickedRow] = useState<any>(null); // State to track the clicked row
+  const [dropdownPosition, setDropdownPosition] = useState({ x: 0, y: 0 }); // State to track dropdown position
 
   // Function to generate initials from display name
   const getInitials = (displayName: string) => {
@@ -81,18 +91,20 @@ export default function AddJobPage() {
 
   // Function to parse address into components
   const parseAddress = (address: string) => {
-    const parts = address.split(',').map(part => part.trim());
-    let siteStreet = '';
-    let siteCity = '';
-    let siteState = '';
-    let sitePostcode = '';
-    let siteCountry = '';
+    const parts = address.split(",").map((part) => part.trim());
+    let siteStreet = "";
+    let siteCity = "";
+    let siteState = "";
+    let sitePostcode = "";
+    let siteCountry = "";
 
     if (parts.length >= 1) siteStreet = parts[0];
     if (parts.length >= 2) siteCity = parts[1];
     if (parts.length >= 3) {
       const statePostcode = parts[2];
-      const statePostcodeMatch = statePostcode.match(/^([A-Za-z\s]+)\s+(\d{5}(?:-\d{4})?)$/);
+      const statePostcodeMatch = statePostcode.match(
+        /^([A-Za-z\s]+)\s+(\d{5}(?:-\d{4})?)$/
+      );
       if (statePostcodeMatch) {
         siteState = statePostcodeMatch[1];
         sitePostcode = statePostcodeMatch[2];
@@ -107,7 +119,7 @@ export default function AddJobPage() {
       siteCity,
       siteState,
       sitePostcode,
-      siteCountry
+      siteCountry,
     };
   };
 
@@ -142,10 +154,10 @@ export default function AddJobPage() {
     const month = date.toLocaleDateString("en-US", { month: "short" });
     const day = date.getDate();
     const year = date.getFullYear();
-    const time = date.toLocaleTimeString("en-US", { 
-      hour: "numeric", 
+    const time = date.toLocaleTimeString("en-US", {
+      hour: "numeric",
       minute: "2-digit",
-      hour12: true 
+      hour12: true,
     });
 
     // Add ordinal suffix to day
@@ -166,12 +178,69 @@ export default function AddJobPage() {
     return `${month} ${day}${getOrdinalSuffix(day)}, ${time}`;
   };
 
+  // Function to handle row click and show dropdown
+  const handleRowClick = (event: React.MouseEvent, line: any) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    // Calculate position for dropdown
+    const rect = event.currentTarget.getBoundingClientRect();
+    setDropdownPosition({
+      x: rect.left + rect.width / 2,
+      y: rect.bottom + 5,
+    });
+    setClickedRow(line);
+  };
+
+  // Function to handle dropdown close
+  const handleDropdownClose = () => {
+    setClickedRow(null);
+  };
+
+  // Function to handle edit action
+  const handleEdit = (line: any) => {
+    console.log("Edit line:", line);
+    // TODO: Implement edit functionality
+    setClickedRow(null);
+  };
+
+  // Function to handle delete action
+  const handleDelete = async (line: any) => {
+    if (!confirm("Are you sure you want to delete this item?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/pricing-lines/${line.id}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        // Refresh pricing data
+        if (jobId && selectedVersion) {
+          await fetchPricingData(jobId, selectedVersion.id);
+        }
+        // Update the job's updated_at field
+        await updateJobLastModified();
+      } else {
+        console.error("Failed to delete pricing line");
+      }
+    } catch (error) {
+      console.error("Error deleting pricing line:", error);
+    }
+
+    setClickedRow(null);
+  };
+
   // Function to update the job's updated_at field
   const updateJobLastModified = async () => {
     if (!jobId) return;
-    
-    console.log("Job Info Page - updateJobLastModified called for jobId:", jobId);
-    
+
+    console.log(
+      "Job Info Page - updateJobLastModified called for jobId:",
+      jobId
+    );
+
     try {
       const response = await fetch("/api/jobs/update-last-modified", {
         method: "POST",
@@ -181,19 +250,26 @@ export default function AddJobPage() {
         body: JSON.stringify({ jobId }),
       });
 
-      console.log("Job Info Page - updateJobLastModified response status:", response.status);
+      console.log(
+        "Job Info Page - updateJobLastModified response status:",
+        response.status
+      );
 
       if (response.ok) {
         const result = await response.json();
         console.log("Job Info Page - updateJobLastModified result:", result);
-        
+
         // Instead of just updating local state, refresh the entire job data
         await reloadJobData();
-        
+
         console.log("Job updated_at updated successfully:", result.updated_at);
       } else {
         const errorText = await response.text();
-        console.error("Failed to update job updated_at:", response.status, errorText);
+        console.error(
+          "Failed to update job updated_at:",
+          response.status,
+          errorText
+        );
       }
     } catch (error) {
       console.error("Error updating job updated_at:", error);
@@ -223,7 +299,7 @@ export default function AddJobPage() {
       if (response.ok) {
         const result = await response.json();
         const users = result.data || [];
-        
+
         // Convert to map for easy lookup
         const userMap = new Map();
         users.forEach((user: any) => {
@@ -232,7 +308,7 @@ export default function AddJobPage() {
             avatarUrl: user.avatar_url || null,
           });
         });
-        
+
         return userMap;
       }
     } catch (error) {
@@ -479,7 +555,7 @@ export default function AddJobPage() {
 
         // Update the job's updated_at field
         await updateJobLastModified();
-        
+
         // Refresh the job data to get the updated information
         await reloadJobData();
       } catch (error) {
@@ -513,7 +589,7 @@ export default function AddJobPage() {
 
         // Update the job's updated_at field
         await updateJobLastModified();
-        
+
         // Refresh the job data to get the updated information
         await reloadJobData();
       } catch (error) {
@@ -526,41 +602,43 @@ export default function AddJobPage() {
         const addressComponents = parseAddress(jobData.jobLocation || "");
 
         // Fetch brand name for proposal number generation
-        let brandName = '';
+        let brandName = "";
         if (jobData.brandId) {
           try {
-            const brandResponse = await fetch(`/api/brands/get-by-id?brand_id=${jobData.brandId}`);
+            const brandResponse = await fetch(
+              `/api/brands/get-by-id?brand_id=${jobData.brandId}`
+            );
             if (brandResponse.ok) {
               const brandResult = await brandResponse.json();
-              brandName = brandResult.data?.brand_name || '';
+              brandName = brandResult.data?.brand_name || "";
             }
           } catch (error) {
-            console.error('Error fetching brand name:', error);
+            console.error("Error fetching brand name:", error);
           }
         }
 
         const proposalNo = generateProposalNumber(brandName);
-        
+
         const formData = new FormData();
-        formData.append('job_name', jobData.jobName || '');
-        formData.append('job_number', jobData.jobNumber || '');
-        formData.append('proposal_no', proposalNo);
-        formData.append('site_street', addressComponents.siteStreet);
-        formData.append('site_city', addressComponents.siteCity);
-        formData.append('site_state', addressComponents.siteState);
-        formData.append('site_postcode', addressComponents.sitePostcode);
-        formData.append('site_country', addressComponents.siteCountry);
-        formData.append('brand_id', jobData.brandId || '');
-        formData.append('pm_id', jobData.managerId || '');
-        formData.append('client_id', data.clientId || '');
+        formData.append("job_name", jobData.jobName || "");
+        formData.append("job_number", jobData.jobNumber || "");
+        formData.append("proposal_no", proposalNo);
+        formData.append("site_street", addressComponents.siteStreet);
+        formData.append("site_city", addressComponents.siteCity);
+        formData.append("site_state", addressComponents.siteState);
+        formData.append("site_postcode", addressComponents.sitePostcode);
+        formData.append("site_country", addressComponents.siteCountry);
+        formData.append("brand_id", jobData.brandId || "");
+        formData.append("pm_id", jobData.managerId || "");
+        formData.append("client_id", data.clientId || "");
 
         if (!user) {
-          console.error('User not available');
+          console.error("User not available");
           return;
         }
 
-        const response = await fetch('/api/jobs/add-job-info', {
-          method: 'POST',
+        const response = await fetch("/api/jobs/add-job-info", {
+          method: "POST",
           headers: { "request.user.id": user.id },
           body: formData,
         });
@@ -568,14 +646,14 @@ export default function AddJobPage() {
         if (response.ok) {
           const result = await response.json();
           const newJobId = result.data?.[0]?.id;
-          
+
           // Redirect to the job info page with the new job ID
           window.location.href = `/jobs/job-info?id=${newJobId}`;
         } else {
-          console.error('Error creating job:', await response.text());
+          console.error("Error creating job:", await response.text());
         }
       } catch (error) {
-        console.error('Error creating job with client:', error);
+        console.error("Error creating job with client:", error);
       }
     }
 
@@ -604,22 +682,32 @@ export default function AddJobPage() {
         const userIds = [];
         if (job.creator_id) userIds.push(job.creator_id);
         if (job.pm_id) userIds.push(job.pm_id);
-        
+
         // Fetch all related data in parallel
         const [brandName, usersMap, clientData] = await Promise.all([
-          job.brand_id ? fetchBrandName(job.brand_id) : Promise.resolve("Unknown Brand"),
+          job.brand_id
+            ? fetchBrandName(job.brand_id)
+            : Promise.resolve("Unknown Brand"),
           userIds.length > 0 ? fetchUsers(userIds) : Promise.resolve(new Map()),
-          job.client_id ? fetchClientData(job.client_id) : Promise.resolve({
-            clientName: "Unknown Client",
-            clientLocation: "Unknown Location", 
-            clientContact: "Unknown Contact",
-            clientPhone: "Unknown Phone",
-          })
+          job.client_id
+            ? fetchClientData(job.client_id)
+            : Promise.resolve({
+                clientName: "Unknown Client",
+                clientLocation: "Unknown Location",
+                clientContact: "Unknown Contact",
+                clientPhone: "Unknown Phone",
+              }),
         ]);
-        
+
         // Extract user data from the map
-        const creatorData = usersMap.get(job.creator_id) || { displayName: "Unknown User", avatarUrl: null };
-        const pmData = usersMap.get(job.pm_id) || { displayName: "Unknown PM", avatarUrl: null };
+        const creatorData = usersMap.get(job.creator_id) || {
+          displayName: "Unknown User",
+          avatarUrl: null,
+        };
+        const pmData = usersMap.get(job.pm_id) || {
+          displayName: "Unknown PM",
+          avatarUrl: null,
+        };
 
         // Format the created_at date
         const createdAt = new Date(job.created_at);
@@ -644,12 +732,14 @@ export default function AddJobPage() {
         });
 
         // Set the actual client data (handle null case)
-        setClientData(clientData || {
-          clientName: "Unknown Client",
-          clientLocation: "Unknown Location",
-          clientContact: "Unknown Contact", 
-          clientPhone: "Unknown Phone",
-        });
+        setClientData(
+          clientData || {
+            clientName: "Unknown Client",
+            clientLocation: "Unknown Location",
+            clientContact: "Unknown Contact",
+            clientPhone: "Unknown Phone",
+          }
+        );
 
         // Fetch versions for this job (can be done in parallel with other data)
         console.log("Job Info Page - Fetching versions for jobId:", jobId);
@@ -684,28 +774,41 @@ export default function AddJobPage() {
 
       const job = await res.json();
       console.log("Job Info Page - reloadJobData - raw job data:", job);
-      console.log("Job Info Page - reloadJobData - updated_at field:", job.updated_at);
+      console.log(
+        "Job Info Page - reloadJobData - updated_at field:",
+        job.updated_at
+      );
 
       // Collect unique user IDs to fetch
       const userIds = [];
       if (job.creator_id) userIds.push(job.creator_id);
       if (job.pm_id) userIds.push(job.pm_id);
-      
+
       // Fetch all related data in parallel
       const [brandName, usersMap, clientData] = await Promise.all([
-        job.brand_id ? fetchBrandName(job.brand_id) : Promise.resolve("Unknown Brand"),
+        job.brand_id
+          ? fetchBrandName(job.brand_id)
+          : Promise.resolve("Unknown Brand"),
         userIds.length > 0 ? fetchUsers(userIds) : Promise.resolve(new Map()),
-        job.client_id ? fetchClientData(job.client_id) : Promise.resolve({
-          clientName: "Unknown Client",
-          clientLocation: "Unknown Location", 
-          clientContact: "Unknown Contact",
-          clientPhone: "Unknown Phone",
-        })
+        job.client_id
+          ? fetchClientData(job.client_id)
+          : Promise.resolve({
+              clientName: "Unknown Client",
+              clientLocation: "Unknown Location",
+              clientContact: "Unknown Contact",
+              clientPhone: "Unknown Phone",
+            }),
       ]);
-      
+
       // Extract user data from the map
-      const creatorData = usersMap.get(job.creator_id) || { displayName: "Unknown User", avatarUrl: null };
-      const pmData = usersMap.get(job.pm_id) || { displayName: "Unknown PM", avatarUrl: null };
+      const creatorData = usersMap.get(job.creator_id) || {
+        displayName: "Unknown User",
+        avatarUrl: null,
+      };
+      const pmData = usersMap.get(job.pm_id) || {
+        displayName: "Unknown PM",
+        avatarUrl: null,
+      };
 
       // Format the created_at date
       const formattedDate = formatDate(job.created_at);
@@ -727,18 +830,22 @@ export default function AddJobPage() {
         createdDate: formattedDate, // Add the created date
         updatedAt: job.updated_at, // Add the updated_at field
       };
-      
-      console.log("Job Info Page - reloadJobData - setting job data:", updatedJobData);
+
+      console.log(
+        "Job Info Page - reloadJobData - setting job data:",
+        updatedJobData
+      );
       setJobData(updatedJobData);
 
       // Update client data
-      setClientData(clientData || {
-        clientName: "Unknown Client",
-        clientLocation: "Unknown Location",
-        clientContact: "Unknown Contact", 
-        clientPhone: "Unknown Phone",
-      });
-
+      setClientData(
+        clientData || {
+          clientName: "Unknown Client",
+          clientLocation: "Unknown Location",
+          clientContact: "Unknown Contact",
+          clientPhone: "Unknown Phone",
+        }
+      );
     } catch (error) {
       console.error("Error reloading job data:", error);
     }
@@ -750,6 +857,23 @@ export default function AddJobPage() {
       fetchPricingData(jobId, selectedVersion.id);
     }
   }, [selectedVersion, jobId, fetchPricingData]);
+
+  // Handle clicking outside dropdown to close it
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (clickedRow) {
+        const target = event.target as Element;
+        if (!target.closest(".dropdown-menu")) {
+          setClickedRow(null);
+        }
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [clickedRow]);
 
   // Function to download proposal PDF
   const downloadProposal = async () => {
@@ -894,7 +1018,11 @@ export default function AddJobPage() {
               </h1>
               <div className="text-sm text-[#60646C] flex items-center gap-2">
                 <span className="font-semibold">Last Updated:</span>
-                {loading ? "Loading..." : jobData.updatedAt ? formatDateTime(jobData.updatedAt) : "Never"}
+                {loading
+                  ? "Loading..."
+                  : jobData.updatedAt
+                  ? formatDateTime(jobData.updatedAt)
+                  : "Never"}
                 <div className="size-2 bg-gray-300 rounded-full" />
                 <span className="font-semibold">Version:</span>
                 {loadingVersions ? (
@@ -1019,7 +1147,8 @@ export default function AddJobPage() {
                         pricingData.lines.map((line: any, index: number) => (
                           <tr
                             key={line.id}
-                            className="border-b border-[#EAEBEE] hover:bg-gray-50"
+                            className="border-b border-[#EAEBEE] hover:bg-gray-50 cursor-pointer"
+                            onClick={(e) => handleRowClick(e, line)}
                           >
                             <td className="p-4 text-sm">{line.qty || 1}</td>
                             <td>
@@ -1295,6 +1424,38 @@ export default function AddJobPage() {
           </section>
         </div>
       </div>
+      {/* Row Action Dropdown */}
+      {clickedRow && (
+        <div
+          className="fixed z-50 bg-white border border-gray-200 rounded-md shadow-lg dropdown-menu"
+          style={{
+            left: dropdownPosition.x - 100,
+            top: dropdownPosition.y,
+            minWidth: "120px",
+          }}
+        >
+          <div className="p-1 space-y-1">
+            <button
+              onClick={() => handleEdit(clickedRow)}
+              className="w-full px-4 py-2 text-sm rounded-md text-left hover:bg-[#F5F5F5] flex items-center gap-2"
+            >
+              <Pencil className="size-4" />
+              Edit
+            </button>
+            <button
+              onClick={() => handleDelete(clickedRow)}
+              className="w-full px-4 py-2 text-sm rounded-md text-left hover:bg-[#F5F5F5] flex items-center gap-2"
+            >
+              <Trash className="size-4" />
+              Delete
+            </button>
+          </div>
+        </div>
+      )}
+      {/* Click outside to close dropdown */}
+      {clickedRow && (
+        <div className="fixed inset-0 z-40" onClick={handleDropdownClose} />
+      )}
       {/* Dialogs */}
       <JobInfoDialog
         isOpen={jobInfoOpen}
