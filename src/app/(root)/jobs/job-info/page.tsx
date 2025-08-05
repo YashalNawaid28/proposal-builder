@@ -12,6 +12,7 @@ import {
 import { JobInfoDialog } from "@/components/jobs/JobInfoDialog";
 import { ClientInfoDialog } from "@/components/jobs/ClientInfoDialog";
 import { AddSignServiceSidebar } from "@/components/jobs/AddSignServiceSidebar";
+import { EditPricingLineDrawer } from "@/components/jobs/EditPricingLineDrawer";
 import Link from "next/link";
 import { PageTabs } from "@/components/ui/page-tabs";
 import { useSearchParams } from "next/navigation";
@@ -78,6 +79,8 @@ export default function AddJobPage() {
   const [loadingVersions, setLoadingVersions] = useState(false);
   const [clickedRow, setClickedRow] = useState<any>(null); // State to track the clicked row
   const [dropdownPosition, setDropdownPosition] = useState({ x: 0, y: 0 }); // State to track dropdown position
+  const [editDrawerOpen, setEditDrawerOpen] = useState(false); // State to track edit drawer
+  const [editingPricingLine, setEditingPricingLine] = useState<any>(null); // State to track which line is being edited
 
   // Function to generate initials from display name
   const getInitials = (displayName: string) => {
@@ -200,7 +203,8 @@ export default function AddJobPage() {
   // Function to handle edit action
   const handleEdit = (line: any) => {
     console.log("Edit line:", line);
-    // TODO: Implement edit functionality
+    setEditingPricingLine(line);
+    setEditDrawerOpen(true);
     setClickedRow(null);
   };
 
@@ -1494,6 +1498,23 @@ export default function AddJobPage() {
             await fetchPricingData(jobId, selectedVersion.id);
           }
           // Update the job's updated_at field
+          await updateJobLastModified();
+        }}
+      />
+      <EditPricingLineDrawer
+        isOpen={editDrawerOpen}
+        onClose={() => {
+          setEditDrawerOpen(false);
+          setEditingPricingLine(null);
+        }}
+        pricingLine={editingPricingLine}
+        onSave={async (updatedData) => {
+          console.log("Saving updated pricing line:", updatedData);
+          // TODO: Implement save functionality
+          // For now, just refresh the data
+          if (jobId && selectedVersion) {
+            await fetchPricingData(jobId, selectedVersion.id);
+          }
           await updateJobLastModified();
         }}
       />
