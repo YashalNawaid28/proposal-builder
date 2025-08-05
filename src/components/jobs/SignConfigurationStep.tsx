@@ -21,6 +21,7 @@ interface SignConfigurationStepProps {
   onClose: () => void;
   onSignAdded?: () => void; // Callback when sign is successfully added
   jobId: string;
+  pricingVersionId?: string; // Current pricing version ID to add signs to
 }
 
 interface SignPricing {
@@ -53,6 +54,7 @@ export const SignConfigurationStep = ({
   onClose,
   onSignAdded,
   jobId,
+  pricingVersionId,
 }: SignConfigurationStepProps) => {
   const user = useUser();
   const [isEditingPrices, setIsEditingPrices] = useState(false);
@@ -437,27 +439,36 @@ export const SignConfigurationStep = ({
       }
       const userId = user.id;
 
-      // Create pricing version
-      const pricingVersionBody = {
-        job_id: jobId,
-        creator_id: userId,
-      };
-      console.log("Component Debug - Pricing version request body:", pricingVersionBody);
-      
-      const pricingVersionResponse = await fetch("/api/pricing-versions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(pricingVersionBody),
-      });
+      let targetPricingVersionId: string;
 
-      if (!pricingVersionResponse.ok) {
-        throw new Error("Failed to create pricing version");
+      // If we have a pricing version ID, use it; otherwise create a new one
+      if (pricingVersionId) {
+        console.log("Component Debug - Using existing pricing version:", pricingVersionId);
+        targetPricingVersionId = pricingVersionId;
+      } else {
+        console.log("Component Debug - Creating new pricing version");
+        // Create pricing version
+        const pricingVersionBody = {
+          job_id: jobId,
+          creator_id: userId,
+        };
+        console.log("Component Debug - Pricing version request body:", pricingVersionBody);
+        
+        const pricingVersionResponse = await fetch("/api/pricing-versions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(pricingVersionBody),
+        });
+
+        if (!pricingVersionResponse.ok) {
+          throw new Error("Failed to create pricing version");
+        }
+
+        const pricingVersionData = await pricingVersionResponse.json();
+        targetPricingVersionId = pricingVersionData.data.id;
       }
-
-      const pricingVersionData = await pricingVersionResponse.json();
-      const pricingVersionId = pricingVersionData.data.id;
 
       // Get the current prices (saved or calculated)
       const currentSignPrice = savedPrices?.signPrice || modifiedSignPrice;
@@ -474,7 +485,7 @@ export const SignConfigurationStep = ({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          pricing_version_id: pricingVersionId,
+          pricing_version_id: targetPricingVersionId,
           sign_id: selectedSign?.id,
           description_resolved: descriptionResolved,
           qty: 1, // You might want to get this from a quantity input

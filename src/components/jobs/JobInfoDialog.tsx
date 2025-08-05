@@ -262,34 +262,8 @@ export const JobInfoDialog = ({
           toast.error('Failed to update job. Please try again.');
         }
       } else {
-        // Create new job
-        const proposalNo = generateProposalNumber(brandName);
-        console.log('Generated proposal number:', proposalNo);
-        
-        const formData = new FormData();
-        formData.append('job_name', jobData.jobName || '');
-        formData.append('job_number', jobData.jobNumber || '');
-        formData.append('proposal_no', proposalNo);
-        formData.append('site_street', addressComponents.siteStreet);
-        formData.append('site_city', addressComponents.siteCity);
-        formData.append('site_state', addressComponents.siteState);
-        formData.append('site_postcode', addressComponents.sitePostcode);
-        formData.append('site_country', addressComponents.siteCountry);
-        formData.append('brand_id', jobData.brandId || '');
-        formData.append('pm_id', jobData.managerId || '');
-
-        const response = await fetch('/api/jobs/add-job-info', {
-          method: 'POST',
-          headers: { "request.user.id": user.id },
-          body: formData,
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          onNext({ ...jobData, jobId: result.data?.[0]?.id });
-        } else {
-          console.error('Error saving job:', await response.text());
-        }
+        // For new jobs, just pass the data to the next step without creating the job yet
+        onNext({ ...jobData });
       }
     } catch (error) {
       console.error('Error saving job:', error);
