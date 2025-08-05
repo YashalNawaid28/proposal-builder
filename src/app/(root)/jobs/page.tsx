@@ -33,6 +33,10 @@ export interface JobData {
     avatar_url: string;
     job_title: string;
   } | null;
+  client: {
+    id: string;
+    legal_name: string;
+  } | null;
   created_at: string;
   updated_at: string;
   current_pricing_version_id: string | null;
@@ -58,7 +62,7 @@ interface RowData {
     avatar_url: string;
     job_title: string;
   } | null;
-  location: string;
+  clientName: string;
   jobNo: string;
 }
 
@@ -163,7 +167,7 @@ export default function JobsPage() {
       date: formatDate(job.created_at),
       creator: job.creator,
       manager: job.project_manager,
-      location: `${job.site_city}, ${job.site_state}`,
+      clientName: job.client?.legal_name || "N/A",
       jobNo: job.job_no,
     }));
   }, [filteredJobs]);
@@ -265,8 +269,8 @@ export default function JobsPage() {
                       {row.jobName}
                     </div>
                     <div className="text-[14px] text-[#60646C] flex font-[400] items-center gap-2">
-                      {row.location}
-                      <div className="w-2 h-2 bg-[#60646C] rounded-full"></div>
+                      {row.clientName}
+                      <div className="w-2 h-2 bg-[#DEE1EA] rounded-full"></div>
                       {row.jobNo}
                     </div>
                   </div>
@@ -329,7 +333,7 @@ export default function JobsPage() {
     );
   };
 
-  const tabs = ["All", "Drafts", "Sent", "Signed"];
+  const tabs = ["All"];
 
   return (
     <div className="bg-white h-screen flex flex-col">
@@ -337,14 +341,6 @@ export default function JobsPage() {
       <section className="px-4 py-5 flex items-center gap-4 justify-between">
         <h1 className="text-2xl font-semibold ml-2">Jobs</h1>
         <div className="flex items-center gap-5">
-          <div className="flex items-center gap-2 text-[14px] cursor-pointer">
-            <ListFilter className="w-4 h-4" />
-            <span>Filter</span>
-          </div>
-          <div className="flex items-center gap-2 text-[14px] cursor-pointer">
-            <ArrowUpDown className="w-4 h-4" />
-            <span>Sort</span>
-          </div>
           <button
             onClick={handleNewJob}
             className="bg-black text-white px-4 text-[14px] flex items-center justify-center font-semibold py-2 rounded-md h-10"

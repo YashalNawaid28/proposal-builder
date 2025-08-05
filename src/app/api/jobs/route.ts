@@ -72,24 +72,60 @@ export async function GET(request: NextRequest) {
 
     console.log("Users data lookup:", usersData);
 
+    // Fetch client data for jobs
+    const clientIds = [
+      ...new Set([
+        ...(data?.map((job) => job.client_id).filter(Boolean) || []),
+      ]),
+    ];
+
+    console.log("Client IDs to fetch:", clientIds);
+
+    let clientsData: Record<
+      string,
+      {
+        id: string;
+        legal_name: string;
+      }
+    > = {};
+    if (clientIds.length > 0) {
+      const { data: clients, error: clientsError } = await supabase
+        .from("clients")
+        .select("id, legal_name")
+        .in("id", clientIds);
+
+      console.log("Clients query result:", { clients, error: clientsError });
+
+      if (!clientsError && clients) {
+        clientsData = clients.reduce((acc, client) => {
+          acc[client.id] = client;
+          return acc;
+        }, {} as Record<string, { id: string; legal_name: string }>);
+      }
+    }
+
+    console.log("Clients data lookup:", clientsData);
+
     const transformedData =
       data?.map((job) => {
         const creator = job.creator_id
           ? usersData[job.creator_id] || null
           : null;
         const project_manager = job.pm_id ? usersData[job.pm_id] || null : null;
+        const client = job.client_id ? clientsData[job.client_id] || null : null;
 
         console.log(
-          `Job ${job.id}: creator_id=${job.creator_id}, pm_id=${job.pm_id}`
+          `Job ${job.id}: creator_id=${job.creator_id}, pm_id=${job.pm_id}, client_id=${job.client_id}`
         );
         console.log(
-          `Job ${job.id}: creator=${creator}, project_manager=${project_manager}`
+          `Job ${job.id}: creator=${creator}, project_manager=${project_manager}, client=${client}`
         );
 
         return {
           ...job,
           creator,
           project_manager,
+          client,
         };
       }) || [];
 
