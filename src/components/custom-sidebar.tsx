@@ -68,7 +68,17 @@ export function CustomSidebar({
   console.log("CustomSidebar - userData:", userData);
 
   const handleSignOut = async () => {
-    await signOut();
+    try {
+      console.log("Sign out button clicked");
+      console.log("Current user:", user);
+      console.log("Current userData:", userData);
+      
+      await signOut();
+      
+      console.log("Sign out completed successfully");
+    } catch (error) {
+      console.error("Error during sign out:", error);
+    }
   };
 
   // Use userData if available, otherwise fall back to session metadata
@@ -174,7 +184,10 @@ export function CustomSidebar({
         {user && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 w-full p-2 rounded-md hover:bg-gray-900/60 transition-colors">
+              <button 
+                className="flex items-center gap-2 w-full p-2 rounded-md hover:bg-gray-900/60 transition-colors"
+                onClick={() => console.log("Dropdown trigger clicked")}
+              >
                 {displayUser.avatar_url ? (
                   <img
                     src={displayUser.avatar_url}
@@ -204,7 +217,14 @@ export function CustomSidebar({
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleSignOut}>
+              <DropdownMenuItem 
+                onClick={(e) => {
+                  console.log("Dropdown menu item clicked");
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleSignOut();
+                }}
+              >
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Sign out</span>
               </DropdownMenuItem>

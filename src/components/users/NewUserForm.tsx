@@ -237,7 +237,7 @@ export const NewUserForm = ({
               ? "Updating..."
               : "Creating..."
             : isEditing
-            ? "Update User"
+            ? "Update"
             : "Add User"}
         </button>
       </section>
