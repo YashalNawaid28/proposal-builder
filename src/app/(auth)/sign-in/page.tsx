@@ -92,12 +92,34 @@ export default function SignIn() {
         return;
       }
 
-      console.log("User is active, sending magic link");
+      console.log("User is active, syncing with auth system if needed");
+
+      // Try to sync user with auth system if they don't exist there
+      try {
+        const syncResponse = await fetch("/api/sync-user", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email: email.toLowerCase() }),
+        });
+
+        if (syncResponse.ok) {
+          const syncResult = await syncResponse.json();
+          console.log("User sync result:", syncResult);
+        } else {
+          console.log("User sync failed, but continuing with sign-in attempt");
+        }
+      } catch (syncError) {
+        console.log("User sync error, but continuing with sign-in attempt:", syncError);
+      }
+
+      console.log("Sending magic link");
 
       const { error: signInError } = await supabase.auth.signInWithOtp({
         email: email.toLowerCase(),
         options: {
-          shouldCreateUser: false,
+          shouldCreateUser: false, // Don't create new users, only use existing ones
           emailRedirectTo: `${getSiteUrl()}/callback`,
         },
       });
