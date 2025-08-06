@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
         job_title: job_title || null,
         role: role || 'employee',
         avatar_url: avatar_url || null,
-        status: 'active',
+        status: 'Active',
         last_active_at: new Date().toISOString(),
       })
       .select();
