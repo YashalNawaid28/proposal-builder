@@ -735,7 +735,7 @@ export const EditPricingLineDrawer = ({
           <button onClick={handleClose}>
             <ArrowLeft className="size-5" />
           </button>
-          <h2 className="text-[20px] font-bold">Edit Sign Configuration</h2>
+          <h2 className="text-[20px] font-bold">Edit Sign</h2>
           <button onClick={handleClose}>
             <X className="size-5" />
           </button>
@@ -1163,7 +1163,7 @@ export const EditPricingLineDrawer = ({
             onClick={isEditingPrices ? handleSavePrices : handleSave}
             className="flex-1 py-2 px-3 text-black disabled:text-[#464C53] bg-white disabled:bg-[#1018280D] h-10 flex items-center justify-center text-[14px] rounded-sm font-semibold"
           >
-            {isEditingPrices ? "Save Pricing" : "Save Changes"}
+            {isEditingPrices ? "Save Pricing" : "Update Sign"}
           </button>
         </div>
       </section>
