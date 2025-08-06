@@ -348,8 +348,7 @@ export function generateProposalHTML(
 
     .custom-table {
       width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
+      border-collapse: collapse;
       font-family: 'Inter', Arial, sans-serif;
       font-size: 14px;
       margin-bottom: 24px;
@@ -366,7 +365,11 @@ export function generateProposalHTML(
 
     .custom-table tbody tr {
       background: #fff;
-      border-bottom: 0.6px solid #000;
+      border-bottom: 0.6px solid #D0D5DD;
+    }
+
+    .custom-table tbody tr:last-child {
+      border-bottom: none;
     }
 
     .custom-table td {
@@ -378,6 +381,11 @@ export function generateProposalHTML(
       font-style: normal;
       font-weight: 400;
       line-height: 12px;
+      border-bottom: 1px solid #D0D5DD;
+    }
+
+    .custom-table tbody tr:last-child td {
+      border-bottom: none;
     }
 
     .custom-table .sign-label {
