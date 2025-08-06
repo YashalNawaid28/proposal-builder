@@ -82,9 +82,35 @@ export function generateProposalHTML(
       }
 
       @bottom-center {
-        font-size: 9pt;
-        font-family: Arial, sans-serif;
-        content: element(footer);
+        content: element(footer-page1);
+      }
+    }
+
+    @page page2 {
+      size: Letter;
+      margin: 2.2cm 0 5cm 0;
+      counter-increment: page;
+
+      @top-left {
+        content: element(header);
+      }
+
+      @bottom-center {
+        content: element(footer-page2);
+      }
+    }
+
+    @page page3 {
+      size: Letter;
+      margin: 2.2cm 0 0 0;
+      counter-increment: page;
+
+      @top-left {
+        content: element(header);
+      }
+
+      @bottom-center {
+        content: element(footer-page3);
       }
     }
 
@@ -102,6 +128,27 @@ export function generateProposalHTML(
       font-family: 'Arial', sans-serif;
       color: white;
       height: 82px;
+    }
+
+    #footer-page1 {
+      position: running(footer-page1);
+      width: 100%;
+      font-size: 8pt;
+      text-align: center;
+    }
+
+    #footer-page2 {
+      position: running(footer-page2);
+      width: 100%;
+      font-size: 8pt;
+      text-align: center;
+    }
+
+    #footer-page3 {
+      position: running(footer-page3);
+      width: 100%;
+      font-size: 8pt;
+      text-align: center;
     }
 
     .left {
@@ -156,12 +203,7 @@ export function generateProposalHTML(
       color: white;
     }
 
-    #footer {
-      position: running(footer);
-      width: 100%;
-      font-size: 8pt;
-      text-align: center;
-    }
+
 
     h1 {
       font-size: 13pt;
@@ -387,7 +429,7 @@ export function generateProposalHTML(
     </div>
   </div>
   <!-- Page 1 Content -->
-  <div class="content" style="position: relative;">
+  <div class="content" style="position: relative;" style="page: page1;">
 
     <div class="info" style="display: flex; gap: 32px;">
       <div style="flex: 1;">
@@ -452,7 +494,7 @@ export function generateProposalHTML(
       </div>
     </div>
 
-    <div id="footer" class="footer" style="display: flex; flex-direction: column;background: #f7f8fa; height: fit-content;">
+    <div id="footer-page1" class="footer" style="display: flex; flex-direction: column;background: #f7f8fa; height: fit-content;">
       <div
         style="display: flex; justify-content: space-between; align-items: flex-start; padding: 30px 16px; font-family: 'Inter', Arial, sans-serif; font-size: 14px; color: #23272f;">
         <div style="flex: 2;text-align: left">
@@ -511,11 +553,9 @@ export function generateProposalHTML(
     <div style="clear: both;"></div>
   </div>
 
-  <!-- Page Break -->
-  <div style="page-break-after: always;"></div>
-
   <!-- Page 2 Content -->
 
+  <div class="content" style="page: page2;">
   <div id="header">
     <div class="left">
       <img src="https://bqobctrcfgearocxjhxr.supabase.co/storage/v1/object/public/images//Logo%20(1).svg" />
@@ -567,7 +607,7 @@ export function generateProposalHTML(
     </div>
 
 
-    <div id="footer" class="footer" style="display: flex; flex-direction: column;background: #f7f8fa;">
+    <div id="footer-page2" class="footer" style="display: flex; flex-direction: column;background: #f7f8fa;">
       <div
         style="display: flex; justify-content: space-between; align-items: flex-start; padding: 30px 16px; font-family: 'Inter', Arial, sans-serif; font-size: 14px; color: #23272f;">
         <div style="flex: 2;text-align: left">
@@ -605,11 +645,11 @@ export function generateProposalHTML(
   </div>
 
 
-  <!-- Page Break -->
-  <div style="page-break-after: always;"></div>
+  </div>
 
   <!-- Page 3 Content -->
 
+  <div class="content" style="page: page3;">
   <div id="header">
     <div class="left">
       <img src="https://bqobctrcfgearocxjhxr.supabase.co/storage/v1/object/public/images//Logo%20(1).svg" />
@@ -625,7 +665,7 @@ export function generateProposalHTML(
     </div>
   </div>
 
-  <div class="content" style="padding: 16px;">
+  <div class="content" style="padding: 16px; position: relative; height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
     <h1
       style="color: #281020; font-family: Inter; font-size: 12px; font-style: normal; font-weight: 600; line-height: normal;">
       Additional Terms and Conditions</h1>
@@ -738,14 +778,15 @@ export function generateProposalHTML(
         indebtedness. This can happen even if you have paid your own contract in full, if the subcontractor,
         laborer, or supplier remains unpaid"</li>
     </ol>
+
   </div>
 
-  <div id="footer" style="background-color: #F2F4F7; height: 20px; padding: 10px 0;">
-    <div
-      style="width: fit-content; border: none; background: #EAECF0; border-radius: 3px; align-self: center; display: inline-block; padding: 2px 12px; margin-bottom: 8px;"
-      class="page-counter">
+  <div id="footer-page3" style="background-color: #F2F4F7; height: 20px; padding: 10px 0; margin: 0; display: flex; justify-content: center; align-items: center; position: absolute; bottom: 0;">
+      <div
+        style="width: fit-content; border: none; background: #EAECF0; border-radius: 3px; padding: 2px 12px; margin: 0;"
+        class="page-counter">
+      </div>
     </div>
-  </div>
 </body>
 
 </html>`;
@@ -772,15 +813,15 @@ export function generateProposalHTML(
     const signLabel = line.signs?.sign_name || 'Sign';
     const unitPrice = line.list_price || 0;
     const totalPrice = unitPrice * (line.qty || 1);
-    
+
     return `
     <tr>
       <td>${line.qty || 1}</td>
       <td>
-        ${signImage ? 
-          `<img class="sign-img" src="${signImage}" alt="Sign Logo" />` : 
-          `<span class="sign-label">${signLabel}</span>`
-        }
+        ${signImage ?
+        `<img class="sign-img" src="${signImage}" alt="Sign Logo" />` :
+        `<span class="sign-label">${signLabel}</span>`
+      }
       </td>
       <td>${line.description_resolved || 'No description'}</td>
       <td class="text-right">$${unitPrice.toFixed(2)}</td>
