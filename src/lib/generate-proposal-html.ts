@@ -441,10 +441,10 @@ export function generateProposalHTML(
           <p style="color: #475467; font-family: Inter; font-size: 9px; font-style: normal; font-weight: 400; line-height: 15px;">{{billing_address}}</p>
           <p style="color: #475467; font-family: Inter; font-size: 9px; font-style: normal; font-weight: 400; line-height: 15px;">{{billing_city_state_zip}}</p>
           <div style="display: flex; align-items: center; color: #475467; font-family: Inter; font-size: 9px; font-style: normal; font-weight: 400; line-height: 15px;">
-            <h5>Phone:</h5> {{billing_phone}}
+            <h5 style="color: #475467; font-family: Inter; font-size: 9px; font-style: normal; font-weight: 600; line-height: 15px;">Phone: </h5> {{billing_phone}}
           </div>
           <div style="display: flex; align-items: center; color: #475467; font-family: Inter; font-size: 9px; font-style: normal; font-weight: 400; line-height: 15px;">
-            <h5>Attn:</h5> {{billing_attn}}
+            <h5 style="color: #475467; font-family: Inter; font-size: 9px; font-style: normal; font-weight: 600; line-height: 15px;">Attn: </h5> {{billing_attn}}
           </div>
         </div>
       </div>
@@ -464,13 +464,13 @@ export function generateProposalHTML(
           Info</strong>
         <div style="display: flex;flex-direction: column;gap: 2px">
           <div style="display: flex; align-items: center; color: #475467; font-family: Inter; font-size: 9px; font-style: normal; font-weight: 400; line-height: 15px;">
-            <h5>Date:</h5> {{contract_date}}
+            <h5 style="color: #475467; font-family: Inter; font-size: 9px; font-style: normal; font-weight: 600; line-height: 15px;">Date: </h5> {{contract_date}}
           </div>
           <div style="display: flex; align-items: center; color: #475467; font-family: Inter; font-size: 9px; font-style: normal; font-weight: 400; line-height: 15px;">
-            <h5>Contract #:</h5> {{contract_number}}
+            <h5 style="color: #475467; font-family: Inter; font-size: 9px; font-style: normal; font-weight: 600; line-height: 15px;">Proposal #: </h5> {{contract_number}}
           </div>
           <div style="display: flex; align-items: center; color: #475467; font-family: Inter; font-size: 9px; font-style: normal; font-weight: 400; line-height: 15px;">
-            <h5>Representative :</h5> {{contract_rep}}
+            <h5 style="color: #475467; font-family: Inter; font-size: 9px; font-style: normal; font-weight: 600; line-height: 15px;">Representative :</h5> {{contract_rep}}
           </div>
         </div>
       </div>
