@@ -19,6 +19,9 @@ interface UserData {
   avatar_url: string | null;
   last_active_at: string;
   created_at: string;
+  job_title?: string;
+  role?: string;
+  status?: string;
 }
 
 interface AuthContextType {
@@ -49,6 +52,27 @@ export function SupabaseAuthProvider({
   const router = useRouter();
   const pathname = usePathname();
 
+  // Fetch user data from users table
+  const fetchUserData = useCallback(async (email: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', email)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user data:', error);
+        return null;
+      }
+
+      return data as UserData;
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      return null;
+    }
+  }, []);
+
   // Client-side route protection
   useEffect(() => {
     if (!loading && !session) {
@@ -69,16 +93,29 @@ export function SupabaseAuthProvider({
       } = await supabase.auth.getSession();
       setSession(session);
       setUser(session?.user ?? null);
+      
+      // Fetch user data if session exists
+      if (session?.user?.email) {
+        const userData = await fetchUserData(session.user.email);
+        setUserData(userData);
+      }
+      
       setLoading(false);
     };
     getInitialSession();
+    
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state change:', event, session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
-      setLoading(false);
+      
+      // Fetch user data on sign in
+      if (event === 'SIGNED_IN' && session?.user?.email) {
+        const userData = await fetchUserData(session.user.email);
+        setUserData(userData);
+      }
       
       // Handle sign-out event
       if (event === 'SIGNED_OUT') {
@@ -95,10 +132,12 @@ export function SupabaseAuthProvider({
           }
         }
       }
+      
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [fetchUserData]);
 
   const signOut = useCallback(async () => {
     try {

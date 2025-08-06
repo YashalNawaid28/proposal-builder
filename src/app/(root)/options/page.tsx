@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@/components/supabase-auth-provider";
 import { PageTabs } from "@/components/ui/page-tabs";
 import {
@@ -55,7 +55,9 @@ const EditOptionValueDialog = ({
   initialValue,
 }: EditOptionValueDialogProps) => {
   const [valueName, setValueName] = useState(initialValue?.display_label || "");
-  const [addPrice, setAddPrice] = useState(initialValue?.price_modifier_value?.toString() || "");
+  const [addPrice, setAddPrice] = useState(
+    initialValue?.price_modifier_value?.toString() || ""
+  );
   const valueNameRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -101,14 +103,21 @@ const EditOptionValueDialog = ({
           </div>
           <div>
             <Label htmlFor="addPrice" className="text-sm font-medium">
-              Add Price {initialValue?.price_modifier_type === 'Percentage' ? '(%)' : '(Fixed Amount)'}
+              Add Price{" "}
+              {initialValue?.price_modifier_type === "Percentage"
+                ? "(%)"
+                : "(Fixed Amount)"}
             </Label>
             <Input
               id="addPrice"
               value={addPrice}
               onChange={(e) => setAddPrice(e.target.value)}
               className="mt-1 w-full border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0"
-              placeholder={initialValue?.price_modifier_type === 'Percentage' ? 'Enter percentage' : 'Enter amount'}
+              placeholder={
+                initialValue?.price_modifier_type === "Percentage"
+                  ? "Enter percentage"
+                  : "Enter amount"
+              }
             />
           </div>
         </div>
@@ -187,16 +196,24 @@ const ValuesCell = ({
   values,
   onValueClick,
 }: {
-  values: { display_label: string; price_modifier_value?: number; price_modifier_type?: string }[];
+  values: {
+    display_label: string;
+    price_modifier_value?: number;
+    price_modifier_type?: string;
+  }[];
   onValueClick: (value: any) => void;
 }) => (
   <div className="flex flex-wrap justify-start gap-1">
     {values && values.length > 0 ? (
       values.map((val, idx: number) => {
-        const displayText = val.price_modifier_value !== undefined && val.price_modifier_value !== null
-          ? `${val.display_label} | +${val.price_modifier_value}${val.price_modifier_type === 'Percentage' ? '%' : ''}`
-          : val.display_label;
-        
+        const displayText =
+          val.price_modifier_value !== undefined &&
+          val.price_modifier_value !== null
+            ? `${val.display_label} | +${val.price_modifier_value}${
+                val.price_modifier_type === "Percentage" ? "%" : ""
+              }`
+            : val.display_label;
+
         return (
           <button
             key={idx}
@@ -215,28 +232,30 @@ const ValuesCell = ({
 
 const OptionsPage = () => {
   const { user } = useAuth();
-  const [tab, setTab] = useState<"all" | "active" | "archived">("all");
+  const [tab, setTab] = useState<"All" | "Active" | "Archived">("All");
   const [options, setOptions] = useState<OptionData[]>([]);
-  const [optionValues, setOptionValues] = useState<{ [optionId: string]: OptionValue[] }>({});
+  const [optionValues, setOptionValues] = useState<{
+    [optionId: string]: OptionValue[];
+  }>({});
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedValue, setSelectedValue] = useState<OptionValue | null>(null);
 
-  const fetchOptions = async () => {
+  const fetchOptions = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     setError(null);
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
-      
+
       const res = await fetch("/api/options", {
         headers: { "request.user.id": user.id },
         signal: controller.signal,
       });
-      
+
       clearTimeout(timeoutId);
       if (!res.ok) {
         throw new Error("Failed to fetch options");
@@ -253,7 +272,7 @@ const OptionsPage = () => {
       setOptionValues(valuesData);
     } catch (error) {
       console.error("Error fetching options:", error);
-      if (error instanceof Error && error.name === 'AbortError') {
+      if (error instanceof Error && error.name === "AbortError") {
         setError("Request timed out. Please try again.");
       } else {
         setError(
@@ -263,16 +282,16 @@ const OptionsPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchOptions();
-  }, [user, fetchOptions]);
+  }, [fetchOptions]);
 
   const filteredOptions = useMemo(() => {
-    if (tab === "all") return options;
+    if (tab === "All") return options;
     return options.filter((option) =>
-      tab === "active"
+      tab === "Active"
         ? option.status === "Active" || option.status === "Draft"
         : option.status === "Archived"
     );
@@ -334,18 +353,18 @@ const OptionsPage = () => {
 
       // Update the local state instead of re-fetching everything
       if (selectedValue && result.data) {
-        setOptionValues(prevValues => {
+        setOptionValues((prevValues) => {
           const newValues = { ...prevValues };
           // Find and update the specific option value
-          Object.keys(newValues).forEach(optionId => {
-            newValues[optionId] = newValues[optionId].map(value => 
+          Object.keys(newValues).forEach((optionId) => {
+            newValues[optionId] = newValues[optionId].map((value) =>
               value.id === selectedValue.id ? result.data : value
             );
           });
           return newValues;
         });
       }
-      
+
       // Show success message
       toast.success("Option value updated successfully!");
     } catch (error) {
@@ -449,7 +468,7 @@ const OptionsPage = () => {
     );
   };
 
-  const tabs = ["all", "active", "archived"];
+  const tabs = ["All", "Active", "Archived"];
 
   return (
     <div className="bg-white">
@@ -457,7 +476,7 @@ const OptionsPage = () => {
       <PageTabs
         tabs={tabs}
         activeTab={tab}
-        onTabChange={(tab) => setTab(tab as "all" | "active" | "archived")}
+        onTabChange={(tab) => setTab(tab as "All" | "Active" | "Archived")}
       />
       <div className="border border-[#DEE1EA] overflow-hidden">
         <div>{renderTable()}</div>
@@ -474,4 +493,3 @@ const OptionsPage = () => {
 };
 
 export default OptionsPage;
-

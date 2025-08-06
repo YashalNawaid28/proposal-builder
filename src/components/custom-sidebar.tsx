@@ -70,7 +70,7 @@ export function CustomSidebar({
   style,
 }: Readonly<CustomSidebarProps>) {
   const pathname = usePathname();
-  const { user, signOut } = useAuth();
+  const { user, userData, signOut } = useAuth();
 
   const handleSignOut = async () => {
     await signOut();
@@ -174,21 +174,19 @@ export function CustomSidebar({
 
       {/* Footer */}
       <div className="mt-auto bg-black text-[14px] px-4 pb-4">
-        {user && (
+        {user && userData && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-2 w-full p-2 rounded-md hover:bg-gray-900/60 transition-colors">
-                {user.user_metadata?.avatar_url ? (
+                {userData.avatar_url ? (
                   <img
-                    src={user.user_metadata.avatar_url}
-                    alt={`${
-                      user.user_metadata?.full_name || user.email
-                    } Profile`}
+                    src={userData.avatar_url}
+                    alt={`${userData.display_name} Profile`}
                     className="w-8 h-8 rounded-full object-cover"
                   />
                 ) : (
                   <div className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-700 text-white text-sm font-medium">
-                    {(user.user_metadata?.full_name || user.email)
+                    {userData.display_name
                       .split(" ")
                       .map((word: string) => word[0])
                       .join("")
@@ -198,9 +196,9 @@ export function CustomSidebar({
                 )}
                 <div className="flex-1 text-left">
                   <div className="text-sm font-medium text-white">
-                    {user.user_metadata?.full_name || user.email}
+                    {userData.display_name}
                   </div>
-                  <div className="text-xs text-gray-400">{user.email}</div>
+                  <div className="text-xs text-gray-400">{userData.email}</div>
                 </div>
               </button>
             </DropdownMenuTrigger>
