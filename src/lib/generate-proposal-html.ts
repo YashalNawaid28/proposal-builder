@@ -1,6 +1,7 @@
 interface JobData {
   jobName?: string;
   jobNumber?: string;
+  proposalNumber?: string;
   jobLocation?: string;
   brandName?: string;
   creatorName?: string;
@@ -82,9 +83,35 @@ export function generateProposalHTML(
       }
 
       @bottom-center {
-        font-size: 9pt;
-        font-family: Arial, sans-serif;
-        content: element(footer);
+        content: element(footer-page1);
+      }
+    }
+
+    @page page2 {
+      size: Letter;
+      margin: 2.2cm 0 5cm 0;
+      counter-increment: page;
+
+      @top-left {
+        content: element(header);
+      }
+
+      @bottom-center {
+        content: element(footer-page2);
+      }
+    }
+
+    @page page3 {
+      size: Letter;
+      margin: 2.2cm 0 0 0;
+      counter-increment: page;
+
+      @top-left {
+        content: element(header);
+      }
+
+      @bottom-center {
+        content: element(footer-page3);
       }
     }
 
@@ -102,6 +129,27 @@ export function generateProposalHTML(
       font-family: 'Arial', sans-serif;
       color: white;
       height: 82px;
+    }
+
+    #footer-page1 {
+      position: running(footer-page1);
+      width: 100%;
+      font-size: 8pt;
+      text-align: center;
+    }
+
+    #footer-page2 {
+      position: running(footer-page2);
+      width: 100%;
+      font-size: 8pt;
+      text-align: center;
+    }
+
+    #footer-page3 {
+      position: running(footer-page3);
+      width: 100%;
+      font-size: 8pt;
+      text-align: center;
     }
 
     .left {
@@ -156,12 +204,7 @@ export function generateProposalHTML(
       color: white;
     }
 
-    #footer {
-      position: running(footer);
-      width: 100%;
-      font-size: 8pt;
-      text-align: center;
-    }
+
 
     h1 {
       font-size: 13pt;
@@ -306,8 +349,7 @@ export function generateProposalHTML(
 
     .custom-table {
       width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
+      border-collapse: collapse;
       font-family: 'Inter', Arial, sans-serif;
       font-size: 14px;
       margin-bottom: 24px;
@@ -324,13 +366,27 @@ export function generateProposalHTML(
 
     .custom-table tbody tr {
       background: #fff;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 0.6px solid #D0D5DD;
+    }
+
+    .custom-table tbody tr:last-child {
+      border-bottom: none;
     }
 
     .custom-table td {
       padding: 16px 8px;
       vertical-align: middle;
-      color: #23272f;
+      color: #475467;
+      font-family: Inter;
+      font-size: 8px;
+      font-style: normal;
+      font-weight: 400;
+      line-height: 12px;
+      border-bottom: 1px solid #D0D5DD;
+    }
+
+    .custom-table tbody tr:last-child td {
+      border-bottom: none;
     }
 
     .custom-table .sign-label {
@@ -386,7 +442,7 @@ export function generateProposalHTML(
       </div>
     </div>
   </div>
-  <!-- Page 1 Content -->
+  <!-- Page 1 Content - Can auto-create new pages based on data -->
   <div class="content" style="position: relative;">
 
     <div class="info" style="display: flex; gap: 32px;">
@@ -399,10 +455,10 @@ export function generateProposalHTML(
           <p style="color: #475467; font-family: Inter; font-size: 9px; font-style: normal; font-weight: 400; line-height: 15px;">{{billing_address}}</p>
           <p style="color: #475467; font-family: Inter; font-size: 9px; font-style: normal; font-weight: 400; line-height: 15px;">{{billing_city_state_zip}}</p>
           <div style="display: flex; align-items: center; color: #475467; font-family: Inter; font-size: 9px; font-style: normal; font-weight: 400; line-height: 15px;">
-            <h5>Phone:</h5> {{billing_phone}}
+            <h5 style="color: #475467; font-family: Inter; font-size: 9px; font-style: normal; font-weight: 600; line-height: 15px;">Phone: </h5> {{billing_phone}}
           </div>
           <div style="display: flex; align-items: center; color: #475467; font-family: Inter; font-size: 9px; font-style: normal; font-weight: 400; line-height: 15px;">
-            <h5>Attn:</h5> {{billing_attn}}
+            <h5 style="color: #475467; font-family: Inter; font-size: 9px; font-style: normal; font-weight: 600; line-height: 15px;">Attn: </h5> {{billing_attn}}
           </div>
         </div>
       </div>
@@ -422,13 +478,13 @@ export function generateProposalHTML(
           Info</strong>
         <div style="display: flex;flex-direction: column;gap: 2px">
           <div style="display: flex; align-items: center; color: #475467; font-family: Inter; font-size: 9px; font-style: normal; font-weight: 400; line-height: 15px;">
-            <h5>Date:</h5> {{contract_date}}
+            <h5 style="color: #475467; font-family: Inter; font-size: 9px; font-style: normal; font-weight: 600; line-height: 15px;">Date: </h5> {{contract_date}}
           </div>
           <div style="display: flex; align-items: center; color: #475467; font-family: Inter; font-size: 9px; font-style: normal; font-weight: 400; line-height: 15px;">
-            <h5>Contract #:</h5> {{contract_number}}
+            <h5 style="color: #475467; font-family: Inter; font-size: 9px; font-style: normal; font-weight: 600; line-height: 15px;">Proposal #: </h5> {{contract_number}}
           </div>
           <div style="display: flex; align-items: center; color: #475467; font-family: Inter; font-size: 9px; font-style: normal; font-weight: 400; line-height: 15px;">
-            <h5>Representative :</h5> {{contract_rep}}
+            <h5 style="color: #475467; font-family: Inter; font-size: 9px; font-style: normal; font-weight: 600; line-height: 15px;">Representative :</h5> {{contract_rep}}
           </div>
         </div>
       </div>
@@ -452,7 +508,7 @@ export function generateProposalHTML(
       </div>
     </div>
 
-    <div id="footer" class="footer" style="display: flex; flex-direction: column;background: #f7f8fa; height: fit-content;">
+    <div id="footer-page1" class="footer" style="display: flex; flex-direction: column;background: #f7f8fa; height: fit-content;">
       <div
         style="display: flex; justify-content: space-between; align-items: flex-start; padding: 30px 16px; font-family: 'Inter', Arial, sans-serif; font-size: 14px; color: #23272f;">
         <div style="flex: 2;text-align: left">
@@ -511,11 +567,9 @@ export function generateProposalHTML(
     <div style="clear: both;"></div>
   </div>
 
-  <!-- Page Break -->
-  <div style="page-break-after: always;"></div>
+  <!-- Page 2 Content - Always a new page -->
 
-  <!-- Page 2 Content -->
-
+  <div class="content" style="page: page2;">
   <div id="header">
     <div class="left">
       <img src="https://bqobctrcfgearocxjhxr.supabase.co/storage/v1/object/public/images//Logo%20(1).svg" />
@@ -567,7 +621,7 @@ export function generateProposalHTML(
     </div>
 
 
-    <div id="footer" class="footer" style="display: flex; flex-direction: column;background: #f7f8fa;">
+    <div id="footer-page2" class="footer" style="display: flex; flex-direction: column;background: #f7f8fa;">
       <div
         style="display: flex; justify-content: space-between; align-items: flex-start; padding: 30px 16px; font-family: 'Inter', Arial, sans-serif; font-size: 14px; color: #23272f;">
         <div style="flex: 2;text-align: left">
@@ -605,11 +659,11 @@ export function generateProposalHTML(
   </div>
 
 
-  <!-- Page Break -->
-  <div style="page-break-after: always;"></div>
+  </div>
 
-  <!-- Page 3 Content -->
+  <!-- Page 3 Content - Always a new page -->
 
+  <div class="content" style="page: page3;">
   <div id="header">
     <div class="left">
       <img src="https://bqobctrcfgearocxjhxr.supabase.co/storage/v1/object/public/images//Logo%20(1).svg" />
@@ -625,7 +679,7 @@ export function generateProposalHTML(
     </div>
   </div>
 
-  <div class="content" style="padding: 16px;">
+  <div class="content" style="padding: 16px; position: relative; height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
     <h1
       style="color: #281020; font-family: Inter; font-size: 12px; font-style: normal; font-weight: 600; line-height: normal;">
       Additional Terms and Conditions</h1>
@@ -738,14 +792,15 @@ export function generateProposalHTML(
         indebtedness. This can happen even if you have paid your own contract in full, if the subcontractor,
         laborer, or supplier remains unpaid"</li>
     </ol>
+
   </div>
 
-  <div id="footer" style="background-color: #F2F4F7; height: 20px; padding: 10px 0;">
-    <div
-      style="width: fit-content; border: none; background: #EAECF0; border-radius: 3px; align-self: center; display: inline-block; padding: 2px 12px; margin-bottom: 8px;"
-      class="page-counter">
+  <div id="footer-page3" style="background-color: #F2F4F7; height: 20px; padding: 10px 0; margin: 0; display: flex; justify-content: center; align-items: center; position: absolute; bottom: 0;">
+      <div
+        style="width: fit-content; border: none; background: #EAECF0; border-radius: 3px; padding: 2px 12px; margin: 0;"
+        class="page-counter">
+      </div>
     </div>
-  </div>
 </body>
 
 </html>`;
@@ -760,7 +815,7 @@ export function generateProposalHTML(
   template = template.replace(/{{job_location}}/g, jobData.jobLocation || 'N/A');
   template = template.replace(/{{job_address}}/g, jobData.jobLocation || 'N/A');
   template = template.replace(/{{contract_date}}/g, currentDate);
-  template = template.replace(/{{contract_number}}/g, jobData.jobNumber || 'N/A');
+  template = template.replace(/{{contract_number}}/g, jobData.proposalNumber || jobData.jobNumber || 'N/A');
   template = template.replace(/{{contract_rep}}/g, jobData.pmName || 'N/A');
   template = template.replace(/{{job_subtotal}}/g, `$${jobSubtotal.toFixed(2)}`);
   template = template.replace(/{{tax}}/g, `$${tax.toFixed(2)}`);
@@ -772,15 +827,15 @@ export function generateProposalHTML(
     const signLabel = line.signs?.sign_name || 'Sign';
     const unitPrice = line.list_price || 0;
     const totalPrice = unitPrice * (line.qty || 1);
-    
+
     return `
     <tr>
       <td>${line.qty || 1}</td>
       <td>
-        ${signImage ? 
-          `<img class="sign-img" src="${signImage}" alt="Sign Logo" />` : 
-          `<span class="sign-label">${signLabel}</span>`
-        }
+        ${signImage ?
+        `<img class="sign-img" src="${signImage}" alt="Sign Logo" />` :
+        `<span class="sign-label">${signLabel}</span>`
+      }
       </td>
       <td>${line.description_resolved || 'No description'}</td>
       <td class="text-right">$${unitPrice.toFixed(2)}</td>

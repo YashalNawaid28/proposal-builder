@@ -794,7 +794,7 @@ export const EditPricingLineDrawer = ({
           <button onClick={handleClose}>
             <ArrowLeft className="size-5" />
           </button>
-          <h2 className="text-[20px] font-bold">Edit Sign Configuration</h2>
+          <h2 className="text-[20px] font-bold">Edit Sign</h2>
           <button onClick={handleClose}>
             <X className="size-5" />
           </button>
@@ -908,332 +908,329 @@ export const EditPricingLineDrawer = ({
                       )}
                     </SelectContent>
                   </Select>
-                ) : field.type === "size-input" ? (
-                  <div className="flex items-center">
-                    <section className="flex flex-col gap-2 items-center justify-between">
-                      <Label className="text-[14px] font-[400] text-[#60646C]">
-                        Height
-                      </Label>
-                      <div className="flex items-center gap-1">
-                        <div className="w-12">
-                          <Input
-                            value={signData.racewaySize?.height?.feet || ""}
-                            onChange={(e) =>
-                              setSignData({
-                                ...signData,
-                                racewaySize: {
-                                  ...signData.racewaySize,
-                                  height: {
-                                    ...signData.racewaySize?.height,
-                                    feet: e.target.value,
-                                  },
-                                },
-                              })
-                            }
-                            className="h-9 border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0 text-center"
-                            placeholder=""
-                          />
-                        </div>
-                        <span className="text-gray-500">-</span>
-                        <div className="w-12">
-                          <Input
-                            value={signData.racewaySize?.height?.inches || ""}
-                            onChange={(e) =>
-                              setSignData({
-                                ...signData,
-                                racewaySize: {
-                                  ...signData.racewaySize,
-                                  height: {
-                                    ...signData.racewaySize?.height,
-                                    inches: e.target.value,
-                                  },
-                                },
-                              })
-                            }
-                            className="h-9 border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0 text-center"
-                            placeholder=""
-                          />
-                        </div>
-                      </div>
-                    </section>
-                    <span className="text-gray-500 mx-2 mt-6">×</span>
-                    <section className="flex flex-col gap-2 items-center justify-between">
-                      <Label className="text-[14px] font-[400] text-[#60646C]">
-                        Width
-                      </Label>
-                      <div className="flex items-center gap-1">
-                        <div className="w-12">
-                          <Input
-                            value={signData.racewaySize?.width?.feet || ""}
-                            onChange={(e) =>
-                              setSignData({
-                                ...signData,
-                                racewaySize: {
-                                  ...signData.racewaySize,
-                                  width: {
-                                    ...signData.racewaySize?.width,
-                                    feet: e.target.value,
-                                  },
-                                },
-                              })
-                            }
-                            className="h-9 border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0 text-center"
-                            placeholder=""
-                          />
-                        </div>
-                        <span className="text-gray-500">-</span>
-                        <div className="w-12">
-                          <Input
-                            value={signData.racewaySize?.width?.inches || ""}
-                            onChange={(e) =>
-                              setSignData({
-                                ...signData,
-                                racewaySize: {
-                                  ...signData.racewaySize,
-                                  width: {
-                                    ...signData.racewaySize?.width,
-                                    inches: e.target.value,
-                                  },
-                                },
-                              })
-                            }
-                            className="h-9 border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0 text-center"
-                            placeholder=""
-                          />
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                ) : (
-                  // Default input for any other field types
-                  <Input
-                    value={signData[field.key] || ""}
-                    onChange={(e) =>
-                      setSignData({ ...signData, [field.key]: e.target.value })
-                    }
-                    className="h-9 w-auto min-w-[120px] border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0"
-                    placeholder={`Enter ${field.label.toLowerCase()}`}
-                  />
-                )}
-              </div>
-            ))}
-
-            {/* Always show Raceway Size if there's a raceway field */}
-            {formFields.some(
-              (field) =>
-                field.key.includes("raceway") && !field.key.includes("size")
-            ) && (
-              <div className="flex items-center justify-between">
-                <Label className="text-[14px] font-[500] text-[#60646C]">
-                  Raceway Size
-                </Label>
-                <div className="flex items-center">
-                  <section className="flex flex-col gap-2 items-center justify-between">
-                    <Label className="text-[14px] font-[400] text-[#60646C]">
-                      Height
-                    </Label>
-                    <div className="flex items-center gap-1">
-                      <div className="w-12">
-                        <Input
-                          value={signData.racewaySize?.height?.feet || ""}
-                          onChange={(e) =>
-                            setSignData({
-                              ...signData,
-                              racewaySize: {
-                                ...signData.racewaySize,
-                                height: {
-                                  ...signData.racewaySize?.height,
-                                  feet: e.target.value,
-                                },
-                              },
-                            })
-                          }
-                          className="h-9 border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0 text-center"
-                          placeholder=""
-                        />
-                      </div>
-                      <span className="text-gray-500">-</span>
-                      <div className="w-12">
-                        <Input
-                          value={signData.racewaySize?.height?.inches || ""}
-                          onChange={(e) =>
-                            setSignData({
-                              ...signData,
-                              racewaySize: {
-                                ...signData.racewaySize,
-                                height: {
-                                  ...signData.racewaySize?.height,
-                                  inches: e.target.value,
-                                },
-                              },
-                            })
-                          }
-                          className="h-9 border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0 text-center"
-                          placeholder=""
-                        />
-                      </div>
-                    </div>
-                  </section>
-                  <span className="text-gray-500 mx-2 mt-6">×</span>
-                  <section className="flex flex-col gap-2 items-center justify-between">
-                    <Label className="text-[14px] font-[400] text-[#60646C]">
-                      Width
-                    </Label>
-                    <div className="flex items-center gap-1">
-                      <div className="w-12">
-                        <Input
-                          value={signData.racewaySize?.width?.feet || ""}
-                          onChange={(e) =>
-                            setSignData({
-                              ...signData,
-                              racewaySize: {
-                                ...signData.racewaySize,
-                                width: {
-                                  ...signData.racewaySize?.width,
-                                  feet: e.target.value,
-                                },
-                              },
-                            })
-                          }
-                          className="h-9 border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0 text-center"
-                          placeholder=""
-                        />
-                      </div>
-                      <span className="text-gray-500">-</span>
-                      <div className="w-12">
-                        <Input
-                          value={signData.racewaySize?.width?.inches || ""}
-                          onChange={(e) =>
-                            setSignData({
-                              ...signData,
-                              racewaySize: {
-                                ...signData.racewaySize,
-                                width: {
-                                  ...signData.racewaySize?.width,
-                                  inches: e.target.value,
-                                },
-                              },
-                            })
-                          }
-                          className="h-9 border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0 text-center"
-                          placeholder=""
-                        />
-                      </div>
-                    </div>
-                  </section>
-                </div>
-              </div>
-            )}
+                ) : field.type === 'size-input' ? (
+                 <div className="flex items-center">
+                   <section className="flex flex-col gap-2 items-center justify-between">
+                     <Label className="text-[14px] font-[400] text-[#60646C]">
+                       Height
+                     </Label>
+                     <div className="flex items-center gap-1">
+                       <div className="w-12">
+                         <Input
+                           value={signData.racewaySize?.height?.feet || ""}
+                           onChange={(e) =>
+                             setSignData({
+                               ...signData,
+                               racewaySize: {
+                                 ...signData.racewaySize,
+                                 height: {
+                                   ...signData.racewaySize?.height,
+                                   feet: e.target.value,
+                                 },
+                               },
+                             })
+                           }
+                           className="h-9 border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0 text-center"
+                           placeholder=""
+                         />
+                       </div>
+                       <span className="text-gray-500">-</span>
+                       <div className="w-12">
+                         <Input
+                           value={signData.racewaySize?.height?.inches || ""}
+                           onChange={(e) =>
+                             setSignData({
+                               ...signData,
+                               racewaySize: {
+                                 ...signData.racewaySize,
+                                 height: {
+                                   ...signData.racewaySize?.height,
+                                   inches: e.target.value,
+                                 },
+                               },
+                             })
+                           }
+                           className="h-9 border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0 text-center"
+                           placeholder=""
+                         />
+                       </div>
+                     </div>
+                   </section>
+                   <span className="text-gray-500 mx-2 mt-6">×</span>
+                   <section className="flex flex-col gap-2 items-center justify-between">
+                     <Label className="text-[14px] font-[400] text-[#60646C]">
+                       Width
+                     </Label>
+                     <div className="flex items-center gap-1">
+                       <div className="w-12">
+                         <Input
+                           value={signData.racewaySize?.width?.feet || ""}
+                           onChange={(e) =>
+                             setSignData({
+                               ...signData,
+                               racewaySize: {
+                                 ...signData.racewaySize,
+                                 width: {
+                                   ...signData.racewaySize?.width,
+                                   feet: e.target.value,
+                                 },
+                               },
+                             })
+                           }
+                           className="h-9 border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0 text-center"
+                           placeholder=""
+                         />
+                       </div>
+                       <span className="text-gray-500">-</span>
+                       <div className="w-12">
+                         <Input
+                           value={signData.racewaySize?.width?.inches || ""}
+                           onChange={(e) =>
+                             setSignData({
+                               ...signData,
+                               racewaySize: {
+                                 ...signData.racewaySize,
+                                 width: {
+                                   ...signData.racewaySize?.width,
+                                   inches: e.target.value,
+                                 },
+                               },
+                             })
+                           }
+                           className="h-9 border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0 text-center"
+                           placeholder=""
+                         />
+                       </div>
+                     </div>
+                   </section>
+                 </div>
+               ) : (
+                 // Default input for any other field types
+                 <Input
+                   value={signData[field.key] || ""}
+                   onChange={(e) =>
+                     setSignData({ ...signData, [field.key]: e.target.value })
+                   }
+                   className="h-9 w-auto min-w-[120px] border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0"
+                   placeholder={`Enter ${field.label.toLowerCase()}`}
+                 />
+               )}
           </div>
-        </section>
-        {/* Footer */}
-        <section className="p-4 bg-black text-white">
-          {loadingPricing && (
-            <div className="text-center text-gray-300 mb-4">
-              Loading pricing...
+          ))}
+          
+          {/* Always show Raceway Size if there's a raceway field */}
+          {formFields.some(field => field.key.includes('raceway') && !field.key.includes('size')) && (
+            <div className="flex items-center justify-between">
+              <Label className="text-[14px] font-[500] text-[#60646C]">
+                Raceway Size
+              </Label>
+              <div className="flex items-center">
+                <section className="flex flex-col gap-2 items-center justify-between">
+                  <Label className="text-[14px] font-[400] text-[#60646C]">
+                    Height
+                  </Label>
+                  <div className="flex items-center gap-1">
+                    <div className="w-12">
+                      <Input
+                        value={signData.racewaySize?.height?.feet || ""}
+                        onChange={(e) =>
+                          setSignData({
+                            ...signData,
+                            racewaySize: {
+                              ...signData.racewaySize,
+                              height: {
+                                ...signData.racewaySize?.height,
+                                feet: e.target.value,
+                              },
+                            },
+                          })
+                        }
+                        className="h-9 border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0 text-center"
+                        placeholder=""
+                      />
+                    </div>
+                    <span className="text-gray-500">-</span>
+                    <div className="w-12">
+                      <Input
+                        value={signData.racewaySize?.height?.inches || ""}
+                        onChange={(e) =>
+                          setSignData({
+                            ...signData,
+                            racewaySize: {
+                              ...signData.racewaySize,
+                              height: {
+                                ...signData.racewaySize?.height,
+                                inches: e.target.value,
+                              },
+                            },
+                          })
+                        }
+                        className="h-9 border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0 text-center"
+                        placeholder=""
+                      />
+                    </div>
+                  </div>
+                </section>
+                <span className="text-gray-500 mx-2 mt-6">×</span>
+                <section className="flex flex-col gap-2 items-center justify-between">
+                  <Label className="text-[14px] font-[400] text-[#60646C]">
+                    Width
+                  </Label>
+                  <div className="flex items-center gap-1">
+                    <div className="w-12">
+                      <Input
+                        value={signData.racewaySize?.width?.feet || ""}
+                        onChange={(e) =>
+                          setSignData({
+                            ...signData,
+                            racewaySize: {
+                              ...signData.racewaySize,
+                              width: {
+                                ...signData.racewaySize?.width,
+                                feet: e.target.value,
+                              },
+                            },
+                          })
+                        }
+                        className="h-9 border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0 text-center"
+                        placeholder=""
+                      />
+                    </div>
+                    <span className="text-gray-500">-</span>
+                    <div className="w-12">
+                      <Input
+                        value={signData.racewaySize?.width?.inches || ""}
+                        onChange={(e) =>
+                          setSignData({
+                            ...signData,
+                            racewaySize: {
+                              ...signData.racewaySize,
+                              width: {
+                                ...signData.racewaySize?.width,
+                                inches: e.target.value,
+                              },
+                            },
+                          })
+                        }
+                        className="h-9 border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0 text-center"
+                        placeholder=""
+                      />
+                    </div>
+                  </div>
+                </section>
+              </div>
             </div>
           )}
-          <div className="space-y-4 mb-4">
-            <div className="flex justify-between items-center">
-              <span className="text-[14px] font-[500]">Sign Price</span>
-              {isEditingPrices ? (
-                <div className="flex items-center">
-                  <span className="text-[16px] font-[800] mr-1">$</span>
-                  <Input
-                    value={editablePrices.signPrice}
-                    onChange={(e) =>
-                      handlePriceChange("signPrice", e.target.value)
-                    }
-                    className="h-8 w-20 border-[#DEE1EA] bg-transparent text-white text-[16px] font-[800] focus:border-[#DEE1EA] focus:ring-0 text-center"
-                  />
-                </div>
-              ) : (
-                <span className="text-[16px] font-[800]">
-                  ${savedPrices?.signPrice || modifiedSignPrice}
-                </span>
-              )}
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-[14px] font-[500]">Install Price</span>
-              {isEditingPrices ? (
-                <div className="flex items-center">
-                  <span className="text-[16px] font-[800] mr-1">$</span>
-                  <Input
-                    value={editablePrices.installPrice}
-                    onChange={(e) =>
-                      handlePriceChange("installPrice", e.target.value)
-                    }
-                    className="h-8 w-20 border-[#DEE1EA] bg-transparent text-white text-[16px] font-[800] focus:border-[#DEE1EA] focus:ring-0 text-center"
-                  />
-                </div>
-              ) : (
-                <span className="text-[16px] font-[800]">
-                  ${savedPrices?.installPrice || editablePrices.installPrice}
-                </span>
-              )}
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-[14px] font-[500]">Sign Budget</span>
-              {isEditingPrices ? (
-                <div className="flex items-center">
-                  <span className="text-[16px] font-[800] mr-1">$</span>
-                  <Input
-                    value={editablePrices.signBudget}
-                    onChange={(e) =>
-                      handlePriceChange("signBudget", e.target.value)
-                    }
-                    className="h-8 w-20 border-[#DEE1EA] bg-transparent text-white text-[16px] font-[800] focus:border-[#DEE1EA] focus:ring-0 text-center"
-                  />
-                </div>
-              ) : (
-                <span className="text-[16px] font-[800]">
-                  ${savedPrices?.signBudget || modifiedSignBudget}
-                </span>
-              )}
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-[14px] font-[500]">Install Budget</span>
-              {isEditingPrices ? (
-                <div className="flex items-center">
-                  <span className="text-[16px] font-[800] mr-1">$</span>
-                  <Input
-                    value={editablePrices.installBudget}
-                    onChange={(e) =>
-                      handlePriceChange("installBudget", e.target.value)
-                    }
-                    className="h-8 w-20 border-[#DEE1EA] bg-transparent text-white text-[16px] font-[800] focus:border-[#DEE1EA] focus:ring-0 text-center"
-                  />
-                </div>
-              ) : (
-                <span className="text-[16px] font-[800]">
-                  ${savedPrices?.installBudget || modifiedInstallBudget}
-                </span>
-              )}
-            </div>
+        </div>
+      </section>
+      {/* Footer */}
+      <section className="p-4 bg-black text-white">
+        {loadingPricing && (
+          <div className="text-center text-gray-300 mb-4">
+            Loading pricing...
           </div>
-          <div className="flex gap-3">
-            <button
-              onClick={isEditingPrices ? handleSavePrices : handleEditPrices}
-              className="w-28 py-2 px-3 border border-white h-10 flex items-center justify-center text-white text-[14px] rounded-sm bg-transparent font-semibold"
-            >
-              Edit Prices
-            </button>
-            {savedPrices && !isEditingPrices && (
-              <button
-                onClick={handleResetPrices}
-                className="w-20 py-2 px-3 border border-white h-10 flex items-center justify-center text-white text-[14px] rounded-sm bg-transparent font-semibold"
-              >
-                Reset
-              </button>
+        )}
+        <div className="space-y-4 mb-4">
+          <div className="flex justify-between items-center">
+            <span className="text-[14px] font-[500]">Sign Price</span>
+            {isEditingPrices ? (
+              <div className="flex items-center">
+                <span className="text-[16px] font-[800] mr-1">$</span>
+                <Input
+                  value={editablePrices.signPrice}
+                  onChange={(e) =>
+                    handlePriceChange("signPrice", e.target.value)
+                  }
+                  className="h-8 w-20 border-[#DEE1EA] bg-transparent text-white text-[16px] font-[800] focus:border-[#DEE1EA] focus:ring-0 text-center"
+                />
+              </div>
+            ) : (
+              <span className="text-[16px] font-[800]">
+                ${savedPrices?.signPrice || modifiedSignPrice}
+              </span>
             )}
-            <button
-              onClick={isEditingPrices ? handleSavePrices : handleSave}
-              className="flex-1 py-2 px-3 text-black disabled:text-[#464C53] bg-white disabled:bg-[#1018280D] h-10 flex items-center justify-center text-[14px] rounded-sm font-semibold"
-            >
-              {isEditingPrices ? "Save Pricing" : "Save Changes"}
-            </button>
           </div>
-        </section>
+          <div className="flex justify-between items-center">
+            <span className="text-[14px] font-[500]">Install Price</span>
+            {isEditingPrices ? (
+              <div className="flex items-center">
+                <span className="text-[16px] font-[800] mr-1">$</span>
+                <Input
+                  value={editablePrices.installPrice}
+                  onChange={(e) =>
+                    handlePriceChange("installPrice", e.target.value)
+                  }
+                  className="h-8 w-20 border-[#DEE1EA] bg-transparent text-white text-[16px] font-[800] focus:border-[#DEE1EA] focus:ring-0 text-center"
+                />
+              </div>
+            ) : (
+              <span className="text-[16px] font-[800]">
+                ${savedPrices?.installPrice || editablePrices.installPrice}
+              </span>
+            )}
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-[14px] font-[500]">Sign Budget</span>
+            {isEditingPrices ? (
+              <div className="flex items-center">
+                <span className="text-[16px] font-[800] mr-1">$</span>
+                <Input
+                  value={editablePrices.signBudget}
+                  onChange={(e) =>
+                    handlePriceChange("signBudget", e.target.value)
+                  }
+                  className="h-8 w-20 border-[#DEE1EA] bg-transparent text-white text-[16px] font-[800] focus:border-[#DEE1EA] focus:ring-0 text-center"
+                />
+              </div>
+            ) : (
+              <span className="text-[16px] font-[800]">
+                ${savedPrices?.signBudget || modifiedSignBudget}
+              </span>
+            )}
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-[14px] font-[500]">Install Budget</span>
+            {isEditingPrices ? (
+              <div className="flex items-center">
+                <span className="text-[16px] font-[800] mr-1">$</span>
+                <Input
+                  value={editablePrices.installBudget}
+                  onChange={(e) =>
+                    handlePriceChange("installBudget", e.target.value)
+                  }
+                  className="h-8 w-20 border-[#DEE1EA] bg-transparent text-white text-[16px] font-[800] focus:border-[#DEE1EA] focus:ring-0 text-center"
+                />
+              </div>
+            ) : (
+              <span className="text-[16px] font-[800]">
+                ${savedPrices?.installBudget || modifiedInstallBudget}
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={isEditingPrices ? handleSavePrices : handleEditPrices}
+            className="w-28 py-2 px-3 border border-white h-10 flex items-center justify-center text-white text-[14px] rounded-sm bg-transparent font-semibold"
+          >
+            Edit Prices
+          </button>
+          {savedPrices && !isEditingPrices && (
+            <button
+              onClick={handleResetPrices}
+              className="w-20 py-2 px-3 border border-white h-10 flex items-center justify-center text-white text-[14px] rounded-sm bg-transparent font-semibold"
+            >
+              Reset
+            </button>
+          )}
+          <button
+            onClick={isEditingPrices ? handleSavePrices : handleSave}
+            className="flex-1 py-2 px-3 text-black disabled:text-[#464C53] bg-white disabled:bg-[#1018280D] h-10 flex items-center justify-center text-[14px] rounded-sm font-semibold"
+          >
+            {isEditingPrices ? "Save Pricing" : "Update Sign"}
+          </button>
+        </div>
+      </section>
       </div>
     </Drawer>
   );

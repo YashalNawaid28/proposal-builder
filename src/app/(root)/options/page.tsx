@@ -231,7 +231,8 @@ const ValuesCell = ({
 );
 
 const OptionsPage = () => {
-  const { user } = useAuth();
+  const { user, userData } = useAuth();
+  console.log("OptionsPage - Component rendered, userData:", userData);
   const [tab, setTab] = useState<"All" | "Active" | "Archived">("All");
   const [options, setOptions] = useState<OptionData[]>([]);
   const [optionValues, setOptionValues] = useState<{
@@ -244,7 +245,12 @@ const OptionsPage = () => {
   const [selectedValue, setSelectedValue] = useState<OptionValue | null>(null);
 
   const fetchOptions = useCallback(async () => {
-    if (!user) return;
+    console.log("OptionsPage - fetchOptions called, userData:", userData);
+    if (!userData) {
+      console.log("OptionsPage - No userData, returning early");
+      return;
+    }
+    console.log("OptionsPage - Starting to fetch options with userData.id:", userData.id);
     setLoading(true);
     setError(null);
     try {
@@ -252,7 +258,7 @@ const OptionsPage = () => {
       const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
       const res = await fetch("/api/options", {
-        headers: { "request.user.id": user.id },
+        headers: { "request.user.id": userData.id },
         signal: controller.signal,
       });
 
@@ -261,6 +267,7 @@ const OptionsPage = () => {
         throw new Error("Failed to fetch options");
       }
       const data = await res.json();
+      console.log("OptionsPage - API response:", data);
       const optionsData = data.data || [];
       setOptions(optionsData);
 
@@ -282,9 +289,10 @@ const OptionsPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [userData]);
 
   useEffect(() => {
+    console.log("OptionsPage - useEffect triggered, fetchOptions:", fetchOptions);
     fetchOptions();
   }, [fetchOptions]);
 

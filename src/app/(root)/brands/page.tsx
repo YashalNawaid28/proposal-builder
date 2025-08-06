@@ -97,7 +97,7 @@ const formatDate = (dateString: string): string => {
 };
 
 const BrandsPage = () => {
-  const { user } = useAuth();
+  const { user, userData } = useAuth();
   const [tab, setTab] = useState<"All" | "Active" | "Archived">("All");
   const [brands, setBrands] = useState<BrandData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -107,12 +107,12 @@ const BrandsPage = () => {
   // Fetch brands data when component mounts or user changes
   useEffect(() => {
     const fetchBrands = async () => {
-      if (!user) return; // Don't fetch if user is not available
+      if (!userData) return; // Don't fetch if user is not available
       setLoading(true);
       setError(null);
       try {
         const res = await fetch("/api/brands", {
-          headers: { "request.user.id": user.id },
+          headers: { "request.user.id": userData.id },
         });
 
         if (!res.ok) {
@@ -132,7 +132,7 @@ const BrandsPage = () => {
     };
 
     fetchBrands();
-  }, [user]);
+  }, [userData]);
 
   // Filter brands based on the selected tab
   const filteredBrands = useMemo(() => {

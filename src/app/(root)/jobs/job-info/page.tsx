@@ -36,7 +36,7 @@ import { generateProposalNumber } from "@/lib/utils";
 
 export default function AddJobPage() {
   const searchParams = useSearchParams();
-  const { user } = useAuth();
+  const { user, userData } = useAuth();
   const jobId = searchParams.get("id");
   console.log("Job Info Page Debug - jobId from URL:", jobId);
 
@@ -48,6 +48,7 @@ export default function AddJobPage() {
   const [jobData, setJobData] = useState<{
     jobName?: string;
     jobNumber?: string;
+    proposalNumber?: string; // Add proposal number field
     jobLocation?: string;
     brand?: string;
     brandId?: string; // For JobInfoDialog
@@ -400,7 +401,7 @@ export default function AddJobPage() {
 
   // Function to create new version
   const createNewVersion = async () => {
-    if (!jobId || !user) return;
+    if (!jobId || !userData) return;
 
     try {
       // Find the latest version to determine new version/revision numbers
@@ -437,7 +438,7 @@ export default function AddJobPage() {
           job_id: jobId,
           version_no: newVersionNo,
           revision_no: newRevisionNo,
-          creator_id: user.id,
+          creator_id: userData.id,
         }),
       });
 
@@ -643,14 +644,14 @@ export default function AddJobPage() {
         formData.append("pm_id", jobData.managerId || "");
         formData.append("client_id", data.clientId || "");
 
-        if (!user) {
-          console.error("User not available");
+        if (!userData) {
+          console.error("User data not available");
           return;
         }
 
         const response = await fetch("/api/jobs/add-job-info", {
           method: "POST",
-          headers: { "request.user.id": user.id },
+          headers: { "request.user.id": userData.id },
           body: formData,
         });
 
@@ -675,11 +676,11 @@ export default function AddJobPage() {
   // Load existing job data when jobId is provided
   useEffect(() => {
     const loadJobData = async () => {
-      if (!jobId || !user) return;
+      if (!jobId || !userData) return;
 
       try {
         const res = await fetch(`/api/jobs/${jobId}`, {
-          headers: { "request.user.id": user.id },
+          headers: { "request.user.id": userData.id },
         });
 
         if (!res.ok) {
@@ -729,6 +730,7 @@ export default function AddJobPage() {
         setJobData({
           jobName: job.job_name,
           jobNumber: job.job_no,
+          proposalNumber: job.proposal_no, // Add proposal number
           jobLocation: `${job.site_street}, ${job.site_city}, ${job.site_state} ${job.site_postcode}`,
           brandId: job.brand_id, // Use brandId for JobInfoDialog
           brandName: brandName, // Add the brand name
@@ -767,18 +769,18 @@ export default function AddJobPage() {
     };
 
     loadJobData();
-  }, [jobId, user, fetchPricingData]);
+  }, [jobId, userData, fetchPricingData]);
 
   // Function to reload job data after update
   const reloadJobData = async () => {
-    if (!jobId || !user) return;
+    if (!jobId || !userData) return;
 
     console.log("Job Info Page - reloadJobData called for jobId:", jobId);
 
     try {
-      const res = await fetch(`/api/jobs/${jobId}`, {
-        headers: { "request.user.id": user.id },
-      });
+              const res = await fetch(`/api/jobs/${jobId}`, {
+          headers: { "request.user.id": userData.id },
+        });
 
       if (!res.ok) {
         throw new Error("Failed to fetch job data");
@@ -829,6 +831,7 @@ export default function AddJobPage() {
       const updatedJobData = {
         jobName: job.job_name,
         jobNumber: job.job_no,
+        proposalNumber: job.proposal_no, // Add proposal number
         jobLocation: `${job.site_street}, ${job.site_city}, ${job.site_state} ${job.site_postcode}`,
         brandId: job.brand_id, // Use brandId for JobInfoDialog
         brandName: brandName, // Add the brand name

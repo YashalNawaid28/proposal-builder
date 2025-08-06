@@ -56,7 +56,7 @@ export const SignConfigurationStep = ({
   jobId,
   pricingVersionId,
 }: SignConfigurationStepProps) => {
-  const { user } = useAuth();
+  const { user, userData } = useAuth();
   const [isEditingPrices, setIsEditingPrices] = useState(false);
   const [editablePrices, setEditablePrices] = useState({
     signPrice: "0.00",
@@ -486,11 +486,17 @@ export const SignConfigurationStep = ({
       // Use the jobId passed as prop
       console.log("Component Debug - jobId:", jobId);
 
+      // Validate quantity
+      const quantity = parseInt(signData.qty) || 1;
+      if (quantity < 1) {
+        throw new Error("Quantity must be at least 1");
+      }
+
       // Get current user ID
-      if (!user) {
+      if (!userData) {
         throw new Error("User not authenticated");
       }
-      const userId = user.id;
+      const userId = userData.id;
 
       let targetPricingVersionId: string;
 
@@ -532,22 +538,26 @@ export const SignConfigurationStep = ({
 
       // Create pricing line
       const descriptionResolved = generateDescriptionResolved();
+      
+      const pricingLineBody = {
+        pricing_version_id: targetPricingVersionId,
+        sign_id: selectedSign?.id,
+        description_resolved: descriptionResolved,
+        qty: quantity, // Use validated quantity
+        list_price: parseFloat(currentSignPrice),
+        cost_budget: parseFloat(currentSignBudget),
+        list_install_price: parseFloat(currentInstallPrice),
+        cost_install_budget: parseFloat(currentInstallBudget),
+      };
+      
+      console.log("Component Debug - Pricing line request body:", pricingLineBody);
 
       const pricingLineResponse = await fetch("/api/pricing-lines", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          pricing_version_id: targetPricingVersionId,
-          sign_id: selectedSign?.id,
-          description_resolved: descriptionResolved,
-          qty: 1, // You might want to get this from a quantity input
-          list_price: parseFloat(currentSignPrice),
-          cost_budget: parseFloat(currentSignBudget),
-          list_install_price: parseFloat(currentInstallPrice),
-          cost_install_budget: parseFloat(currentInstallBudget),
-        }),
+        body: JSON.stringify(pricingLineBody),
       });
 
       if (!pricingLineResponse.ok) {
@@ -751,6 +761,8 @@ export const SignConfigurationStep = ({
         <Input
           className="h-9 border-[#E0E0E0] w-12 ml-auto focus:border-[#E0E0E0] focus:ring-0 text-center"
           placeholder="Qty"
+          value={signData.qty || ""}
+          onChange={(e) => setSignData({ ...signData, qty: e.target.value })}
         />
       </section>
       {/* Form */}
