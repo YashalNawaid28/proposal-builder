@@ -3,7 +3,6 @@ import { useMemo, useState, useEffect } from "react";
 import { PageTabs } from "@/components/ui/page-tabs";
 import { UserInfoDialog } from "@/components/users/UserInfoDialog";
 import { ConfirmationDialog } from "@/components/users/ConfirmationDialog";
-import { Button } from "@/components/ui/button";
 
 // Define interfaces for our data structures
 export interface UserData {
@@ -279,7 +278,6 @@ const UsersPage = () => {
   const selectedRowData = rowData.filter((row) =>
     selectedRows.includes(row.id)
   );
-  const hasActiveUsers = selectedRowData.some((row) => row.status === "Active");
   const hasDisabledUsers = selectedRowData.some(
     (row) => row.status === "Disabled"
   );

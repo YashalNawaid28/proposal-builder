@@ -202,16 +202,6 @@ export default function JobsPage() {
   };
 
   const renderTable = () => {
-    if (loading) {
-      return <div className="p-4 text-center">Loading jobs...</div>;
-    }
-    if (error) {
-      return <div className="p-4 text-center text-red-500">Error: {error}</div>;
-    }
-    if (rowData.length === 0) {
-      return null; // Return null to show empty state
-    }
-
     return (
       <div className="overflow-x-auto">
         <table className="min-w-full border-collapse">
@@ -358,32 +348,61 @@ export default function JobsPage() {
         />
       </div>
 
-      {/* Table or Empty State */}
-      {rowData.length > 0 ? (
-        <div className="flex-1">
-          <div>{renderTable()}</div>
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
-          <div className="text-center max-w-md">
-            <h2 className="text-2xl font-semibold mb-2">
-              Create your first job.
-            </h2>
-            <p className="text-[14px] text-[#60646C] mb-6">
-              You&apos;ll use this section create jobs for any brand we service.
-              Brand specific jobs can also be created under their tab in the
-              menu.
-            </p>
-            <div className="flex items-center justify-center">
-              <button
-                onClick={handleNewJob}
-                className="border border-[#DEE1EA] px-6 py-3 flex items-center justify-center h-10 text-black text-[14px] rounded-md bg-[#F9F9FB] font-medium"
-              >
-                Get Started
-              </button>
-            </div>
+      {/* Loading State */}
+      {loading && (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-4"></div>
+            <p className="text-[14px] text-[#60646C]">Loading jobs...</p>
           </div>
         </div>
+      )}
+
+      {/* Error State */}
+      {!loading && error && (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-red-500 text-[14px] mb-4">Error: {error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="border border-[#DEE1EA] px-6 py-3 flex items-center justify-center h-10 text-black text-[14px] rounded-md bg-[#F9F9FB] font-medium"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Table or Empty State */}
+      {!loading && !error && (
+        <>
+          {rowData.length > 0 ? (
+            <div className="flex-1">
+              <div>{renderTable()}</div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
+              <div className="text-center max-w-md">
+                <h2 className="text-2xl font-semibold mb-2">
+                  Create your first job.
+                </h2>
+                <p className="text-[14px] text-[#60646C] mb-6">
+                  You&apos;ll use this section create jobs for any brand we
+                  service. Brand specific jobs can also be created under their
+                  tab in the menu.
+                </p>
+                <div className="flex items-center justify-center">
+                  <button
+                    onClick={handleNewJob}
+                    className="border border-[#DEE1EA] px-6 py-3 flex items-center justify-center h-10 text-black text-[14px] rounded-md bg-[#F9F9FB] font-medium"
+                  >
+                    Get Started
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* Pagination Section */}
