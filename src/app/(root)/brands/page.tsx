@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState, useEffect } from "react";
-import { useUser } from "@stackframe/stack";
+import { useAuth } from "@/components/supabase-auth-provider";
 import { PageTabs } from "@/components/ui/page-tabs";
 
 // Define interfaces for our data structures
@@ -97,7 +97,7 @@ const formatDate = (dateString: string): string => {
 };
 
 const BrandsPage = () => {
-  const user = useUser();
+  const { user } = useAuth();
   const [tab, setTab] = useState<"All" | "Active" | "Archived">("All");
   const [brands, setBrands] = useState<BrandData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);

@@ -1,9 +1,17 @@
 "use client";
-import { Users, Grid2x2, ListTodo, Tag, House } from "lucide-react";
+import { Users, Grid2x2, ListTodo, Tag, House, LogOut } from "lucide-react";
 import Image from "next/image";
-import { UserButton } from "@stackframe/stack";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "./supabase-auth-provider";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 const navLinks = [
   {
@@ -54,6 +62,31 @@ export function CustomSidebar({
   style,
 }: Readonly<CustomSidebarProps>) {
   const pathname = usePathname();
+  const { user, userData, signOut } = useAuth();
+
+  console.log("CustomSidebar - user:", user);
+  console.log("CustomSidebar - userData:", userData);
+
+  const handleSignOut = async () => {
+    try {
+      console.log("Sign out button clicked");
+      console.log("Current user:", user);
+      console.log("Current userData:", userData);
+      
+      await signOut();
+      
+      console.log("Sign out completed successfully");
+    } catch (error) {
+      console.error("Error during sign out:", error);
+    }
+  };
+
+  // Use userData if available, otherwise fall back to session metadata
+  const displayUser = userData || {
+    display_name: user?.user_metadata?.display_name || user?.email || "User",
+    email: user?.email || "",
+    avatar_url: user?.user_metadata?.avatar_url || null,
+  };
 
   return (
     <div
@@ -62,12 +95,7 @@ export function CustomSidebar({
     >
       {/* Header */}
       <div className="flex flex-col bg-black items-center gap-4 pt-8 pb-12">
-        <Image
-          width={210}
-          height={64}
-          src="/images/logo.svg"
-          alt="Visible Graphics Logo"
-        />
+        <Image width={210} height={64} src="/images/logo.svg" alt="" priority />
       </div>
 
       {/* Content */}
@@ -153,7 +181,56 @@ export function CustomSidebar({
 
       {/* Footer */}
       <div className="mt-auto bg-black text-[14px] px-4 pb-4">
-        <UserButton showUserInfo={true} />
+        {user && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button 
+                className="flex items-center gap-2 w-full p-2 rounded-md hover:bg-gray-900/60 transition-colors"
+                onClick={() => console.log("Dropdown trigger clicked")}
+              >
+                {displayUser.avatar_url ? (
+                  <img
+                    src={displayUser.avatar_url}
+                    alt={`${displayUser.display_name} Profile`}
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-700 text-white text-sm font-medium">
+                    {displayUser.display_name
+                      .split(" ")
+                      .map((word: string) => word[0])
+                      .join("")
+                      .toUpperCase()
+                      .substring(0, 2)}
+                  </div>
+                )}
+                <div className="flex-1 text-left">
+                  <div className="text-sm font-medium text-white">
+                    {displayUser.display_name}
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    {displayUser.email}
+                  </div>
+                </div>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={(e) => {
+                  console.log("Dropdown menu item clicked");
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleSignOut();
+                }}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Sign out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
     </div>
   );

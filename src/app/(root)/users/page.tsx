@@ -2,6 +2,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { PageTabs } from "@/components/ui/page-tabs";
 import { UserInfoDialog } from "@/components/users/UserInfoDialog";
+import { ConfirmationDialog } from "@/components/users/ConfirmationDialog";
 
 // Define interfaces for our data structures
 export interface UserData {
@@ -106,24 +107,31 @@ const UserNameCell = ({
 );
 
 const UsersPage = () => {
-  const [tab, setTab] = useState<"all" | "active" | "disabled">("all");
+  const [tab, setTab] = useState<"All" | "Active" | "Disabled">("All");
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userInfoOpen, setUserInfoOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<UserData | null>(null);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<
+    "enable" | "disable" | null
+  >(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   // Fetch real users data
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/users');
-        
+        setError(null);
+        const response = await fetch("/api/users");
+
         if (!response.ok) {
-          throw new Error('Failed to fetch users');
+          throw new Error("Failed to fetch users");
         }
-        
+
         const result = await response.json();
         setUsers(result.data || []);
       } catch (err) {
@@ -137,42 +145,50 @@ const UsersPage = () => {
   }, []);
 
   const filteredUsers = useMemo(() => {
-    if (tab === "all") return users;
+    if (tab === "All") return users;
     return users.filter((user) =>
-      tab === "active" ? user.status === "Active" : user.status === "Disabled"
+      tab === "Active" ? user.status === "Active" : user.status === "Disabled"
     );
   }, [users, tab]);
 
   const rowData: RowData[] = useMemo(() => {
     return filteredUsers.map((user) => ({
       id: user.id,
-      userImage: user.avatar_url || '',
+      userImage: user.avatar_url || "",
       userName: user.display_name,
       email: user.email,
-      jobTitle: user.job_title || 'Not Set',
+      jobTitle: user.job_title || "Not Set",
       status: user.status,
-      role: user.role || 'Not Set',
+      role: user.role || "Not Set",
       jobs: user.job_count || 0,
-      dateAdded: new Date(user.created_at).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
+      dateAdded: new Date(user.created_at).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
       }),
     }));
   }, [filteredUsers]);
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Disable select all functionality since we only want single selection
     if (e.target.checked) {
-      setSelectedRows(rowData.map((row) => row.id));
+      // Only select the first user if any
+      if (rowData.length > 0) {
+        setSelectedRows([rowData[0].id]);
+      }
     } else {
       setSelectedRows([]);
     }
   };
 
   const handleRowSelect = (id: string) => {
-    setSelectedRows((prev) =>
-      prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
-    );
+    // Allow unselecting by clicking the same checkbox
+    if (selectedRows.includes(id)) {
+      setSelectedRows([]);
+    } else {
+      // Only allow selecting one user at a time
+      setSelectedRows([id]);
+    }
   };
 
   const handleUserInfoComplete = () => {
@@ -184,12 +200,13 @@ const UsersPage = () => {
     const fetchUsers = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/users');
-        
+        setError(null);
+        const response = await fetch("/api/users");
+
         if (!response.ok) {
-          throw new Error('Failed to fetch users');
+          throw new Error("Failed to fetch users");
         }
-        
+
         const result = await response.json();
         setUsers(result.data || []);
       } catch (err) {
@@ -202,8 +219,68 @@ const UsersPage = () => {
     fetchUsers();
   };
 
+  const handleEditUser = () => {
+    if (selectedRows.length === 1) {
+      const userToEdit = users.find((user) => user.id === selectedRows[0]);
+      if (userToEdit) {
+        setEditingUser(userToEdit);
+        setUserInfoOpen(true);
+      }
+    }
+  };
+
+  const handleEnableDisable = (action: "enable" | "disable") => {
+    setConfirmAction(action);
+    setConfirmDialogOpen(true);
+  };
+
+  const handleConfirmAction = async () => {
+    if (!confirmAction || selectedRows.length === 0) return;
+
+    try {
+      setActionLoading(true);
+      const newStatus = confirmAction === "enable" ? "Active" : "Disabled";
+
+      // Update all selected users
+      const updatePromises = selectedRows.map((userId) =>
+        fetch(`/api/users/${userId}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ status: newStatus }),
+        })
+      );
+
+      await Promise.all(updatePromises);
+
+      // Refresh users list
+      handleUserCreated();
+      setSelectedRows([]);
+      setConfirmDialogOpen(false);
+      setConfirmAction(null);
+    } catch (error) {
+      console.error("Error updating user status:", error);
+      setError("Failed to update user status");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleUserUpdated = () => {
+    handleUserCreated();
+    setEditingUser(null);
+  };
+
   const isAllSelected =
     rowData.length > 0 && selectedRows.length === rowData.length;
+
+  const selectedRowData = rowData.filter((row) =>
+    selectedRows.includes(row.id)
+  );
+  const hasDisabledUsers = selectedRowData.some(
+    (row) => row.status === "Disabled"
+  );
 
   const renderTable = () => {
     if (loading) {
@@ -242,7 +319,7 @@ const UsersPage = () => {
                 <div className="flex items-center justify-center">
                   <input
                     type="checkbox"
-                    className="h-4 w-4 border-[#DEE1EA] text-gray-400"
+                    className="h-4 w-4 accent-black"
                     onChange={handleSelectAll}
                     checked={isAllSelected}
                   />
@@ -278,7 +355,7 @@ const UsersPage = () => {
                   <div className="flex items-center justify-center">
                     <input
                       type="checkbox"
-                      className="h-4 w-4 border-[#DEE1EA] text-gray-400"
+                      className="h-4 w-4 accent-black"
                       checked={selectedRows.includes(row.id)}
                       onChange={() => handleRowSelect(row.id)}
                     />
@@ -318,7 +395,7 @@ const UsersPage = () => {
     );
   };
 
-  const tabs = ["all", "active", "disabled"];
+  const tabs = ["All", "Active", "Disabled"];
 
   return (
     <div className="bg-white">
@@ -334,18 +411,64 @@ const UsersPage = () => {
       <PageTabs
         tabs={tabs}
         activeTab={tab}
-        onTabChange={(tab) => setTab(tab as "all" | "active" | "disabled")}
+        onTabChange={(tab) => setTab(tab as "All" | "Active" | "Disabled")}
       />
       <div className="border border-[#DEE1EA] overflow-hidden">
         <div>{renderTable()}</div>
       </div>
 
+      {/* Action buttons at the bottom of the page */}
+      {selectedRows.length > 0 && (
+        <div className="absolute bottom-16 left-0 right-0 flex justify-center">
+          <div className="flex bg-black text-white rounded-full h-11 items-center justify-center shadow-sm">
+            <button
+              onClick={handleEditUser}
+              className="rounded-md px-4 w-28 py-2 cursor-pointer font-semibold text-[16px]"
+            >
+              Edit
+            </button>
+            <div className="bg-white opacity-30 w-[2px] h-full"></div>
+            {hasDisabledUsers ? (
+              <button
+                onClick={() => handleEnableDisable("enable")}
+                disabled={actionLoading}
+                className="rounded-md px-4 py-2 w-28 cursor-pointer font-semibold text-[16px]"
+              >
+                {actionLoading ? "Loading..." : "Enable"}
+              </button>
+            ) : (
+              <button
+                onClick={() => handleEnableDisable("disable")}
+                disabled={actionLoading}
+                className="rounded-md px-4 py-2 w-28 cursor-pointer font-semibold text-[16px]"
+              >
+                {actionLoading ? "Loading..." : "Disable"}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* User Info Dialog */}
       <UserInfoDialog
         isOpen={userInfoOpen}
-        onClose={() => setUserInfoOpen(false)}
+        onClose={() => {
+          setUserInfoOpen(false);
+          setEditingUser(null);
+        }}
         onComplete={handleUserInfoComplete}
         onUserCreated={handleUserCreated}
+        onUserUpdated={handleUserUpdated}
+        editingUser={editingUser}
+      />
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={confirmDialogOpen}
+        onOpenChange={setConfirmDialogOpen}
+        action={confirmAction}
+        onConfirm={handleConfirmAction}
+        loading={actionLoading}
       />
     </div>
   );

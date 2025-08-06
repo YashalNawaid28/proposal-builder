@@ -7,7 +7,6 @@ import {
   TextCursorInput,
   ImagePlus,
 } from "lucide-react";
-import type { BrandData } from "../brands/page";
 import { IAccount, ISignDetail, ISignOption } from "@/lib/interfaces";
 import { PageTabs } from "@/components/ui/page-tabs";
 import { AgGridReact } from "ag-grid-react";
@@ -85,17 +84,19 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
   // Convert ISignDetail[] to PricingDetail[] for AG Grid
   const convertedGridData = useMemo(() => {
     if (!rowData || rowData.length === 0) return [];
-    
+
     return rowData.map((item) => {
       // Extract multipliers from the original data
       const signBudgetMultiplier = (item as any).signBudgetMultiplier || 0.55;
-      const installBudgetMultiplier = (item as any).installBudgetMultiplier || 0.55;
-      
+      const installBudgetMultiplier =
+        (item as any).installBudgetMultiplier || 0.55;
+
       return {
         id: item.id, // Include the pricing ID for updates
         size: item.size,
         signPrice: parseFloat(item.signPrice.replace(/[^0-9.-]+/g, "")) || 0,
-        installPrice: parseFloat(item.installPrice.replace(/[^0-9.-]+/g, "")) || 0,
+        installPrice:
+          parseFloat(item.installPrice.replace(/[^0-9.-]+/g, "")) || 0,
         signBudget: parseFloat(item.signBudget.replace(/[^0-9.-]+/g, "")) || 0,
         installBudget:
           parseFloat(item.installBudget.replace(/[^0-9.-]+/g, "")) || 0,
@@ -112,12 +113,12 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       setLocalGridData([]);
       return;
     }
-    
+
     // Sort the data by size in ascending order
     const sortedData = [...convertedGridData].sort((a, b) => {
       // Extract numeric part from size strings (e.g., "12″" -> 12)
-      const aSize = parseInt(a.size.replace(/[^0-9]/g, '')) || 0;
-      const bSize = parseInt(b.size.replace(/[^0-9]/g, '')) || 0;
+      const aSize = parseInt(a.size.replace(/[^0-9]/g, "")) || 0;
+      const bSize = parseInt(b.size.replace(/[^0-9]/g, "")) || 0;
       return aSize - bSize;
     });
     setLocalGridData(sortedData);
@@ -211,7 +212,7 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
     },
   };
 
-  console.log('Grid data for editing:', localGridData); // Debug log
+  console.log("Grid data for editing:", localGridData); // Debug log
 
   return (
     <div className="ag-theme-quartz h-full w-full flex-1">
@@ -226,7 +227,6 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
         getRowId={(params: GetRowIdParams) => params.data.size}
         enableRangeSelection={true}
         enableFillHandle={true}
-
         getRowClass={(params) => {
           return "ag-row-custom";
         }}
@@ -234,7 +234,7 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
           params.api.sizeColumnsToFit();
         }}
         onCellClicked={(event) => {
-          console.log('Cell clicked:', event); // Debug log
+          console.log("Cell clicked:", event); // Debug log
         }}
         onRangeSelectionChanged={(event) => {
           // Force update of cell borders when selection changes
@@ -253,108 +253,131 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
           }, 0);
         }}
         onCellValueChanged={(event) => {
-          console.log('Cell value changed event:', event); // Debug log
-          
+          console.log("Cell value changed event:", event); // Debug log
+
           // Handle cell value changes and save to database
           const { data, colDef, newValue } = event;
-          console.log('Data:', data, 'Field:', colDef.field, 'New Value:', newValue); // Debug log
-          
+          console.log(
+            "Data:",
+            data,
+            "Field:",
+            colDef.field,
+            "New Value:",
+            newValue
+          ); // Debug log
+
           if (!data.id) {
-            console.error('No pricing ID found for update');
+            console.error("No pricing ID found for update");
             return;
           }
 
           const field = colDef.field;
           if (!field) {
-            console.error('No field found in column definition');
+            console.error("No field found in column definition");
             return;
           }
 
           // Map field names to database column names
           const fieldMapping: { [key: string]: string } = {
-            signPrice: 'sign_price',
-            installPrice: 'install_price',
-            raceway: 'raceway'
+            signPrice: "sign_price",
+            installPrice: "install_price",
+            raceway: "raceway",
           };
 
           const dbField = fieldMapping[field];
           if (!dbField) {
-            console.error('Unknown field for update:', field);
+            console.error("Unknown field for update:", field);
             return;
           }
 
-          console.log('Updating field:', field, 'to database field:', dbField, 'with value:', newValue); // Debug log
+          console.log(
+            "Updating field:",
+            field,
+            "to database field:",
+            dbField,
+            "with value:",
+            newValue
+          ); // Debug log
 
           // Prepare update data
           const updateData: any = { id: data.id };
           updateData[dbField] = newValue;
 
           // If price fields are updated, also update the calculated budgets
-          if (field === 'signPrice' || field === 'installPrice') {
+          if (field === "signPrice" || field === "installPrice") {
             const signBudgetMultiplier = data.signBudgetMultiplier || 0.55;
-            const installBudgetMultiplier = data.installBudgetMultiplier || 0.55;
-            
-            if (field === 'signPrice') {
+            const installBudgetMultiplier =
+              data.installBudgetMultiplier || 0.55;
+
+            if (field === "signPrice") {
               const newSignBudget = newValue * signBudgetMultiplier;
               updateData.sign_budget = newSignBudget;
-              console.log('Calculated new sign budget:', newSignBudget);
+              console.log("Calculated new sign budget:", newSignBudget);
             }
-            
-            if (field === 'installPrice') {
+
+            if (field === "installPrice") {
               const newInstallBudget = newValue * installBudgetMultiplier;
               updateData.install_budget = newInstallBudget;
-              console.log('Calculated new install budget:', newInstallBudget);
+              console.log("Calculated new install budget:", newInstallBudget);
             }
           }
 
-          console.log('Sending update data:', updateData); // Debug log
+          console.log("Sending update data:", updateData); // Debug log
 
           // Save to database
-          fetch('/api/sign-pricing/update', {
-            method: 'PUT',
+          fetch("/api/sign-pricing/update", {
+            method: "PUT",
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
             body: JSON.stringify(updateData),
           })
-          .then(response => {
-            console.log('Response status:', response.status); // Debug log
-            if (!response.ok) {
-              throw new Error('Failed to update pricing data');
-            }
-            return response.json();
-          })
-          .then(result => {
-            console.log('Pricing data updated successfully:', result);
-            
-            // Update the local grid data to reflect the new values
-            setLocalGridData(prevData => {
-              return prevData.map(row => {
-                if (row.size === data.size) {
-                  const updatedRow = { ...row };
-                  
-                  if (field === 'signPrice') {
-                    const newSignBudget = newValue * (data.signBudgetMultiplier || 0.55);
-                    updatedRow.signBudget = newSignBudget;
-                    console.log('Updated sign budget in grid:', newSignBudget);
+            .then((response) => {
+              console.log("Response status:", response.status); // Debug log
+              if (!response.ok) {
+                throw new Error("Failed to update pricing data");
+              }
+              return response.json();
+            })
+            .then((result) => {
+              console.log("Pricing data updated successfully:", result);
+
+              // Update the local grid data to reflect the new values
+              setLocalGridData((prevData) => {
+                return prevData.map((row) => {
+                  if (row.size === data.size) {
+                    const updatedRow = { ...row };
+
+                    if (field === "signPrice") {
+                      const newSignBudget =
+                        newValue * (data.signBudgetMultiplier || 0.55);
+                      updatedRow.signBudget = newSignBudget;
+                      console.log(
+                        "Updated sign budget in grid:",
+                        newSignBudget
+                      );
+                    }
+
+                    if (field === "installPrice") {
+                      const newInstallBudget =
+                        newValue * (data.installBudgetMultiplier || 0.55);
+                      updatedRow.installBudget = newInstallBudget;
+                      console.log(
+                        "Updated install budget in grid:",
+                        newInstallBudget
+                      );
+                    }
+
+                    return updatedRow;
                   }
-                  
-                  if (field === 'installPrice') {
-                    const newInstallBudget = newValue * (data.installBudgetMultiplier || 0.55);
-                    updatedRow.installBudget = newInstallBudget;
-                    console.log('Updated install budget in grid:', newInstallBudget);
-                  }
-                  
-                  return updatedRow;
-                }
-                return row;
+                  return row;
+                });
               });
+            })
+            .catch((error) => {
+              console.error("Error updating pricing data:", error);
+              // Optionally revert the cell value or show an error message
             });
-          })
-          .catch(error => {
-            console.error('Error updating pricing data:', error);
-            // Optionally revert the cell value or show an error message
-          });
         }}
       />
     </div>
@@ -407,7 +430,7 @@ const SignsPage = () => {
           throw new Error("Invalid API response format");
         }
         const brandNames = responseData.data.map(
-          (brand: BrandData) => brand.brand_name
+          (brand: any) => brand.brand_name
         );
         if (brandNames.length > 0) {
           setBrands(brandNames);
@@ -416,7 +439,7 @@ const SignsPage = () => {
           }
         }
         const selectedBrand = responseData.data.find(
-          (brand: BrandData) => brand.brand_name === tab
+          (brand: any) => brand.brand_name === tab
         );
         if (!selectedBrand?.signs) {
           setSignData([]);
@@ -455,14 +478,17 @@ const SignsPage = () => {
 
             // Get multipliers from sign data (default to 0.55 if not available)
             const signBudgetMultiplier = sign.sign_budget_multiplier || 0.55;
-            const installBudgetMultiplier = sign.install_budget_multiplier || 0.55;
+            const installBudgetMultiplier =
+              sign.install_budget_multiplier || 0.55;
 
             // Use pricing data that's already included in the sign object
             const details = (sign.sign_pricing || []).map((pricing: any) => {
               // Calculate budgets based on multipliers
-              const calculatedSignBudget = (pricing.sign_price || 0) * signBudgetMultiplier;
-              const calculatedInstallBudget = (pricing.install_price || 0) * installBudgetMultiplier;
-              
+              const calculatedSignBudget =
+                (pricing.sign_price || 0) * signBudgetMultiplier;
+              const calculatedInstallBudget =
+                (pricing.install_price || 0) * installBudgetMultiplier;
+
               return {
                 id: pricing.id, // Include the pricing ID for updates
                 size: pricing.size || "",
@@ -561,9 +587,9 @@ const SignsPage = () => {
   ) => {
     // Handle multiplier updates only when Enter is pressed
     if (optionLabel === "Sign Budget" || optionLabel === "Install Budget") {
-      const sign = signData.find(s => s.signName === signName);
+      const sign = signData.find((s) => s.signName === signName);
       if (!sign?.signId) {
-        console.error('Sign ID not found for multiplier update');
+        console.error("Sign ID not found for multiplier update");
         return;
       }
 
@@ -578,29 +604,33 @@ const SignsPage = () => {
         }
 
         // Update the sign multipliers in the database
-        const response = await fetch('/api/signs/update-multipliers', {
-          method: 'PUT',
+        const response = await fetch("/api/signs/update-multipliers", {
+          method: "PUT",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify(updateData),
         });
 
         if (!response.ok) {
-          throw new Error('Failed to update multipliers');
+          throw new Error("Failed to update multipliers");
         }
 
-        console.log('Multipliers updated successfully');
+        console.log("Multipliers updated successfully");
 
         // Update all pricing data for this sign with new multipliers
-        const updatedSignData = signData.map(s => {
+        const updatedSignData = signData.map((s) => {
           if (s.signName === signName) {
-            const updatedDetails = s.details.map(detail => {
-              const signPrice = parseFloat(detail.signPrice.replace(/[^0-9.-]+/g, "")) || 0;
-              const installPrice = parseFloat(detail.installPrice.replace(/[^0-9.-]+/g, "")) || 0;
-              
-              let newSignBudget = parseFloat(detail.signBudget.replace(/[^0-9.-]+/g, "")) || 0;
-              let newInstallBudget = parseFloat(detail.installBudget.replace(/[^0-9.-]+/g, "")) || 0;
+            const updatedDetails = s.details.map((detail) => {
+              const signPrice =
+                parseFloat(detail.signPrice.replace(/[^0-9.-]+/g, "")) || 0;
+              const installPrice =
+                parseFloat(detail.installPrice.replace(/[^0-9.-]+/g, "")) || 0;
+
+              let newSignBudget =
+                parseFloat(detail.signBudget.replace(/[^0-9.-]+/g, "")) || 0;
+              let newInstallBudget =
+                parseFloat(detail.installBudget.replace(/[^0-9.-]+/g, "")) || 0;
 
               if (optionLabel === "Sign Budget") {
                 newSignBudget = signPrice * multiplierValue;
@@ -626,33 +656,37 @@ const SignsPage = () => {
         setSignData(updatedSignData);
 
         // Update all pricing records in the database
-        const updatedSign = updatedSignData.find(s => s.signName === signName);
+        const updatedSign = updatedSignData.find(
+          (s) => s.signName === signName
+        );
         if (updatedSign) {
           for (const detail of updatedSign.details) {
             if (detail.id) {
               const pricingUpdateData: any = { id: detail.id };
-              
+
               if (optionLabel === "Sign Budget") {
-                const newSignBudget = parseFloat(detail.signBudget.replace(/[^0-9.-]+/g, "")) || 0;
+                const newSignBudget =
+                  parseFloat(detail.signBudget.replace(/[^0-9.-]+/g, "")) || 0;
                 pricingUpdateData.sign_budget = newSignBudget;
               } else if (optionLabel === "Install Budget") {
-                const newInstallBudget = parseFloat(detail.installBudget.replace(/[^0-9.-]+/g, "")) || 0;
+                const newInstallBudget =
+                  parseFloat(detail.installBudget.replace(/[^0-9.-]+/g, "")) ||
+                  0;
                 pricingUpdateData.install_budget = newInstallBudget;
               }
 
-              await fetch('/api/sign-pricing/update', {
-                method: 'PUT',
+              await fetch("/api/sign-pricing/update", {
+                method: "PUT",
                 headers: {
-                  'Content-Type': 'application/json',
+                  "Content-Type": "application/json",
                 },
                 body: JSON.stringify(pricingUpdateData),
               });
             }
           }
         }
-
       } catch (error) {
-        console.error('Error updating multipliers:', error);
+        console.error("Error updating multipliers:", error);
       }
     }
   };
@@ -804,10 +838,13 @@ const SignsPage = () => {
                                                       )
                                                     }
                                                     onKeyDown={(e) => {
-                                                      if (e.key === 'Enter') {
-                                                        const currentValue = editableValues[
-                                                          `${sign.signName}-${option.label}`
-                                                        ] || option.value || '';
+                                                      if (e.key === "Enter") {
+                                                        const currentValue =
+                                                          editableValues[
+                                                            `${sign.signName}-${option.label}`
+                                                          ] ||
+                                                          option.value ||
+                                                          "";
                                                         handleMultiplierSave(
                                                           sign.signName,
                                                           option.label,

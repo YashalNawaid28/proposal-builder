@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useUser } from "@stackframe/stack";
+import { useAuth } from "@/components/supabase-auth-provider";
 import { toast } from "sonner";
 import { generateProposalNumber } from "@/lib/utils";
 
@@ -69,63 +69,65 @@ export const JobInfoDialog = ({
   const [brands, setBrands] = useState<Brand[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedBrandName, setSelectedBrandName] = useState<string | null>('');
-  const [brandNameCache, setBrandNameCache] = useState<Record<string, string | null>>({});
-  const user = useUser();
+  const [selectedBrandName, setSelectedBrandName] = useState<string | null>("");
+  const [brandNameCache, setBrandNameCache] = useState<
+    Record<string, string | null>
+  >({});
+  const { user } = useAuth();
 
   const fetchBrands = useCallback(async () => {
     try {
-      const response = await fetch('/api/brands');
+      const response = await fetch("/api/brands");
       const result = await response.json();
       if (result.data) {
         setBrands(result.data);
       }
     } catch (error) {
-      console.error('Error fetching brands:', error);
+      console.error("Error fetching brands:", error);
     }
   }, []);
 
   const fetchUsers = useCallback(async () => {
     try {
-      const response = await fetch('/api/users');
+      const response = await fetch("/api/users");
       const result = await response.json();
       if (result.data) {
         setUsers(result.data);
       }
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error("Error fetching users:", error);
     }
   }, []);
 
   const fetchBrandName = useCallback(async (brandId: string) => {
     if (!brandId) {
-      setSelectedBrandName('');
+      setSelectedBrandName("");
       return;
     }
-    
+
     // Check if brand name is already cached
     if (brandNameCache[brandId] !== undefined) {
       setSelectedBrandName(brandNameCache[brandId]);
       return;
     }
-    
+
     try {
       const response = await fetch(`/api/brands/get-by-id?brand_id=${brandId}`);
       if (response.ok) {
         const result = await response.json();
         const brandName = result.data?.brand_name || null;
-        
+
         // Cache the result
-        setBrandNameCache(prev => ({ ...prev, [brandId]: brandName }));
+        setBrandNameCache((prev) => ({ ...prev, [brandId]: brandName }));
         setSelectedBrandName(brandName);
       } else {
         setSelectedBrandName(null);
-        setBrandNameCache(prev => ({ ...prev, [brandId]: null }));
+        setBrandNameCache((prev) => ({ ...prev, [brandId]: null }));
       }
     } catch (error) {
-      console.error('Error fetching brand name:', error);
+      console.error("Error fetching brand name:", error);
       setSelectedBrandName(null);
-      setBrandNameCache(prev => ({ ...prev, [brandId]: null }));
+      setBrandNameCache((prev) => ({ ...prev, [brandId]: null }));
     }
   }, []);
 
@@ -138,18 +140,30 @@ export const JobInfoDialog = ({
         fetchBrandName(jobData.brandId);
       }
     }
-  }, [isOpen, isEditing, jobData.brandId, fetchBrands, fetchUsers, fetchBrandName]);
+  }, [
+    isOpen,
+    isEditing,
+    jobData.brandId,
+    fetchBrands,
+    fetchUsers,
+    fetchBrandName,
+  ]);
 
   // Function to format job location from individual address fields
   const formatJobLocation = (jobData: any) => {
-    if (jobData.site_street || jobData.site_city || jobData.site_state || jobData.site_postcode) {
+    if (
+      jobData.site_street ||
+      jobData.site_city ||
+      jobData.site_state ||
+      jobData.site_postcode
+    ) {
       const parts = [
         jobData.site_street,
         jobData.site_city,
         jobData.site_state,
-        jobData.site_postcode
+        jobData.site_postcode,
       ].filter(Boolean);
-      return parts.join(', ');
+      return parts.join(", ");
     }
     return "";
   };
@@ -157,14 +171,14 @@ export const JobInfoDialog = ({
   // Function to parse address into components
   const parseAddress = (address: string) => {
     // Simple address parsing - you might want to use a more sophisticated library
-    const parts = address.split(',').map(part => part.trim());
-    
+    const parts = address.split(",").map((part) => part.trim());
+
     // Default structure: Street, City, State Postcode, Country
-    let siteStreet = '';
-    let siteCity = '';
-    let siteState = '';
-    let sitePostcode = '';
-    let siteCountry = '';
+    let siteStreet = "";
+    let siteCity = "";
+    let siteState = "";
+    let sitePostcode = "";
+    let siteCountry = "";
 
     if (parts.length >= 1) siteStreet = parts[0];
     if (parts.length >= 2) siteCity = parts[1];
@@ -186,13 +200,13 @@ export const JobInfoDialog = ({
       siteCity,
       siteState,
       sitePostcode,
-      siteCountry
+      siteCountry,
     };
   };
 
   const handleSave = async () => {
     if (!user) {
-      console.error('User not available');
+      console.error("User not available");
       return;
     }
 
@@ -202,27 +216,35 @@ export const JobInfoDialog = ({
       const addressComponents = parseAddress(jobData.jobLocation || "");
 
       // Fetch brand name for proposal number generation
-      let brandName = '';
+      let brandName = "";
       if (jobData.brandId) {
         // Check cache first
         if (brandNameCache[jobData.brandId] !== undefined) {
-          brandName = brandNameCache[jobData.brandId] || '';
+          brandName = brandNameCache[jobData.brandId] || "";
         } else {
           try {
-            const brandResponse = await fetch(`/api/brands/get-by-id?brand_id=${jobData.brandId}`);
+            const brandResponse = await fetch(
+              `/api/brands/get-by-id?brand_id=${jobData.brandId}`
+            );
             if (brandResponse.ok) {
               const brandResult = await brandResponse.json();
-              brandName = brandResult.data?.brand_name || '';
+              brandName = brandResult.data?.brand_name || "";
               // Cache the result
-              setBrandNameCache(prev => ({ ...prev, [jobData.brandId]: brandName }));
+              setBrandNameCache((prev) => ({
+                ...prev,
+                [jobData.brandId]: brandName,
+              }));
             } else {
-              brandName = '';
-              setBrandNameCache(prev => ({ ...prev, [jobData.brandId]: null }));
+              brandName = "";
+              setBrandNameCache((prev) => ({
+                ...prev,
+                [jobData.brandId]: null,
+              }));
             }
           } catch (error) {
-            console.error('Error fetching brand name:', error);
-            brandName = '';
-            setBrandNameCache(prev => ({ ...prev, [jobData.brandId]: null }));
+            console.error("Error fetching brand name:", error);
+            brandName = "";
+            setBrandNameCache((prev) => ({ ...prev, [jobData.brandId]: null }));
           }
         }
       }
@@ -230,43 +252,43 @@ export const JobInfoDialog = ({
       if (isEditing && jobId) {
         // Update existing job
         const updateData = {
-          job_name: jobData.jobName || '',
-          job_no: jobData.jobNumber || '',
+          job_name: jobData.jobName || "",
+          job_no: jobData.jobNumber || "",
           proposal_no: generateProposalNumber(brandName),
           site_street: addressComponents.siteStreet,
           site_city: addressComponents.siteCity,
           site_state: addressComponents.siteState,
           site_postcode: addressComponents.sitePostcode,
           site_country: addressComponents.siteCountry,
-          brand_id: jobData.brandId || '',
-          pm_id: jobData.managerId || '',
+          brand_id: jobData.brandId || "",
+          pm_id: jobData.managerId || "",
         };
 
         const response = await fetch(`/api/jobs/${jobId}`, {
-          method: 'PUT',
-          headers: { 
+          method: "PUT",
+          headers: {
             "Content-Type": "application/json",
-            "request.user.id": user.id 
+            "request.user.id": user.id,
           },
           body: JSON.stringify(updateData),
         });
 
         if (response.ok) {
           const result = await response.json();
-          console.log('Job updated successfully:', result);
-          toast.success('Job updated successfully!');
+          console.log("Job updated successfully:", result);
+          toast.success("Job updated successfully!");
           onUpdateSuccess?.(); // Refresh job data
           onClose(); // Close dialog after successful update
         } else {
-          console.error('Error updating job:', await response.text());
-          toast.error('Failed to update job. Please try again.');
+          console.error("Error updating job:", await response.text());
+          toast.error("Failed to update job. Please try again.");
         }
       } else {
         // For new jobs, just pass the data to the next step without creating the job yet
         onNext({ ...jobData });
       }
     } catch (error) {
-      console.error('Error saving job:', error);
+      console.error("Error saving job:", error);
     } finally {
       setLoading(false);
     }
@@ -392,7 +414,7 @@ export const JobInfoDialog = ({
             disabled={loading}
             className="h-10 bg-black w-full flex items-center text-white justify-center px-3 gap-2 rounded-md disabled:opacity-50"
           >
-            {loading ? 'Saving...' : isEditing ? 'Update' : 'Next: Client Info'}
+            {loading ? "Saving..." : isEditing ? "Update" : "Next: Client Info"}
           </button>
         </section>
       </DialogContent>

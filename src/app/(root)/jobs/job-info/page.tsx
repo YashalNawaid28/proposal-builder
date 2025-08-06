@@ -16,7 +16,7 @@ import { EditPricingLineDrawer } from "@/components/jobs/EditPricingLineDrawer";
 import Link from "next/link";
 import { PageTabs } from "@/components/ui/page-tabs";
 import { useSearchParams } from "next/navigation";
-import { useUser } from "@stackframe/stack";
+import { useAuth } from "@/components/supabase-auth-provider";
 import {
   Select,
   SelectContent,
@@ -36,7 +36,7 @@ import { generateProposalNumber } from "@/lib/utils";
 
 export default function AddJobPage() {
   const searchParams = useSearchParams();
-  const user = useUser();
+  const { user } = useAuth();
   const jobId = searchParams.get("id");
   console.log("Job Info Page Debug - jobId from URL:", jobId);
 
@@ -565,7 +565,7 @@ export default function AddJobPage() {
       } catch (error) {
         console.error("Error updating job:", error);
       }
-      
+
       // For editing existing jobs, just close the dialog
       setJobInfoOpen(false);
     } else {
@@ -603,7 +603,7 @@ export default function AddJobPage() {
       } catch (error) {
         console.error("Error updating job client info:", error);
       }
-      
+
       // For editing existing jobs, just close the dialog
       setClientInfoOpen(false);
     } else {
@@ -666,7 +666,7 @@ export default function AddJobPage() {
       } catch (error) {
         console.error("Error creating job with client:", error);
       }
-      
+
       // For new jobs, close the dialog after creating the job
       setClientInfoOpen(false);
     }
@@ -1519,8 +1519,6 @@ export default function AddJobPage() {
         pricingLine={editingPricingLine}
         onSave={async (updatedData) => {
           console.log("Saving updated pricing line:", updatedData);
-          // TODO: Implement save functionality
-          // For now, just refresh the data
           if (jobId && selectedVersion) {
             await fetchPricingData(jobId, selectedVersion.id);
           }
