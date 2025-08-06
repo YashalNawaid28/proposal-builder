@@ -45,6 +45,22 @@ export async function middleware(req: NextRequest) {
       );
       return response;
     }
+
+    // Check if user is disabled
+    if (existingUser.status === "Disabled") {
+      console.log("Middleware - User is disabled, signing out");
+      await supabase.auth.signOut();
+      const redirectUrl = req.nextUrl.clone();
+      redirectUrl.pathname = "/sign-in";
+      redirectUrl.searchParams.set("error", "account_disabled");
+      const response = NextResponse.redirect(redirectUrl);
+      response.headers.set(
+        "Cache-Control",
+        "no-cache, no-store, must-revalidate"
+      );
+      return response;
+    }
+
     await supabase
       .from("users")
       .update({ last_active_at: new Date().toISOString() })

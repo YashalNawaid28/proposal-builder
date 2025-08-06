@@ -19,6 +19,10 @@ export default function SignIn() {
       );
     } else if (errorParam === "auth_failed") {
       setError("Authentication failed. Please try again.");
+    } else if (errorParam === "account_disabled") {
+      setError(
+        "Your account has been disabled. Please contact your administrator for assistance."
+      );
     }
   }, [searchParams]);
 
@@ -31,7 +35,7 @@ export default function SignIn() {
     try {
       const { data: existingUser, error: checkError } = await supabase
         .from("users")
-        .select("id, email, display_name")
+        .select("id, email, display_name, status")
         .eq("email", email.toLowerCase())
         .single();
       if (checkError || !existingUser) {
@@ -41,6 +45,16 @@ export default function SignIn() {
         setLoading(false);
         return;
       }
+
+      // Check if user is disabled
+      if (existingUser.status === "Disabled") {
+        setError(
+          "Your account has been disabled. Please contact your administrator for assistance."
+        );
+        setLoading(false);
+        return;
+      }
+
       const { error: signInError } = await supabase.auth.signInWithOtp({
         email: email.toLowerCase(),
         options: {

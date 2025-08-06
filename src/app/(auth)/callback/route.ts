@@ -43,6 +43,14 @@ export async function GET(request: NextRequest) {
         );
       }
 
+      // Check if user is disabled
+      if (existingUser.status === "Disabled") {
+        await supabase.auth.signOut();
+        return NextResponse.redirect(
+          new URL("/sign-in?error=account_disabled", request.url)
+        );
+      }
+
       // Update last_active_at
       await supabase
         .from("users")
