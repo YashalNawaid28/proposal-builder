@@ -10,7 +10,7 @@ import {
 } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "../supabase/client";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 interface UserData {
   id: string;
@@ -49,26 +49,24 @@ export function SupabaseAuthProvider({
   const [userData, setUserData] = useState<UserData | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
   const pathname = usePathname();
 
-  // Fetch user data from users table
   const fetchUserData = useCallback(async (email: string) => {
     try {
       const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', email)
+        .from("users")
+        .select("*")
+        .eq("email", email)
         .single();
 
       if (error) {
-        console.error('Error fetching user data:', error);
+        console.error("Error fetching user data:", error);
         return null;
       }
 
       return data as UserData;
     } catch (error) {
-      console.error('Error fetching user data:', error);
+      console.error("Error fetching user data:", error);
       return null;
     }
   }, []);
@@ -76,12 +74,20 @@ export function SupabaseAuthProvider({
   // Client-side route protection
   useEffect(() => {
     if (!loading && !session) {
-      const protectedRoutes = ['/jobs', '/users', '/signs', '/options', '/brands'];
-      const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
-      
+      const protectedRoutes = [
+        "/jobs",
+        "/users",
+        "/signs",
+        "/options",
+        "/brands",
+      ];
+      const isProtectedRoute = protectedRoutes.some((route) =>
+        pathname.startsWith(route)
+      );
+
       if (isProtectedRoute) {
-        console.log('Client-side protection: Redirecting from', pathname);
-        window.location.replace('/auth/sign-in');
+        console.log("Client-side protection: Redirecting from", pathname);
+        window.location.replace("/sign-in");
       }
     }
   }, [session, loading, pathname]);
@@ -93,46 +99,54 @@ export function SupabaseAuthProvider({
       } = await supabase.auth.getSession();
       setSession(session);
       setUser(session?.user ?? null);
-      
+
       // Fetch user data if session exists
       if (session?.user?.email) {
         const userData = await fetchUserData(session.user.email);
         setUserData(userData);
       }
-      
+
       setLoading(false);
     };
     getInitialSession();
-    
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state change:', event, session?.user?.email);
+      console.log("Auth state change:", event, session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
-      
+
       // Fetch user data on sign in
-      if (event === 'SIGNED_IN' && session?.user?.email) {
+      if (event === "SIGNED_IN" && session?.user?.email) {
         const userData = await fetchUserData(session.user.email);
         setUserData(userData);
       }
-      
+
       // Handle sign-out event
-      if (event === 'SIGNED_OUT') {
+      if (event === "SIGNED_OUT") {
         setUserData(null);
-        console.log('SIGNED_OUT event detected, redirecting...');
+        console.log("SIGNED_OUT event detected, redirecting...");
         // Force immediate redirect for all protected routes
-        if (typeof window !== 'undefined') {
+        if (typeof window !== "undefined") {
           const currentPath = window.location.pathname;
-          const protectedRoutes = ['/jobs', '/users', '/signs', '/options', '/brands'];
-          const isProtectedRoute = protectedRoutes.some(route => currentPath.startsWith(route));
+          const protectedRoutes = [
+            "/jobs",
+            "/users",
+            "/signs",
+            "/options",
+            "/brands",
+          ];
+          const isProtectedRoute = protectedRoutes.some((route) =>
+            currentPath.startsWith(route)
+          );
           if (isProtectedRoute) {
-            console.log('Redirecting from protected route:', currentPath);
-            window.location.replace('/auth/sign-in');
+            console.log("Redirecting from protected route:", currentPath);
+            window.location.replace("/sign-in");
           }
         }
       }
-      
+
       setLoading(false);
     });
 
@@ -141,19 +155,15 @@ export function SupabaseAuthProvider({
 
   const signOut = useCallback(async () => {
     try {
-      console.log('Signing out...');
+      console.log("Signing out...");
       await supabase.auth.signOut();
-      // Clear local state immediately
       setUser(null);
       setSession(null);
       setUserData(null);
-      console.log('Sign-out completed, redirecting...');
-      // Force a complete page reload to clear any cached state
-      window.location.replace('/auth/sign-in');
+      window.location.replace("/sign-in");
     } catch (error) {
-      console.error('Error signing out:', error);
-      // Still redirect even if there's an error
-      window.location.replace('/auth/sign-in');
+      console.error("Error signing out:", error);
+      window.location.replace("/sign-in");
     }
   }, []);
 

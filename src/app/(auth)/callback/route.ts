@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   if (error) {
     console.error("Auth error:", error);
     return NextResponse.redirect(
-      new URL("/auth/sign-in?error=auth_failed", request.url)
+      new URL("/sign-in?error=auth_failed", request.url)
     );
   }
 
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
       if (sessionError || !session) {
         console.error("Session error:", sessionError);
         return NextResponse.redirect(
-          new URL("/auth/sign-in?error=auth_failed", request.url)
+          new URL("/sign-in?error=auth_failed", request.url)
         );
       }
 
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
       if (userError || !existingUser) {
         await supabase.auth.signOut();
         return NextResponse.redirect(
-          new URL("/auth/sign-in?error=access_denied", request.url)
+          new URL("/sign-in?error=access_denied", request.url)
         );
       }
 
@@ -58,17 +58,17 @@ export async function GET(request: NextRequest) {
           role: existingUser.role,
           avatar_url: existingUser.avatar_url,
           status: existingUser.status,
-        }
+        },
       });
 
       return NextResponse.redirect(new URL("/jobs", request.url));
     } catch (error) {
       console.error("Callback error:", error);
       return NextResponse.redirect(
-        new URL("/auth/sign-in?error=auth_failed", request.url)
+        new URL("/sign-in?error=auth_failed", request.url)
       );
     }
   }
 
-  return NextResponse.redirect(new URL("/auth/sign-in", request.url));
+  return NextResponse.redirect(new URL("/sign-in", request.url));
 }

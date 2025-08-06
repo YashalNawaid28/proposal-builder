@@ -45,7 +45,7 @@ export default function SignIn() {
         email: email.toLowerCase(),
         options: {
           shouldCreateUser: false,
-          emailRedirectTo: `${getSiteUrl()}/auth/callback`,
+          emailRedirectTo: `${getSiteUrl()}/callback`,
         },
       });
 

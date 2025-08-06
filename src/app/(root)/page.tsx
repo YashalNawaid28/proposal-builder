@@ -2,7 +2,7 @@
 import { useAuth } from "../../components/supabase-auth-provider";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from 'next/link';
+import Link from "next/link";
 
 export default function Home() {
   const { user, loading } = useAuth();
@@ -13,12 +13,11 @@ export default function Home() {
       if (user) {
         router.push("/jobs");
       } else {
-        router.push("/auth/sign-in");
+        router.push("/sign-in");
       }
     }
   }, [user, loading, router]);
 
-  // Show loading state while checking authentication
   return (
     <main>
       <div className="min-h-screen flex items-center justify-center">

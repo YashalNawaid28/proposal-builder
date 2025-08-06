@@ -15,7 +15,7 @@ export async function middleware(req: NextRequest) {
 
   if (!session && isProtectedRoute) {
     const redirectUrl = req.nextUrl.clone();
-    redirectUrl.pathname = "/auth/sign-in";
+    redirectUrl.pathname = "/sign-in";
     const response = NextResponse.redirect(redirectUrl);
     response.headers.set(
       "Cache-Control",
@@ -36,7 +36,7 @@ export async function middleware(req: NextRequest) {
       console.log("Middleware - User not found in database, signing out");
       await supabase.auth.signOut();
       const redirectUrl = req.nextUrl.clone();
-      redirectUrl.pathname = "/auth/sign-in";
+      redirectUrl.pathname = "/sign-in";
       redirectUrl.searchParams.set("error", "access_denied");
       const response = NextResponse.redirect(redirectUrl);
       response.headers.set(
@@ -62,7 +62,7 @@ export async function middleware(req: NextRequest) {
       });
     }
     if (
-      req.nextUrl.pathname.startsWith("/auth/sign-in") ||
+      req.nextUrl.pathname.startsWith("/sign-in") ||
       req.nextUrl.pathname === "/"
     ) {
       const redirectUrl = req.nextUrl.clone();
