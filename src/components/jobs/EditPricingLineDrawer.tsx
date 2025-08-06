@@ -101,34 +101,129 @@ export const EditPricingLineDrawer = ({
 
   // Initialize with data from props or dummy data
   useEffect(() => {
-    if (hasDataFromProps) {
-      // Parse the description_resolved to extract current values
-      const description = pricingLine.description_resolved || "";
-      const currentValues: SignData = {};
+    console.log("EditPricingLineDrawer - Pricing line data:", pricingLine);
+    console.log("EditPricingLineDrawer - hasDataFromProps:", hasDataFromProps);
+    if (hasDataFromProps && pricingLine) {
+      // Fetch sign data when we have a pricing line with sign_id
+      const fetchSignData = async () => {
+        if (!pricingLine?.sign_id) return;
+        
+        try {
+          const response = await fetch(`/api/signs/get-by-id?sign_id=${pricingLine.sign_id}`);
+          if (response.ok) {
+            const result = await response.json();
+            console.log("EditPricingLineDrawer - Sign data fetched:", result.data);
+            setSelectedSignData(result.data);
+            
+            // Parse the description_resolved to extract current values
+            const description = pricingLine.description_resolved || "";
+            console.log("EditPricingLineDrawer - Parsing description:", description);
+            console.log("EditPricingLineDrawer - Raw pricing line data:", pricingLine);
+            console.log("EditPricingLineDrawer - Description type:", typeof description);
+            console.log("EditPricingLineDrawer - Description length:", description.length);
+            console.log("EditPricingLineDrawer - Description split by spaces:", description.split(/\s+/));
+            console.log("EditPricingLineDrawer - Description split by commas:", description.split(/,\s*/));
+            const currentValues: SignData = {};
+            
+            // Extract size from description if available
+            const sizeMatch = description.match(/(\d+)"?/);
+            if (sizeMatch) {
+              // Remove the inch sign to match the available sizes format
+              const sizeValue = sizeMatch[1];
+              currentValues.size = sizeValue;
+              console.log("EditPricingLineDrawer - Extracted size:", sizeValue);
+            } else {
+              console.log("EditPricingLineDrawer - No size found in description");
+            }
+            
+            // Extract raceway size if available
+            const racewaySizeMatch = description.match(/\((\d+)'-(\d+)"x\s*(\d+)'-(\d+)"\)/);
+            if (racewaySizeMatch) {
+              currentValues.racewaySize = {
+                height: {
+                  feet: racewaySizeMatch[1],
+                  inches: racewaySizeMatch[2]
+                },
+                width: {
+                  feet: racewaySizeMatch[3],
+                  inches: racewaySizeMatch[4]
+                }
+              };
+              console.log("EditPricingLineDrawer - Extracted raceway size:", currentValues.racewaySize);
+            }
+            
+            // Simple, direct parsing based on the actual description format
+            console.log("EditPricingLineDrawer - Parsing description directly:", description);
+            
+            // Extract values directly from the description
+            const words = description.split(/\s+/);
+            console.log("EditPricingLineDrawer - Words in description:", words);
+            
+            // Extract size (already done above, but let's make sure it's stored)
+            if (currentValues.size) {
+              console.log("EditPricingLineDrawer - Size already extracted:", currentValues.size);
+            }
+            
+            // Extract raceway - use the key that matches form fields
+            if (description.includes('Raceway-Mounted')) {
+              currentValues['raceway-mountedoption'] = 'Raceway-Mounted';
+              console.log("EditPricingLineDrawer - Extracted raceway: Raceway-Mounted");
+            }
+            
+            // Extract color
+            const colors = ['Red', 'Blue', 'Green', 'Yellow', 'White', 'Black', 'Orange', 'Purple', 'Pink', 'Brown', 'Gray', 'Grey'];
+            for (const color of colors) {
+              if (description.includes(color)) {
+                currentValues.color = color;
+                console.log("EditPricingLineDrawer - Extracted color:", color);
+                break;
+              }
+            }
+            
+            // Extract fabrication type - use the key that matches form fields
+            if (description.includes('Face + Halo Lit (Duel LEDs)')) {
+              currentValues.fabricationtype = 'Face + Halo Lit (Duel LEDs)';
+              console.log("EditPricingLineDrawer - Extracted fab type: Face + Halo Lit (Duel LEDs)");
+            } else if (description.includes('Face + Halo Lit')) {
+              currentValues.fabricationtype = 'Face + Halo Lit';
+              console.log("EditPricingLineDrawer - Extracted fab type: Face + Halo Lit");
+            } else if (description.includes('Halo-Lit')) {
+              currentValues.fabricationtype = 'Halo-Lit';
+              console.log("EditPricingLineDrawer - Extracted fab type: Halo-Lit");
+            } else if (description.includes('Face-Lit')) {
+              currentValues.fabricationtype = 'Face-Lit';
+              console.log("EditPricingLineDrawer - Extracted fab type: Face-Lit");
+            } else if (description.includes('Trimless')) {
+              currentValues.fabricationtype = 'Trimless';
+              console.log("EditPricingLineDrawer - Extracted fab type: Trimless");
+            }
+            
+            // Extract raceway size (already done above, but let's make sure it's stored)
+            if (currentValues.racewaySize) {
+              console.log("EditPricingLineDrawer - Raceway size already extracted:", currentValues.racewaySize);
+            }
+            
+            console.log("EditPricingLineDrawer - Final extracted values:", currentValues);
+            
+            // Check what values we actually extracted
+            console.log("EditPricingLineDrawer - Extracted size:", currentValues.size);
+            console.log("EditPricingLineDrawer - Extracted color:", currentValues.color);
+            console.log("EditPricingLineDrawer - Extracted raceway:", currentValues['raceway-mountedoption']);
+            console.log("EditPricingLineDrawer - Extracted fabtype:", currentValues.fabricationtype);
+            
+            // Set the signData with the extracted values
+            console.log("EditPricingLineDrawer - Setting signData with:", currentValues);
+            setSignData(currentValues);
+            
+            // Also log the current signData state for debugging
+            console.log("EditPricingLineDrawer - Current signData state after setSignData:", signData);
+          }
+        } catch (error) {
+          console.error("Error fetching sign data:", error);
+        }
+      };
       
-      // Extract size from description if available
-      const sizeMatch = description.match(/(\d+)"?/);
-      if (sizeMatch) {
-        currentValues.size = sizeMatch[1];
-      }
-      
-      // Extract other values based on common patterns
-      const colorMatch = description.match(/(Red|Blue|Green|Yellow|White|Black)/i);
-      if (colorMatch) {
-        currentValues.color = colorMatch[1];
-      }
-      
-      const fabMatch = description.match(/(Aluminum|Steel|Vinyl|Acrylic)/i);
-      if (fabMatch) {
-        currentValues.fabtype = fabMatch[1];
-      }
-      
-      setSignData(currentValues);
-      setSelectedSignData({
-        sign_description: description,
-        sign_budget_multiplier: 0.8,
-        install_budget_multiplier: 0.6,
-      });
+      fetchSignData();
     } else {
       // Use dummy data
       setSelectedSignData(dummyData);
@@ -148,16 +243,27 @@ export const EditPricingLineDrawer = ({
   // Fetch available sizes when sign changes
   useEffect(() => {
     const fetchSizes = async () => {
-      if (!selectedSignData?.id && !hasDataFromProps) {
-        setAvailableSizes(["12", "18", "24", "36"]);
+      if (!selectedSignData?.id) {
+        setAvailableSizes([]);
         return;
       }
 
       try {
         setLoadingSizes(true);
-        if (hasDataFromProps) {
-          // Extract sizes from the description or use defaults
-          const sizes = ["12", "18", "24", "36"];
+        const response = await fetch(
+          `/api/sign-pricing/get-sizes-by-signId?sign_id=${selectedSignData.id}`
+        );
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch sizes: ${response.status}`);
+        }
+
+        const result = await response.json();
+        
+        if (result.data && result.data.length > 0) {
+          // Extract just the numbers from sizes like "12"", "18"", etc.
+          const sizes = result.data.map((size: string) => size.replace('"', ''));
+          console.log("EditPricingLineDrawer - Available sizes:", sizes);
           setAvailableSizes(sizes);
           
           // Set the first available size as default if no size is selected
@@ -165,19 +271,18 @@ export const EditPricingLineDrawer = ({
             setSignData({ ...signData, size: sizes[0] });
           }
         } else {
-          // For dummy data, use default sizes
-          setAvailableSizes(["12", "18", "24", "36"]);
+          setAvailableSizes([]);
         }
       } catch (error) {
         console.error("Error fetching sizes:", error);
-        setAvailableSizes(["12", "18", "24", "36"]);
+        setAvailableSizes([]);
       } finally {
         setLoadingSizes(false);
       }
     };
 
     fetchSizes();
-  }, [selectedSignData?.id, setSignData, signData, hasDataFromProps]);
+  }, [selectedSignData?.id, setSignData, signData]);
 
   // Parse sign description and generate form fields
   useEffect(() => {
@@ -353,82 +458,54 @@ export const EditPricingLineDrawer = ({
     fetchOptions();
   }, [selectedSignData]);
 
-  // Fetch pricing data when sign or size changes
+  // Set pricing data from the existing pricing line
   useEffect(() => {
-    const fetchPricing = async () => {
-      if (!signData.size || signData.size === "loading" || signData.size === "no-sizes") {
-        setCurrentPricing(null);
-        setEditablePrices({
-          signPrice: "0.00",
-          installPrice: "0.00",
-          signBudget: "0.00",
-          installBudget: "0.00",
-        });
-        return;
-      }
+    console.log("EditPricingLineDrawer - Pricing useEffect triggered");
+    console.log("EditPricingLineDrawer - hasDataFromProps:", hasDataFromProps);
+    console.log("EditPricingLineDrawer - pricingLine:", pricingLine);
+    
+    if (hasDataFromProps && pricingLine) {
+      // Use the existing pricing data from the pricing line
+      const pricing = {
+        id: pricingLine.id,
+        sign_id: pricingLine.sign_id,
+        size: signData.size || "12",
+        sign_price: pricingLine.list_price || 0,
+        install_price: pricingLine.list_install_price || 0,
+        sign_budget: pricingLine.cost_budget || 0,
+        install_budget: pricingLine.cost_install_budget || 0,
+        raceway: 0,
+        sign_budget_multiplier: selectedSignData?.sign_budget_multiplier || 0.8,
+        install_budget_multiplier: selectedSignData?.install_budget_multiplier || 0.6,
+      };
+      
+      console.log("EditPricingLineDrawer - Using existing pricing data:", pricing);
+      console.log("EditPricingLineDrawer - Pricing line values:", {
+        list_price: pricingLine.list_price,
+        list_install_price: pricingLine.list_install_price,
+        cost_budget: pricingLine.cost_budget,
+        cost_install_budget: pricingLine.cost_install_budget
+      });
+      
+      setCurrentPricing(pricing);
+      setEditablePrices({
+        signPrice: pricing.sign_price.toFixed(2),
+        installPrice: pricing.install_price.toFixed(2),
+        signBudget: pricing.sign_budget.toFixed(2),
+        installBudget: pricing.install_budget.toFixed(2),
+      });
+      
+      // Also set the modified values to match the current pricing
+      setModifiedSignPrice(pricing.sign_price.toFixed(2));
+      setModifiedSignBudget(pricing.sign_budget.toFixed(2));
+      setModifiedInstallBudget(pricing.install_budget.toFixed(2));
+    }
+  }, [hasDataFromProps, pricingLine, signData.size, selectedSignData]);
 
-      try {
-        setLoadingPricing(true);
-        
-        if (hasDataFromProps) {
-          // Use pricing data from props
-          const pricing = {
-            id: pricingLine.id,
-            sign_id: pricingLine.sign_id,
-            size: signData.size,
-            sign_price: pricingLine.list_price || 0,
-            install_price: pricingLine.list_install_price || 0,
-            sign_budget: pricingLine.cost_budget || 0,
-            install_budget: pricingLine.cost_install_budget || 0,
-            raceway: 0,
-            sign_budget_multiplier: 0.8,
-            install_budget_multiplier: 0.6,
-          };
-          setCurrentPricing(pricing);
-          setEditablePrices({
-            signPrice: pricing.sign_price.toFixed(2),
-            installPrice: pricing.install_price.toFixed(2),
-            signBudget: pricing.sign_budget.toFixed(2),
-            installBudget: pricing.install_budget.toFixed(2),
-          });
-        } else {
-          // Use dummy pricing data
-          const dummyPricing = {
-            id: "dummy-pricing-id",
-            sign_id: "dummy-sign-id",
-            size: signData.size,
-            sign_price: 150.00,
-            install_price: 75.00,
-            sign_budget: 120.00,
-            install_budget: 60.00,
-            raceway: 25.00,
-            sign_budget_multiplier: 0.8,
-            install_budget_multiplier: 0.6,
-          };
-          setCurrentPricing(dummyPricing);
-          setEditablePrices({
-            signPrice: dummyPricing.sign_price.toFixed(2),
-            installPrice: dummyPricing.install_price.toFixed(2),
-            signBudget: dummyPricing.sign_budget.toFixed(2),
-            installBudget: dummyPricing.install_budget.toFixed(2),
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching pricing:", error);
-        setCurrentPricing(null);
-        setEditablePrices({
-          signPrice: "0.00",
-          installPrice: "0.00",
-          signBudget: "0.00",
-          installBudget: "0.00",
-        });
-      } finally {
-        setLoadingPricing(false);
-      }
-    };
-
-    fetchPricing();
-  }, [signData.size, hasDataFromProps, pricingLine]);
+  // Debug useEffect to log signData changes
+  useEffect(() => {
+    console.log("EditPricingLineDrawer - signData updated:", signData);
+  }, [signData]);
 
   const handleSizeChange = (value: string) => {
     setSignData({ ...signData, size: value });
@@ -460,8 +537,8 @@ export const EditPricingLineDrawer = ({
     console.log("Prices reset to original calculated values");
   };
 
-  const handleSave = () => {
-    if (onSave) {
+  const handleSave = async () => {
+    if (onSave && pricingLine) {
       const updatedData = {
         ...pricingLine,
         list_price: parseFloat(savedPrices?.signPrice || modifiedSignPrice),
@@ -469,9 +546,30 @@ export const EditPricingLineDrawer = ({
         cost_budget: parseFloat(savedPrices?.signBudget || modifiedSignBudget),
         cost_install_budget: parseFloat(savedPrices?.installBudget || modifiedInstallBudget),
         description_resolved: generateDescriptionResolved(),
-        qty: 1,
+        qty: pricingLine.qty || 1,
       };
-      onSave(updatedData);
+      
+      console.log("EditPricingLineDrawer - Saving updated data:", updatedData);
+      
+      // Update the pricing line in the database
+      try {
+        const response = await fetch(`/api/pricing-lines/${pricingLine.id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updatedData),
+        });
+        
+        if (response.ok) {
+          console.log("EditPricingLineDrawer - Successfully updated pricing line");
+          onSave(updatedData);
+        } else {
+          console.error("Failed to update pricing line:", response.status);
+        }
+      } catch (error) {
+        console.error("Error updating pricing line:", error);
+      }
     }
     onClose();
   };
@@ -628,7 +726,7 @@ export const EditPricingLineDrawer = ({
           <button onClick={handleClose}>
             <ArrowLeft className="size-5" />
           </button>
-          <h2 className="text-[20px] font-bold">Edit Pricing Line</h2>
+          <h2 className="text-[20px] font-bold">Edit Sign Configuration</h2>
           <button onClick={handleClose}>
             <X className="size-5" />
           </button>
@@ -636,20 +734,26 @@ export const EditPricingLineDrawer = ({
       {/* Sign Preview */}
       <section className="p-4 flex items-center">
         <div className="h-20 w-[130px] p-3 bg-[#F3F4F8] rounded-lg flex items-center justify-center">
-          {hasDataFromProps ? (
-            <img src="/images/dave1.png" alt="" />
+          {selectedSignData?.sign_image ? (
+            <img src={selectedSignData.sign_image} alt="" />
           ) : (
-            <img src={dummyData.image} alt="" />
+            <img src="/images/dave1.png" alt="" />
           )}
         </div>
         <span className="text-[14px] ml-3 font-medium">
-          {hasDataFromProps ? "Edit Sign" : dummyData.name}
+          {selectedSignData?.sign_name || "Edit Sign"}
         </span>
 
         <Input
           className="h-9 border-[#E0E0E0] w-12 ml-auto focus:border-[#E0E0E0] focus:ring-0 text-center"
           placeholder="Qty"
-          defaultValue="1"
+          defaultValue={pricingLine?.qty?.toString() || "1"}
+          onChange={(e) => {
+            // Update the pricing line qty
+            if (pricingLine) {
+              pricingLine.qty = parseInt(e.target.value) || 1;
+            }
+          }}
         />
       </section>
       {/* Form */}
@@ -688,9 +792,9 @@ export const EditPricingLineDrawer = ({
           {/* Dynamic fields based on sign description */}
           {formFields.map((field) => (
             <div key={field.key} className="flex items-center justify-between">
-            <Label className="text-[14px] font-[500] text-[#60646C]">
+              <Label className="text-[14px] font-[500] text-[#60646C]">
                 {field.label}
-            </Label>
+              </Label>
                               {field.key.includes('backer') && field.key.includes('size') ? (
                   <Input
                     value={signData[field.key] || ""}
