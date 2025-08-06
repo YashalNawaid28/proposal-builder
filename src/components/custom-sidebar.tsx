@@ -1,13 +1,5 @@
 "use client";
-import {
-  Users,
-  Grid2x2,
-  ListTodo,
-  Tag,
-  House,
-  LogOut,
-  User,
-} from "lucide-react";
+import { Users, Grid2x2, ListTodo, Tag, House, LogOut } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -72,8 +64,18 @@ export function CustomSidebar({
   const pathname = usePathname();
   const { user, userData, signOut } = useAuth();
 
+  console.log("CustomSidebar - user:", user);
+  console.log("CustomSidebar - userData:", userData);
+
   const handleSignOut = async () => {
     await signOut();
+  };
+
+  // Use userData if available, otherwise fall back to session metadata
+  const displayUser = userData || {
+    display_name: user?.user_metadata?.display_name || user?.email || "User",
+    email: user?.email || "",
+    avatar_url: user?.user_metadata?.avatar_url || null,
   };
 
   return (
@@ -83,12 +85,7 @@ export function CustomSidebar({
     >
       {/* Header */}
       <div className="flex flex-col bg-black items-center gap-4 pt-8 pb-12">
-        <Image
-          width={210}
-          height={64}
-          src="/images/logo.svg"
-          alt="Visible Graphics Logo"
-        />
+        <Image width={210} height={64} src="/images/logo.svg" alt="" priority />
       </div>
 
       {/* Content */}
@@ -174,19 +171,19 @@ export function CustomSidebar({
 
       {/* Footer */}
       <div className="mt-auto bg-black text-[14px] px-4 pb-4">
-        {user && userData && (
+        {user && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-2 w-full p-2 rounded-md hover:bg-gray-900/60 transition-colors">
-                {userData.avatar_url ? (
+                {displayUser.avatar_url ? (
                   <img
-                    src={userData.avatar_url}
-                    alt={`${userData.display_name} Profile`}
+                    src={displayUser.avatar_url}
+                    alt={`${displayUser.display_name} Profile`}
                     className="w-8 h-8 rounded-full object-cover"
                   />
                 ) : (
                   <div className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-700 text-white text-sm font-medium">
-                    {userData.display_name
+                    {displayUser.display_name
                       .split(" ")
                       .map((word: string) => word[0])
                       .join("")
@@ -196,9 +193,11 @@ export function CustomSidebar({
                 )}
                 <div className="flex-1 text-left">
                   <div className="text-sm font-medium text-white">
-                    {userData.display_name}
+                    {displayUser.display_name}
                   </div>
-                  <div className="text-xs text-gray-400">{userData.email}</div>
+                  <div className="text-xs text-gray-400">
+                    {displayUser.email}
+                  </div>
                 </div>
               </button>
             </DropdownMenuTrigger>

@@ -53,6 +53,7 @@ export function SupabaseAuthProvider({
 
   const fetchUserData = useCallback(async (email: string) => {
     try {
+      console.log("Fetching user data for email:", email);
       const { data, error } = await supabase
         .from("users")
         .select("*")
@@ -64,6 +65,7 @@ export function SupabaseAuthProvider({
         return null;
       }
 
+      console.log("User data fetched successfully:", data);
       return data as UserData;
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -94,6 +96,7 @@ export function SupabaseAuthProvider({
 
   useEffect(() => {
     const getInitialSession = async () => {
+      console.log("Getting initial session...");
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -102,8 +105,11 @@ export function SupabaseAuthProvider({
 
       // Fetch user data if session exists
       if (session?.user?.email) {
+        console.log("Session found, fetching user data for:", session.user.email);
         const userData = await fetchUserData(session.user.email);
         setUserData(userData);
+      } else {
+        console.log("No session found");
       }
 
       setLoading(false);
@@ -119,6 +125,7 @@ export function SupabaseAuthProvider({
 
       // Fetch user data on sign in
       if (event === "SIGNED_IN" && session?.user?.email) {
+        console.log("User signed in, fetching user data for:", session.user.email);
         const userData = await fetchUserData(session.user.email);
         setUserData(userData);
       }

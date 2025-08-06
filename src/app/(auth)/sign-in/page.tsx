@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "../../../supabase/client";
 import { useSearchParams } from "next/navigation";
 import { getSiteUrl } from "../../../lib/utils";
+import { Input } from "../../../components/ui/input";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
@@ -33,12 +34,36 @@ export default function SignIn() {
     setSuccess("");
 
     try {
-      const { data: existingUser, error: checkError } = await supabase
+      console.log("Attempting to sign in with email:", email.toLowerCase());
+
+      // First try exact match
+      let { data: existingUser, error: checkError } = await supabase
         .from("users")
         .select("id, email, display_name, status")
         .eq("email", email.toLowerCase())
         .single();
-      if (checkError || !existingUser) {
+
+      console.log("User lookup result:", { existingUser, checkError });
+
+      // If no exact match, try case-insensitive search
+      if (checkError && checkError.code === "PGRST116") {
+        console.log("No exact match found, trying case-insensitive search");
+        const { data: users, error: searchError } = await supabase
+          .from("users")
+          .select("id, email, display_name, status")
+          .ilike("email", `%${email}%`);
+
+        console.log("Case-insensitive search result:", { users, searchError });
+
+        if (!searchError && users && users.length > 0) {
+          existingUser = users[0];
+          checkError = null;
+          console.log("Found user with case-insensitive search:", existingUser);
+        }
+      }
+
+      if (checkError) {
+        console.error("Database error:", checkError);
         setError(
           "Access denied. Please contact your administrator to get access."
         );
@@ -46,14 +71,28 @@ export default function SignIn() {
         return;
       }
 
+      if (!existingUser) {
+        console.log("No user found in database");
+        setError(
+          "Access denied. Please contact your administrator to get access."
+        );
+        setLoading(false);
+        return;
+      }
+
+      console.log("User found:", existingUser);
+
       // Check if user is disabled
       if (existingUser.status === "Disabled") {
+        console.log("User is disabled");
         setError(
           "Your account has been disabled. Please contact your administrator for assistance."
         );
         setLoading(false);
         return;
       }
+
+      console.log("User is active, sending magic link");
 
       const { error: signInError } = await supabase.auth.signInWithOtp({
         email: email.toLowerCase(),
@@ -64,35 +103,38 @@ export default function SignIn() {
       });
 
       if (signInError) {
+        console.error("Sign in error:", signInError);
         setError(signInError.message);
       } else {
+        console.log("Magic link sent successfully");
         setSuccess(
           "Magic link sent to your email! Check your inbox and click the link to sign in."
         );
       }
+    } catch (error) {
+      console.error("Unexpected error:", error);
+      setError("An unexpected error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    handleSendMagicLink(e);
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-6 text-center text-[24px] font-bold text-gray-900">
             Sign in to your account
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Enter your email to receive a magic link
-          </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSendMagicLink}>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div>
-            <label htmlFor="email" className="sr-only">
-              Email address
-            </label>
-            <input
+            <Input
               id="email"
               name="email"
               type="email"
@@ -100,8 +142,7 @@ export default function SignIn() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-              placeholder="Email address"
+              placeholder="Enter your email"
               disabled={loading}
             />
           </div>
@@ -122,9 +163,9 @@ export default function SignIn() {
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-black disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? "Sending..." : "Send Magic Link"}
+              {loading ? "Sending..." : "Send Email"}
             </button>
           </div>
         </form>
