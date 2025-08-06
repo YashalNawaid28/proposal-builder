@@ -366,13 +366,18 @@ export function generateProposalHTML(
 
     .custom-table tbody tr {
       background: #fff;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 0.6px solid #000;
     }
 
     .custom-table td {
       padding: 16px 8px;
       vertical-align: middle;
-      color: #23272f;
+      color: #475467;
+      font-family: Inter;
+      font-size: 8px;
+      font-style: normal;
+      font-weight: 400;
+      line-height: 12px;
     }
 
     .custom-table .sign-label {
