@@ -48,6 +48,7 @@ export default function AddJobPage() {
   const [jobData, setJobData] = useState<{
     jobName?: string;
     jobNumber?: string;
+    proposalNumber?: string; // Add proposal number field
     jobLocation?: string;
     brand?: string;
     brandId?: string; // For JobInfoDialog
@@ -729,6 +730,7 @@ export default function AddJobPage() {
         setJobData({
           jobName: job.job_name,
           jobNumber: job.job_no,
+          proposalNumber: job.proposal_no, // Add proposal number
           jobLocation: `${job.site_street}, ${job.site_city}, ${job.site_state} ${job.site_postcode}`,
           brandId: job.brand_id, // Use brandId for JobInfoDialog
           brandName: brandName, // Add the brand name
@@ -829,6 +831,7 @@ export default function AddJobPage() {
       const updatedJobData = {
         jobName: job.job_name,
         jobNumber: job.job_no,
+        proposalNumber: job.proposal_no, // Add proposal number
         jobLocation: `${job.site_street}, ${job.site_city}, ${job.site_state} ${job.site_postcode}`,
         brandId: job.brand_id, // Use brandId for JobInfoDialog
         brandName: brandName, // Add the brand name
