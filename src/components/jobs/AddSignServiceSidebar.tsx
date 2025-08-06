@@ -33,7 +33,7 @@ interface AddSignServiceSidebarProps {
   isOpen: boolean;
   onClose: () => void;
   jobId: string;
-  pricingVersionId?: string; // Current pricing version ID to add signs to
+  pricingVersionId?: string; // Add this prop
   onSignAdded?: () => void; // Callback when a sign is successfully added
 }
 

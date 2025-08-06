@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/select";
 import { SignOption, SignData } from "./AddSignServiceSidebar";
 import { useState, useEffect } from "react";
-import { useUser } from "@stackframe/stack";
+import { useAuth } from "@/components/supabase-auth-provider";
 
 interface SignConfigurationStepProps {
   selectedSign: SignOption | null;
@@ -56,7 +56,7 @@ export const SignConfigurationStep = ({
   jobId,
   pricingVersionId,
 }: SignConfigurationStepProps) => {
-  const user = useUser();
+  const { user } = useAuth();
   const [isEditingPrices, setIsEditingPrices] = useState(false);
   const [editablePrices, setEditablePrices] = useState({
     signPrice: "0.00",
@@ -64,21 +64,28 @@ export const SignConfigurationStep = ({
     signBudget: "0.00",
     installBudget: "0.00",
   });
-  const [currentPricing, setCurrentPricing] = useState<SignPricing | null>(null);
+  const [currentPricing, setCurrentPricing] = useState<SignPricing | null>(
+    null
+  );
   const [loadingPricing, setLoadingPricing] = useState(false);
   const [availableSizes, setAvailableSizes] = useState<string[]>([]);
   const [loadingSizes, setLoadingSizes] = useState(false);
-  const [dynamicOptions, setDynamicOptions] = useState<{ [key: string]: OptionValue[] }>({});
+  const [dynamicOptions, setDynamicOptions] = useState<{
+    [key: string]: OptionValue[];
+  }>({});
   const [loadingOptions, setLoadingOptions] = useState(false);
-  const [formFields, setFormFields] = useState<Array<{
-    key: string;
-    label: string;
-    type: string;
-    placeholder: string;
-  }>>([]);
+  const [formFields, setFormFields] = useState<
+    Array<{
+      key: string;
+      label: string;
+      type: string;
+      placeholder: string;
+    }>
+  >([]);
   const [modifiedSignPrice, setModifiedSignPrice] = useState<string>("0.00");
   const [modifiedSignBudget, setModifiedSignBudget] = useState<string>("0.00");
-  const [modifiedInstallBudget, setModifiedInstallBudget] = useState<string>("0.00");
+  const [modifiedInstallBudget, setModifiedInstallBudget] =
+    useState<string>("0.00");
   const [savedPrices, setSavedPrices] = useState<{
     signPrice: string;
     signBudget: string;
@@ -106,12 +113,14 @@ export const SignConfigurationStep = ({
         }
 
         const result = await response.json();
-        
+
         if (result.data && result.data.length > 0) {
           // Extract just the numbers from sizes like "12"", "18"", etc.
-          const sizes = result.data.map((size: string) => size.replace('"', ''));
+          const sizes = result.data.map((size: string) =>
+            size.replace('"', "")
+          );
           setAvailableSizes(sizes);
-          
+
           // Set the first available size as default if no size is selected
           if (!signData.size && sizes.length > 0) {
             setSignData({ ...signData, size: sizes[0] });
@@ -139,7 +148,9 @@ export const SignConfigurationStep = ({
       }
 
       try {
-        const response = await fetch(`/api/signs/get-by-id?sign_id=${selectedSign.id}`);
+        const response = await fetch(
+          `/api/signs/get-by-id?sign_id=${selectedSign.id}`
+        );
         if (response.ok) {
           const result = await response.json();
           setSelectedSignData(result.data);
@@ -163,72 +174,79 @@ export const SignConfigurationStep = ({
     console.log("SignConfigurationStep - Parsing description:", description);
     const placeholders = description.match(/\{([^}]+)\}/g) || [];
     console.log("SignConfigurationStep - Found placeholders:", placeholders);
-    
+
     const fields: Array<{
       key: string;
       label: string;
-      type: 'select' | 'size-input';
+      type: "select" | "size-input";
       placeholder: string;
     }> = [];
 
     placeholders.forEach((placeholder: string) => {
-      const key = placeholder.replace(/[{}]/g, '').toLowerCase().replace(/\s+/g, '');
-      
+      const key = placeholder
+        .replace(/[{}]/g, "")
+        .toLowerCase()
+        .replace(/\s+/g, "");
+
       // Skip Size field as it's handled separately
-      if (key === 'size') {
+      if (key === "size") {
         return;
       }
-      
+
       // Skip Behind-The-Wall Option fields only
-      if (key.includes('behind') || key.includes('wall') || key.includes('behindthewall')) {
+      if (
+        key.includes("behind") ||
+        key.includes("wall") ||
+        key.includes("behindthewall")
+      ) {
         return;
       }
-      
+
       // Map placeholder to field configuration
-      let label = placeholder.replace(/[{}]/g, '');
-      let type: 'select' | 'size-input' = 'select';
-      
-      if (key.includes('size')) {
-        if (key.includes('raceway')) {
-          label = 'Raceway Size';
-          type = 'size-input';
-        } else if (key.includes('backer')) {
-          label = 'Backer Size';
-          type = 'select'; // We'll handle this in rendering logic
+      let label = placeholder.replace(/[{}]/g, "");
+      let type: "select" | "size-input" = "select";
+
+      if (key.includes("size")) {
+        if (key.includes("raceway")) {
+          label = "Raceway Size";
+          type = "size-input";
+        } else if (key.includes("backer")) {
+          label = "Backer Size";
+          type = "select"; // We'll handle this in rendering logic
         } else {
-          label = 'Size';
-          type = 'select';
+          label = "Size";
+          type = "select";
         }
-      } else if (key.includes('color')) {
-        label = 'Color';
-      } else if (key.includes('fab') || key.includes('fabrication')) {
-        label = 'Fab Type';
-      } else if (key.includes('raceway')) {
-        label = 'Raceway';
-      } else if (key.includes('backer')) {
-        if (key.includes('size') || key.includes('backersize')) {
-          label = 'Backer Size';
-          type = 'select'; // We'll handle this in rendering logic
-        } else if (key.includes('illumination')) {
-          label = 'Backer Illumination';
+      } else if (key.includes("color")) {
+        label = "Color";
+      } else if (key.includes("fab") || key.includes("fabrication")) {
+        label = "Fab Type";
+      } else if (key.includes("raceway")) {
+        label = "Raceway";
+      } else if (key.includes("backer")) {
+        if (key.includes("size") || key.includes("backersize")) {
+          label = "Backer Size";
+          type = "select"; // We'll handle this in rendering logic
+        } else if (key.includes("illumination")) {
+          label = "Backer Illumination";
         } else {
-          label = 'Backer Panel';
+          label = "Backer Panel";
         }
-      } else if (key.includes('print') || key.includes('material')) {
-        label = 'Print Material';
-      } else if (key.includes('mounting') || key.includes('surface')) {
-        label = 'Mounting Surface';
-      } else if (key.includes('anti') || key.includes('graffiti')) {
-        label = 'Anti-Graffiti';
+      } else if (key.includes("print") || key.includes("material")) {
+        label = "Print Material";
+      } else if (key.includes("mounting") || key.includes("surface")) {
+        label = "Mounting Surface";
+      } else if (key.includes("anti") || key.includes("graffiti")) {
+        label = "Anti-Graffiti";
       } else {
-        label = placeholder.replace(/[{}]/g, '');
+        label = placeholder.replace(/[{}]/g, "");
       }
-      
+
       fields.push({
         key,
         label,
         type,
-        placeholder: label
+        placeholder: label,
       });
     });
 
@@ -240,82 +258,106 @@ export const SignConfigurationStep = ({
   useEffect(() => {
     const fetchOptions = async () => {
       if (!selectedSignData?.sign_description) return;
-      
+
       try {
         setLoadingOptions(true);
         const newOptions: { [key: string]: OptionValue[] } = {};
-        
+
         const description = selectedSignData.sign_description;
         const placeholders = description.match(/\{([^}]+)\}/g) || [];
-        
+
         for (const placeholder of placeholders) {
-          const key = placeholder.replace(/[{}]/g, '').toLowerCase().replace(/\s+/g, '');
-          console.log(`Processing placeholder: "${placeholder}" -> key: "${key}"`);
-          
+          const key = placeholder
+            .replace(/[{}]/g, "")
+            .toLowerCase()
+            .replace(/\s+/g, "");
+          console.log(
+            `Processing placeholder: "${placeholder}" -> key: "${key}"`
+          );
+
           // Skip Size field as it's handled separately with sign_pricing data
-          if (key === 'size') {
+          if (key === "size") {
             continue;
           }
-          
+
           // Skip Behind-The-Wall Option fields only
-          if (key.includes('behind') || key.includes('wall') || key.includes('behindthewall')) {
+          if (
+            key.includes("behind") ||
+            key.includes("wall") ||
+            key.includes("behindthewall")
+          ) {
             continue;
           }
-          
+
           // Map placeholder to option name
-          let optionName = '';
-          if (key.includes('color')) {
-            optionName = 'Color';
-          } else if (key.includes('fab') || key.includes('fabrication')) {
-            optionName = 'Fab Type';
-          } else if (key.includes('raceway') && !key.includes('size')) {
-            optionName = 'Raceway';
-          } else if (key.includes('backer')) {
-            if (key.includes('size')) {
+          let optionName = "";
+          if (key.includes("color")) {
+            optionName = "Color";
+          } else if (key.includes("fab") || key.includes("fabrication")) {
+            optionName = "Fab Type";
+          } else if (key.includes("raceway") && !key.includes("size")) {
+            optionName = "Raceway";
+          } else if (key.includes("backer")) {
+            if (key.includes("size")) {
               // Skip fetching options for Backer Size(s) as it's a text input
               continue;
-            } else if (key.includes('illumination')) {
-              optionName = 'Backer Illumination';
+            } else if (key.includes("illumination")) {
+              optionName = "Backer Illumination";
             } else {
-              optionName = 'Backer Panel Size';
+              optionName = "Backer Panel Size";
             }
-          } else if (key.includes('print') || key.includes('material')) {
-            optionName = 'Print Material';
-          } else if (key.includes('mounting') || key.includes('surface')) {
-            optionName = 'Mounting Surface';
-          } else if (key.includes('anti') || key.includes('graffiti')) {
-            optionName = 'Anti-Graffiti';
+          } else if (key.includes("print") || key.includes("material")) {
+            optionName = "Print Material";
+          } else if (key.includes("mounting") || key.includes("surface")) {
+            optionName = "Mounting Surface";
+          } else if (key.includes("anti") || key.includes("graffiti")) {
+            optionName = "Anti-Graffiti";
           }
-          
+
           if (optionName) {
             try {
               console.log(`Fetching options for: ${optionName} (key: ${key})`);
-              const response = await fetch(`/api/options/get-by-name?option_name=${encodeURIComponent(optionName)}`);
+              const response = await fetch(
+                `/api/options/get-by-name?option_name=${encodeURIComponent(
+                  optionName
+                )}`
+              );
               if (response.ok) {
                 const data = await response.json();
                 console.log(`Option data for ${optionName}:`, data);
                 if (data.data) {
-                  const valuesResponse = await fetch(`/api/option-values/get-by-optionId?option_id=${data.data.id}`);
+                  const valuesResponse = await fetch(
+                    `/api/option-values/get-by-optionId?option_id=${data.data.id}`
+                  );
                   if (valuesResponse.ok) {
                     const valuesData = await valuesResponse.json();
                     console.log(`Option values for ${optionName}:`, valuesData);
                     newOptions[key] = valuesData.data || [];
-                    console.log(`Stored options for key "${key}":`, newOptions[key]);
+                    console.log(
+                      `Stored options for key "${key}":`,
+                      newOptions[key]
+                    );
                   } else {
-                    console.error(`Failed to fetch values for ${optionName}:`, valuesResponse.status);
+                    console.error(
+                      `Failed to fetch values for ${optionName}:`,
+                      valuesResponse.status
+                    );
                   }
                 } else {
                   console.log(`No option data found for ${optionName}`);
                 }
               } else {
-                console.error(`Failed to fetch option ${optionName}:`, response.status);
+                console.error(
+                  `Failed to fetch option ${optionName}:`,
+                  response.status
+                );
               }
             } catch (error) {
               console.error(`Error fetching options for ${optionName}:`, error);
             }
           }
         }
-        
+
         setDynamicOptions(newOptions);
       } catch (error) {
         console.error("Error fetching options:", error);
@@ -330,7 +372,12 @@ export const SignConfigurationStep = ({
   // Fetch pricing data when sign or size changes
   useEffect(() => {
     const fetchPricing = async () => {
-      if (!selectedSign?.id || !signData.size || signData.size === "loading" || signData.size === "no-sizes") {
+      if (
+        !selectedSign?.id ||
+        !signData.size ||
+        signData.size === "loading" ||
+        signData.size === "no-sizes"
+      ) {
         setCurrentPricing(null);
         setEditablePrices({
           signPrice: "0.00",
@@ -347,7 +394,7 @@ export const SignConfigurationStep = ({
         console.log("Component Debug - selectedSign.id:", selectedSign.id);
         console.log("Component Debug - signData.size:", signData.size);
         console.log("Component Debug - Fetching URL:", url);
-        
+
         const response = await fetch(url);
 
         if (!response.ok) {
@@ -356,12 +403,18 @@ export const SignConfigurationStep = ({
 
         const result = await response.json();
         console.log("Component Debug - API Response:", result);
-        
+
         if (result.data && result.data.length > 0) {
           const pricing = result.data[0];
           console.log("Component Debug - Pricing data received:", pricing);
-          console.log("Component Debug - Sign budget multiplier:", pricing.sign_budget_multiplier);
-          console.log("Component Debug - Install budget multiplier:", pricing.install_budget_multiplier);
+          console.log(
+            "Component Debug - Sign budget multiplier:",
+            pricing.sign_budget_multiplier
+          );
+          console.log(
+            "Component Debug - Install budget multiplier:",
+            pricing.install_budget_multiplier
+          );
           setCurrentPricing(pricing);
           setEditablePrices({
             signPrice: pricing.sign_price.toFixed(2),
@@ -432,7 +485,7 @@ export const SignConfigurationStep = ({
     try {
       // Use the jobId passed as prop
       console.log("Component Debug - jobId:", jobId);
-      
+
       // Get current user ID
       if (!user) {
         throw new Error("User not authenticated");
@@ -474,11 +527,12 @@ export const SignConfigurationStep = ({
       const currentSignPrice = savedPrices?.signPrice || modifiedSignPrice;
       const currentSignBudget = savedPrices?.signBudget || modifiedSignBudget;
       const currentInstallPrice = editablePrices.installPrice;
-      const currentInstallBudget = savedPrices?.installBudget || modifiedInstallBudget;
+      const currentInstallBudget =
+        savedPrices?.installBudget || modifiedInstallBudget;
 
       // Create pricing line
       const descriptionResolved = generateDescriptionResolved();
-      
+
       const pricingLineResponse = await fetch("/api/pricing-lines", {
         method: "POST",
         headers: {
@@ -516,32 +570,39 @@ export const SignConfigurationStep = ({
   // Helper function to generate description_resolved based on sign_description template
   const generateDescriptionResolved = () => {
     if (!selectedSign || !selectedSignData) return "";
-    
+
     let description = selectedSignData.sign_description || "";
-    
+
     // Replace all placeholders with actual values
     const placeholders = description.match(/\{([^}]+)\}/g) || [];
-    
+
     placeholders.forEach((placeholder: string) => {
-      const key = placeholder.replace(/[{}]/g, '').toLowerCase().replace(/\s+/g, '');
+      const key = placeholder
+        .replace(/[{}]/g, "")
+        .toLowerCase()
+        .replace(/\s+/g, "");
       const value = signData[key];
-      
+
       if (value) {
-        if (key.includes('raceway') && !key.includes('size')) {
+        if (key.includes("raceway") && !key.includes("size")) {
           // Handle raceway with size
           let racewayValue = value;
-          
+
           // Add raceway size in parentheses if raceway size inputs are provided
-          if (signData.racewaySize && signData.racewaySize.height && signData.racewaySize.width) {
+          if (
+            signData.racewaySize &&
+            signData.racewaySize.height &&
+            signData.racewaySize.width
+          ) {
             const heightFeet = signData.racewaySize.height.feet || "0";
             const heightInches = signData.racewaySize.height.inches || "0";
             const widthFeet = signData.racewaySize.width.feet || "0";
             const widthInches = signData.racewaySize.width.inches || "0";
-            
+
             const racewaySizeValue = `${heightFeet}'-${heightInches}"x ${widthFeet}'-${widthInches}"`;
             racewayValue = `${value} (${racewaySizeValue})`;
           }
-          
+
           description = description.replace(placeholder, racewayValue);
         } else {
           description = description.replace(placeholder, value);
@@ -551,41 +612,46 @@ export const SignConfigurationStep = ({
         description = description.replace(placeholder, "");
       }
     });
-    
+
     // Clean up any extra spaces that might result from empty replacements
     description = description.replace(/\s+/g, " ").trim();
-    
+
     return description;
   };
 
   // Helper function to calculate modified sign price and budgets based on selected options
   const calculateModifiedValues = () => {
-    if (!currentPricing) return { signPrice: "0.00", signBudget: "0.00", installBudget: "0.00" };
-    
+    if (!currentPricing)
+      return { signPrice: "0.00", signBudget: "0.00", installBudget: "0.00" };
+
     const baseSignPrice = currentPricing.sign_price;
     const baseInstallPrice = currentPricing.install_price;
     let signPriceModifier = 0;
     let installPriceModifier = 0;
-    
+
     // Calculate modifiers from selected options
     Object.keys(dynamicOptions).forEach((key) => {
       const value = signData[key];
       const options = dynamicOptions[key];
-      
+
       if (value && options) {
-        const selectedOption = options.find((opt: OptionValue) => opt.display_label === value);
+        const selectedOption = options.find(
+          (opt: OptionValue) => opt.display_label === value
+        );
         if (selectedOption && selectedOption.price_modifier_value) {
           // Special case: Mounting Surface affects Install Price instead of Sign Price
-          if (key.includes('mounting') || key.includes('surface')) {
-            if (selectedOption.price_modifier_type === 'Percentage') {
-              installPriceModifier += (baseInstallPrice * selectedOption.price_modifier_value) / 100;
+          if (key.includes("mounting") || key.includes("surface")) {
+            if (selectedOption.price_modifier_type === "Percentage") {
+              installPriceModifier +=
+                (baseInstallPrice * selectedOption.price_modifier_value) / 100;
             } else {
               installPriceModifier += selectedOption.price_modifier_value;
             }
           } else {
             // All other options affect Sign Price
-            if (selectedOption.price_modifier_type === 'Percentage') {
-              signPriceModifier += (baseSignPrice * selectedOption.price_modifier_value) / 100;
+            if (selectedOption.price_modifier_type === "Percentage") {
+              signPriceModifier +=
+                (baseSignPrice * selectedOption.price_modifier_value) / 100;
             } else {
               signPriceModifier += selectedOption.price_modifier_value;
             }
@@ -593,24 +659,28 @@ export const SignConfigurationStep = ({
         }
       }
     });
-    
+
     // Add raceway value from pricing data if raceway is selected
     // Check for any raceway-related field in signData
-    const racewayField = Object.keys(signData).find(key => 
-      key.includes('raceway') && !key.includes('size') && signData[key]
+    const racewayField = Object.keys(signData).find(
+      (key) => key.includes("raceway") && !key.includes("size") && signData[key]
     );
     if (racewayField && currentPricing.raceway) {
-      console.log("Component Debug - Raceway selected, adding raceway value:", currentPricing.raceway);
+      console.log(
+        "Component Debug - Raceway selected, adding raceway value:",
+        currentPricing.raceway
+      );
       signPriceModifier += currentPricing.raceway;
     }
-    
+
     const finalSignPrice = baseSignPrice + signPriceModifier;
     const finalInstallPrice = baseInstallPrice + installPriceModifier;
-    
+
     // Calculate modified budgets using multipliers from sign data
     const signBudgetMultiplier = selectedSignData?.sign_budget_multiplier || 0;
-    const installBudgetMultiplier = selectedSignData?.install_budget_multiplier || 0;
-    
+    const installBudgetMultiplier =
+      selectedSignData?.install_budget_multiplier || 0;
+
     console.log("Component Debug - Budget calculation:", {
       finalSignPrice,
       finalInstallPrice,
@@ -618,18 +688,18 @@ export const SignConfigurationStep = ({
       installPriceModifier,
       signBudgetMultiplier,
       installBudgetMultiplier,
-      selectedSignData
+      selectedSignData,
     });
-    
+
     // Sign Budget = Sign Price × Sign Budget Multiplier
     const modifiedSignBudget = finalSignPrice * signBudgetMultiplier;
     // Install Budget = Install Price × Install Budget Multiplier
     const modifiedInstallBudget = finalInstallPrice * installBudgetMultiplier;
-    
+
     return {
       signPrice: finalSignPrice.toFixed(2),
       signBudget: modifiedSignBudget.toFixed(2),
-      installBudget: modifiedInstallBudget.toFixed(2)
+      installBudget: modifiedInstallBudget.toFixed(2),
     };
   };
 
@@ -639,7 +709,13 @@ export const SignConfigurationStep = ({
     setModifiedSignPrice(modifiedValues.signPrice);
     setModifiedSignBudget(modifiedValues.signBudget);
     setModifiedInstallBudget(modifiedValues.installBudget);
-  }, [currentPricing, signData, dynamicOptions, selectedSignData, calculateModifiedValues]);
+  }, [
+    currentPricing,
+    signData,
+    dynamicOptions,
+    selectedSignData,
+    calculateModifiedValues,
+  ]);
 
   const handlePriceChange = (
     field: keyof typeof editablePrices,
@@ -685,7 +761,10 @@ export const SignConfigurationStep = ({
             <Label className="text-[14px] font-[500] text-[#60646C]">
               Size
             </Label>
-            <Select value={signData?.size || ""} onValueChange={handleSizeChange}>
+            <Select
+              value={signData?.size || ""}
+              onValueChange={handleSizeChange}
+            >
               <SelectTrigger className="h-9 w-auto min-w-[80px] border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0">
                 <SelectValue />
               </SelectTrigger>
@@ -696,7 +775,9 @@ export const SignConfigurationStep = ({
                 align="end"
               >
                 {loadingSizes ? (
-                  <SelectItem value="loading" disabled>Loading...</SelectItem>
+                  <SelectItem value="loading" disabled>
+                    Loading...
+                  </SelectItem>
                 ) : availableSizes?.length > 0 ? (
                   availableSizes?.map((size) => (
                     <SelectItem key={size} value={size}>
@@ -704,160 +785,171 @@ export const SignConfigurationStep = ({
                     </SelectItem>
                   ))
                 ) : (
-                  <SelectItem value="no-sizes" disabled>No sizes available</SelectItem>
+                  <SelectItem value="no-sizes" disabled>
+                    No sizes available
+                  </SelectItem>
                 )}
               </SelectContent>
             </Select>
           </div>
-          
+
           {/* Dynamic fields based on sign description */}
           {formFields.map((field) => (
             <div key={field.key} className="flex items-center justify-between">
-            <Label className="text-[14px] font-[500] text-[#60646C]">
+              <Label className="text-[14px] font-[500] text-[#60646C]">
                 {field.label}
-            </Label>
-                              {field.key.includes('backer') && field.key.includes('size') ? (
-                  <Input
-                    value={signData[field.key] || ""}
-                    onChange={(e) =>
-                      setSignData({ ...signData, [field.key]: e.target.value })
-                    }
-                    className="h-9 w-auto min-w-[120px] border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0"
-                    placeholder="Enter size"
-                  />
-                ) : field.type === 'select' ? (
-                  <Select 
-                    value={signData[field.key] || ""} 
-                    onValueChange={(value) => {
-                      setSignData({ ...signData, [field.key]: value });
-                    }}
+              </Label>
+              {field.key.includes("backer") && field.key.includes("size") ? (
+                <Input
+                  value={signData[field.key] || ""}
+                  onChange={(e) =>
+                    setSignData({ ...signData, [field.key]: e.target.value })
+                  }
+                  className="h-9 w-auto min-w-[120px] border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0"
+                  placeholder="Enter size"
+                />
+              ) : field.type === "select" ? (
+                <Select
+                  value={signData[field.key] || ""}
+                  onValueChange={(value) => {
+                    setSignData({ ...signData, [field.key]: value });
+                  }}
+                >
+                  <SelectTrigger className="h-9 w-auto min-w-[80px] border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent
+                    className="z-[9999]"
+                    position="popper"
+                    side="bottom"
+                    align="end"
                   >
-                    <SelectTrigger className="h-9 w-auto min-w-[80px] border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent
-                      className="z-[9999]"
-                      position="popper"
-                      side="bottom"
-                      align="end"
-                    >
-                      {loadingOptions ? (
-                        <SelectItem value="loading" disabled>Loading...</SelectItem>
-                      ) : dynamicOptions[field.key]?.length > 0 ? (
-                        dynamicOptions[field.key].map((option: OptionValue) => (
-                          <SelectItem key={option.id} value={option.display_label}>
-                            {option.display_label}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value={`no-${field.key}`} disabled>
-                          No options available (key: {field.key}, options: {JSON.stringify(dynamicOptions[field.key])})
+                    {loadingOptions ? (
+                      <SelectItem value="loading" disabled>
+                        Loading...
+                      </SelectItem>
+                    ) : dynamicOptions[field.key]?.length > 0 ? (
+                      dynamicOptions[field.key].map((option: OptionValue) => (
+                        <SelectItem
+                          key={option.id}
+                          value={option.display_label}
+                        >
+                          {option.display_label}
                         </SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                ) : field.type === 'size-input' ? (
-                 <div className="flex items-center">
-                   <section className="flex flex-col gap-2 items-center justify-between">
-                     <Label className="text-[14px] font-[400] text-[#60646C]">
-                       Height
-                     </Label>
-                     <div className="flex items-center gap-1">
-                       <div className="w-12">
-                         <Input
-                           value={signData.racewaySize?.height?.feet || ""}
-                           onChange={(e) =>
-                             setSignData({
-                               ...signData,
-                               racewaySize: {
-                                 ...signData.racewaySize,
-                                 height: {
-                                   ...signData.racewaySize?.height,
-                                   feet: e.target.value,
-                                 },
-                               },
-                             })
-                           }
-                           className="h-9 border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0 text-center"
-                           placeholder=""
-                         />
-                       </div>
-                       <span className="text-gray-500">-</span>
-                       <div className="w-12">
-                         <Input
-                           value={signData.racewaySize?.height?.inches || ""}
-                           onChange={(e) =>
-                             setSignData({
-                               ...signData,
-                               racewaySize: {
-                                 ...signData.racewaySize,
-                                 height: {
-                                   ...signData.racewaySize?.height,
-                                   inches: e.target.value,
-                                 },
-                               },
-                             })
-                           }
-                           className="h-9 border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0 text-center"
-                           placeholder=""
-                         />
-                       </div>
-                     </div>
-                   </section>
-                   <span className="text-gray-500 mx-2 mt-6">×</span>
-                   <section className="flex flex-col gap-2 items-center justify-between">
-                     <Label className="text-[14px] font-[400] text-[#60646C]">
-                       Width
-                     </Label>
-                     <div className="flex items-center gap-1">
-                       <div className="w-12">
-                         <Input
-                           value={signData.racewaySize?.width?.feet || ""}
-                           onChange={(e) =>
-                             setSignData({
-                               ...signData,
-                               racewaySize: {
-                                 ...signData.racewaySize,
-                                 width: {
-                                   ...signData.racewaySize?.width,
-                                   feet: e.target.value,
-                                 },
-                               },
-                             })
-                           }
-                           className="h-9 border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0 text-center"
-                           placeholder=""
-                         />
-                       </div>
-                       <span className="text-gray-500">-</span>
-                       <div className="w-12">
-                         <Input
-                           value={signData.racewaySize?.width?.inches || ""}
-                           onChange={(e) =>
-                             setSignData({
-                               ...signData,
-                               racewaySize: {
-                                 ...signData.racewaySize,
-                                 width: {
-                                   ...signData.racewaySize?.width,
-                                   inches: e.target.value,
-                                 },
-                               },
-                             })
-                           }
-                           className="h-9 border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0 text-center"
-                           placeholder=""
-                         />
-                       </div>
-                     </div>
-                   </section>
-                 </div>
-               ) : null}
-          </div>
+                      ))
+                    ) : (
+                      <SelectItem value={`no-${field.key}`} disabled>
+                        No options available (key: {field.key}, options:{" "}
+                        {JSON.stringify(dynamicOptions[field.key])})
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              ) : field.type === "size-input" ? (
+                <div className="flex items-center">
+                  <section className="flex flex-col gap-2 items-center justify-between">
+                    <Label className="text-[14px] font-[400] text-[#60646C]">
+                      Height
+                    </Label>
+                    <div className="flex items-center gap-1">
+                      <div className="w-12">
+                        <Input
+                          value={signData.racewaySize?.height?.feet || ""}
+                          onChange={(e) =>
+                            setSignData({
+                              ...signData,
+                              racewaySize: {
+                                ...signData.racewaySize,
+                                height: {
+                                  ...signData.racewaySize?.height,
+                                  feet: e.target.value,
+                                },
+                              },
+                            })
+                          }
+                          className="h-9 border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0 text-center"
+                          placeholder=""
+                        />
+                      </div>
+                      <span className="text-gray-500">-</span>
+                      <div className="w-12">
+                        <Input
+                          value={signData.racewaySize?.height?.inches || ""}
+                          onChange={(e) =>
+                            setSignData({
+                              ...signData,
+                              racewaySize: {
+                                ...signData.racewaySize,
+                                height: {
+                                  ...signData.racewaySize?.height,
+                                  inches: e.target.value,
+                                },
+                              },
+                            })
+                          }
+                          className="h-9 border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0 text-center"
+                          placeholder=""
+                        />
+                      </div>
+                    </div>
+                  </section>
+                  <span className="text-gray-500 mx-2 mt-6">×</span>
+                  <section className="flex flex-col gap-2 items-center justify-between">
+                    <Label className="text-[14px] font-[400] text-[#60646C]">
+                      Width
+                    </Label>
+                    <div className="flex items-center gap-1">
+                      <div className="w-12">
+                        <Input
+                          value={signData.racewaySize?.width?.feet || ""}
+                          onChange={(e) =>
+                            setSignData({
+                              ...signData,
+                              racewaySize: {
+                                ...signData.racewaySize,
+                                width: {
+                                  ...signData.racewaySize?.width,
+                                  feet: e.target.value,
+                                },
+                              },
+                            })
+                          }
+                          className="h-9 border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0 text-center"
+                          placeholder=""
+                        />
+                      </div>
+                      <span className="text-gray-500">-</span>
+                      <div className="w-12">
+                        <Input
+                          value={signData.racewaySize?.width?.inches || ""}
+                          onChange={(e) =>
+                            setSignData({
+                              ...signData,
+                              racewaySize: {
+                                ...signData.racewaySize,
+                                width: {
+                                  ...signData.racewaySize?.width,
+                                  inches: e.target.value,
+                                },
+                              },
+                            })
+                          }
+                          className="h-9 border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0 text-center"
+                          placeholder=""
+                        />
+                      </div>
+                    </div>
+                  </section>
+                </div>
+              ) : null}
+            </div>
           ))}
-          
+
           {/* Always show Raceway Size if there's a raceway field */}
-          {formFields.some(field => field.key.includes('raceway') && !field.key.includes('size')) && (
+          {formFields.some(
+            (field) =>
+              field.key.includes("raceway") && !field.key.includes("size")
+          ) && (
             <div className="flex items-center justify-between">
               <Label className="text-[14px] font-[500] text-[#60646C]">
                 Raceway Size

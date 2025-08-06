@@ -1,23 +1,23 @@
 "use client";
-import { useUser } from "@stackframe/stack";
+import { useAuth } from "../../components/supabase-auth-provider";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from 'next/link';
+import Link from "next/link";
 
 export default function Home() {
-  const user = useUser();
+  const { user, loading } = useAuth();
   const router = useRouter();
-  console.log(user);
 
   useEffect(() => {
-    if (user?.id) {
-      router.push("/jobs");
-    } else {
-      router.push("/handler/sign-in");
+    if (!loading) {
+      if (user) {
+        router.push("/jobs");
+      } else {
+        router.push("/sign-in");
+      }
     }
-  }, [user, router]);
+  }, [user, loading, router]);
 
-  // Show loading state while checking authentication
   return (
     <main>
       <div className="min-h-screen flex items-center justify-center">
