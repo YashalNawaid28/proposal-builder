@@ -496,10 +496,7 @@ export const SignConfigurationStep = ({
 
       // If we have a pricing version ID, use it; otherwise create a new one
       if (pricingVersionId) {
-        console.log(
-          "Component Debug - Using existing pricing version:",
-          pricingVersionId
-        );
+        console.log("Component Debug - Using existing pricing version:", pricingVersionId);
         targetPricingVersionId = pricingVersionId;
       } else {
         console.log("Component Debug - Creating new pricing version");
@@ -508,11 +505,8 @@ export const SignConfigurationStep = ({
           job_id: jobId,
           creator_id: userId,
         };
-        console.log(
-          "Component Debug - Pricing version request body:",
-          pricingVersionBody
-        );
-
+        console.log("Component Debug - Pricing version request body:", pricingVersionBody);
+        
         const pricingVersionResponse = await fetch("/api/pricing-versions", {
           method: "POST",
           headers: {

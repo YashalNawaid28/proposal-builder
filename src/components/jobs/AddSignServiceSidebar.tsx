@@ -148,6 +148,7 @@ export const AddSignServiceSidebar = ({
       onClose={handleClose}
       onSignAdded={handleSignAdded}
       jobId={jobId}
+      pricingVersionId={pricingVersionId}
     />
   );
 
