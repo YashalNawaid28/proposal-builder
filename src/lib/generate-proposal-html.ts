@@ -1,6 +1,7 @@
 interface JobData {
   jobName?: string;
   jobNumber?: string;
+  proposalNumber?: string;
   jobLocation?: string;
   brandName?: string;
   creatorName?: string;
@@ -814,7 +815,7 @@ export function generateProposalHTML(
   template = template.replace(/{{job_location}}/g, jobData.jobLocation || 'N/A');
   template = template.replace(/{{job_address}}/g, jobData.jobLocation || 'N/A');
   template = template.replace(/{{contract_date}}/g, currentDate);
-  template = template.replace(/{{contract_number}}/g, jobData.jobNumber || 'N/A');
+  template = template.replace(/{{contract_number}}/g, jobData.proposalNumber || jobData.jobNumber || 'N/A');
   template = template.replace(/{{contract_rep}}/g, jobData.pmName || 'N/A');
   template = template.replace(/{{job_subtotal}}/g, `$${jobSubtotal.toFixed(2)}`);
   template = template.replace(/{{tax}}/g, `$${tax.toFixed(2)}`);
