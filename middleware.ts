@@ -27,11 +27,17 @@ export async function middleware(req: NextRequest) {
   }
 
   if (session) {
+    console.log("Middleware - Session found for email:", session.user.email);
+    
+    // Step 1: Get user data from users table (main source of truth)
     const { data: existingUser, error } = await supabase
       .from("users")
       .select("*")
       .eq("email", session.user.email)
       .single();
+    
+    console.log("Middleware - User lookup result:", { existingUser, error });
+    
     if (error || !existingUser) {
       console.log("Middleware - User not found in database, signing out");
       await supabase.auth.signOut();
@@ -46,7 +52,7 @@ export async function middleware(req: NextRequest) {
       return response;
     }
 
-    // Check if user is disabled
+    // Step 2: Check if user is disabled
     if (existingUser.status === "Disabled") {
       console.log("Middleware - User is disabled, signing out");
       await supabase.auth.signOut();
@@ -61,10 +67,13 @@ export async function middleware(req: NextRequest) {
       return response;
     }
 
+    // Step 3: Update last_active_at in users table
     await supabase
       .from("users")
       .update({ last_active_at: new Date().toISOString() })
       .eq("email", session.user.email);
+    
+    // Step 4: Ensure session metadata has users table data
     if (!session.user.user_metadata?.user_id) {
       await supabase.auth.updateUser({
         data: {
@@ -74,9 +83,12 @@ export async function middleware(req: NextRequest) {
           role: existingUser.role,
           avatar_url: existingUser.avatar_url,
           status: existingUser.status,
+          email: existingUser.email, // Use email from users table
         },
       });
     }
+    
+    // Step 5: Redirect authenticated users away from sign-in page
     if (
       req.nextUrl.pathname.startsWith("/sign-in") ||
       req.nextUrl.pathname === "/"

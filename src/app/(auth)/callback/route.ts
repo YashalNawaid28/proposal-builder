@@ -29,35 +29,41 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      // Get user data from users table
+      console.log("Callback - Session user email:", session.user.email);
+      
+      // Step 1: Get user data from users table (main source of truth)
       const { data: existingUser, error: userError } = await supabase
         .from("users")
         .select("*")
         .eq("email", session.user.email)
         .single();
 
+      console.log("Callback - User lookup result:", { existingUser, userError });
+
       if (userError || !existingUser) {
+        console.log("Callback - User not found in database, signing out");
         await supabase.auth.signOut();
         return NextResponse.redirect(
           new URL("/sign-in?error=access_denied", request.url)
         );
       }
 
-      // Check if user is disabled
+      // Step 2: Check if user is disabled
       if (existingUser.status === "Disabled") {
+        console.log("Callback - User is disabled, signing out");
         await supabase.auth.signOut();
         return NextResponse.redirect(
           new URL("/sign-in?error=account_disabled", request.url)
         );
       }
 
-      // Update last_active_at
+      // Step 3: Update last_active_at in users table
       await supabase
         .from("users")
         .update({ last_active_at: new Date().toISOString() })
         .eq("email", session.user.email);
 
-      // Update session metadata with user data
+      // Step 4: Save users table data in session metadata (main source of truth)
       await supabase.auth.updateUser({
         data: {
           user_id: existingUser.id,
@@ -66,9 +72,11 @@ export async function GET(request: NextRequest) {
           role: existingUser.role,
           avatar_url: existingUser.avatar_url,
           status: existingUser.status,
+          email: existingUser.email, // Use email from users table
         },
       });
 
+      console.log("Callback - Successfully authenticated user:", existingUser.display_name);
       return NextResponse.redirect(new URL("/jobs", request.url));
     } catch (error) {
       console.error("Callback error:", error);
