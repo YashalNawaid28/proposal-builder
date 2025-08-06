@@ -1,5 +1,5 @@
 "use client";
-import { Users, Grid2x2, ListTodo, Tag, House } from "lucide-react";
+import { Users, Grid2x2, ListTodo, Tag, House, LogOut, User } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -10,9 +10,18 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import Image from "next/image";
-import { UserButton } from "@stackframe/stack";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "./supabase-auth-provider";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 const navLinks = [
   {
@@ -55,6 +64,12 @@ const adminLinks = [
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
+  const { user, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
   return (
     <Sidebar
       collapsible="offcanvas"
@@ -171,7 +186,36 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="mt-auto bg-black text-[14px] px-4 pb-4">
-        <UserButton showUserInfo={true} />
+        {user && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-2 w-full p-2 rounded-md hover:bg-gray-900/60 transition-colors">
+                <Avatar className="w-8 h-8">
+                  <AvatarImage src={user.user_metadata?.avatar_url} />
+                  <AvatarFallback>
+                    <User className="w-4 h-4" />
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 text-left">
+                  <div className="text-sm font-medium text-white">
+                    {user.user_metadata?.full_name || user.email}
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    {user.email}
+                  </div>
+                </div>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleSignOut}>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Sign out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </SidebarFooter>
     </Sidebar>
   );

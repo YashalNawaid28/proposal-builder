@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState, useEffect, useRef } from "react";
-import { useUser } from "@stackframe/stack";
+import { useAuth } from "@/components/supabase-auth-provider";
 import { PageTabs } from "@/components/ui/page-tabs";
 import {
   Dialog,
@@ -173,7 +173,6 @@ const OptionIconCell = ({
       </div>
     );
   }
-
   return (
     <img
       src={src}
@@ -215,7 +214,7 @@ const ValuesCell = ({
 );
 
 const OptionsPage = () => {
-  const user = useUser();
+  const { user } = useAuth();
   const [tab, setTab] = useState<"all" | "active" | "archived">("all");
   const [options, setOptions] = useState<OptionData[]>([]);
   const [optionValues, setOptionValues] = useState<{ [optionId: string]: OptionValue[] }>({});
@@ -475,3 +474,4 @@ const OptionsPage = () => {
 };
 
 export default OptionsPage;
+

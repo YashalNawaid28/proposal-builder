@@ -1,9 +1,25 @@
 "use client";
-import { Users, Grid2x2, ListTodo, Tag, House } from "lucide-react";
+import {
+  Users,
+  Grid2x2,
+  ListTodo,
+  Tag,
+  House,
+  LogOut,
+  User,
+} from "lucide-react";
 import Image from "next/image";
-import { UserButton } from "@stackframe/stack";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "./supabase-auth-provider";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 const navLinks = [
   {
@@ -54,6 +70,11 @@ export function CustomSidebar({
   style,
 }: Readonly<CustomSidebarProps>) {
   const pathname = usePathname();
+  const { user, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
 
   return (
     <div
@@ -153,7 +174,46 @@ export function CustomSidebar({
 
       {/* Footer */}
       <div className="mt-auto bg-black text-[14px] px-4 pb-4">
-        <UserButton showUserInfo={true} />
+        {user && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-2 w-full p-2 rounded-md hover:bg-gray-900/60 transition-colors">
+                {user.user_metadata?.avatar_url ? (
+                  <img
+                    src={user.user_metadata.avatar_url}
+                    alt={`${
+                      user.user_metadata?.full_name || user.email
+                    } Profile`}
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-700 text-white text-sm font-medium">
+                    {(user.user_metadata?.full_name || user.email)
+                      .split(" ")
+                      .map((word: string) => word[0])
+                      .join("")
+                      .toUpperCase()
+                      .substring(0, 2)}
+                  </div>
+                )}
+                <div className="flex-1 text-left">
+                  <div className="text-sm font-medium text-white">
+                    {user.user_metadata?.full_name || user.email}
+                  </div>
+                  <div className="text-xs text-gray-400">{user.email}</div>
+                </div>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleSignOut}>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Sign out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
     </div>
   );

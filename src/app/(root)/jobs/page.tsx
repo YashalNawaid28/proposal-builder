@@ -1,10 +1,9 @@
 "use client";
 import { useEffect, useState, useMemo } from "react";
-import { ListFilter, ArrowUpDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { PageTabs } from "@/components/ui/page-tabs";
 import { Pagination } from "@/components/ui/pagination";
-import { useUser } from "@stackframe/stack";
+import { useAuth } from "@/components/supabase-auth-provider";
 
 export interface JobData {
   id: string;
@@ -98,7 +97,7 @@ export default function JobsPage() {
   const [totalPages, setTotalPages] = useState<number>(0);
   const router = useRouter();
 
-  const user = useUser();
+  const { user } = useAuth();
 
   const handleNewJob = () => {
     router.push("/jobs/job-info");

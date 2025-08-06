@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/supabase/server';
+import { v4 as uuidv4 } from 'uuid';
 
 export async function GET(request: NextRequest) {
   try {
@@ -33,6 +34,7 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabase
       .from('users')
       .insert({
+        id: uuidv4(),
         display_name,
         email,
         job_title: job_title || null,

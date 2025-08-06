@@ -106,7 +106,7 @@ const UserNameCell = ({
 );
 
 const UsersPage = () => {
-  const [tab, setTab] = useState<"all" | "active" | "disabled">("all");
+  const [tab, setTab] = useState<"All" | "Active" | "Disabled">("All");
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -118,12 +118,12 @@ const UsersPage = () => {
     const fetchUsers = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/users');
-        
+        const response = await fetch("/api/users");
+
         if (!response.ok) {
-          throw new Error('Failed to fetch users');
+          throw new Error("Failed to fetch users");
         }
-        
+
         const result = await response.json();
         setUsers(result.data || []);
       } catch (err) {
@@ -137,26 +137,26 @@ const UsersPage = () => {
   }, []);
 
   const filteredUsers = useMemo(() => {
-    if (tab === "all") return users;
+    if (tab === "All") return users;
     return users.filter((user) =>
-      tab === "active" ? user.status === "Active" : user.status === "Disabled"
+      tab === "Active" ? user.status === "Active" : user.status === "Disabled"
     );
   }, [users, tab]);
 
   const rowData: RowData[] = useMemo(() => {
     return filteredUsers.map((user) => ({
       id: user.id,
-      userImage: user.avatar_url || '',
+      userImage: user.avatar_url || "",
       userName: user.display_name,
       email: user.email,
-      jobTitle: user.job_title || 'Not Set',
+      jobTitle: user.job_title || "Not Set",
       status: user.status,
-      role: user.role || 'Not Set',
+      role: user.role || "Not Set",
       jobs: user.job_count || 0,
-      dateAdded: new Date(user.created_at).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
+      dateAdded: new Date(user.created_at).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
       }),
     }));
   }, [filteredUsers]);
@@ -184,12 +184,12 @@ const UsersPage = () => {
     const fetchUsers = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/users');
-        
+        const response = await fetch("/api/users");
+
         if (!response.ok) {
-          throw new Error('Failed to fetch users');
+          throw new Error("Failed to fetch users");
         }
-        
+
         const result = await response.json();
         setUsers(result.data || []);
       } catch (err) {
@@ -318,7 +318,7 @@ const UsersPage = () => {
     );
   };
 
-  const tabs = ["all", "active", "disabled"];
+  const tabs = ["All", "Active", "Disabled"];
 
   return (
     <div className="bg-white">
@@ -334,7 +334,7 @@ const UsersPage = () => {
       <PageTabs
         tabs={tabs}
         activeTab={tab}
-        onTabChange={(tab) => setTab(tab as "all" | "active" | "disabled")}
+        onTabChange={(tab) => setTab(tab as "All" | "Active" | "Disabled")}
       />
       <div className="border border-[#DEE1EA] overflow-hidden">
         <div>{renderTable()}</div>
