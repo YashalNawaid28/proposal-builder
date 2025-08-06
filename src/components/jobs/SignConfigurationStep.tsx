@@ -56,7 +56,7 @@ export const SignConfigurationStep = ({
   jobId,
   pricingVersionId,
 }: SignConfigurationStepProps) => {
-  const { user } = useAuth();
+  const { user, userData } = useAuth();
   const [isEditingPrices, setIsEditingPrices] = useState(false);
   const [editablePrices, setEditablePrices] = useState({
     signPrice: "0.00",
@@ -487,10 +487,10 @@ export const SignConfigurationStep = ({
       console.log("Component Debug - jobId:", jobId);
 
       // Get current user ID
-      if (!user) {
+      if (!userData) {
         throw new Error("User not authenticated");
       }
-      const userId = user.id;
+      const userId = userData.id;
 
       let targetPricingVersionId: string;
 
