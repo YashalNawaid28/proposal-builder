@@ -128,8 +128,8 @@ export const EditPricingLineDrawer = ({
             // Extract size from description if available
             const sizeMatch = description.match(/(\d+)"?/);
             if (sizeMatch) {
-              // Remove the inch sign to match the available sizes format
-              const sizeValue = sizeMatch[1];
+              // Use the curly quote to match the available sizes format
+              const sizeValue = sizeMatch[1] + '″';
               currentValues.size = sizeValue;
               console.log("EditPricingLineDrawer - Extracted size:", sizeValue);
             } else {
@@ -261,15 +261,18 @@ export const EditPricingLineDrawer = ({
         const result = await response.json();
         
         if (result.data && result.data.length > 0) {
-          // Extract just the numbers from sizes like "12"", "18"", etc.
-          const sizes = result.data.map((size: string) => size.replace('"', ''));
+          // Keep the inch symbol to match the extracted size format
+          const sizes = result.data.map((size: string) => size);
           console.log("EditPricingLineDrawer - Available sizes:", sizes);
+          
+          // Log the extracted size for debugging
+          console.log("EditPricingLineDrawer - Extracted size from description:", signData.size);
+          
           setAvailableSizes(sizes);
           
-          // Set the first available size as default if no size is selected
-          if (!signData.size && sizes.length > 0) {
-            setSignData({ ...signData, size: sizes[0] });
-          }
+          // Don't override the extracted size - just ensure it's in the available sizes
+          console.log("EditPricingLineDrawer - Current signData.size:", signData.size);
+          console.log("EditPricingLineDrawer - Available sizes after fetch:", sizes);
         } else {
           setAvailableSizes([]);
         }
@@ -367,6 +370,12 @@ export const EditPricingLineDrawer = ({
     console.log("EditPricingLineDrawer - Generated fields:", fields);
     setFormFields(fields);
   }, [selectedSignData]);
+
+  // Debug size field
+  useEffect(() => {
+    console.log("EditPricingLineDrawer - Size field value:", signData?.size);
+    console.log("EditPricingLineDrawer - Available sizes for dropdown:", availableSizes);
+  }, [signData?.size, availableSizes]);
 
   // Fetch options for dynamic fields
   useEffect(() => {
