@@ -1519,8 +1519,6 @@ export default function AddJobPage() {
         pricingLine={editingPricingLine}
         onSave={async (updatedData) => {
           console.log("Saving updated pricing line:", updatedData);
-          // TODO: Implement save functionality
-          // For now, just refresh the data
           if (jobId && selectedVersion) {
             await fetchPricingData(jobId, selectedVersion.id);
           }
