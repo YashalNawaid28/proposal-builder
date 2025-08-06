@@ -428,8 +428,8 @@ export function generateProposalHTML(
       </div>
     </div>
   </div>
-  <!-- Page 1 Content -->
-  <div class="content" style="position: relative;" style="page: page1;">
+  <!-- Page 1 Content - Can auto-create new pages based on data -->
+  <div class="content" style="position: relative;">
 
     <div class="info" style="display: flex; gap: 32px;">
       <div style="flex: 1;">
@@ -553,7 +553,7 @@ export function generateProposalHTML(
     <div style="clear: both;"></div>
   </div>
 
-  <!-- Page 2 Content -->
+  <!-- Page 2 Content - Always a new page -->
 
   <div class="content" style="page: page2;">
   <div id="header">
@@ -647,7 +647,7 @@ export function generateProposalHTML(
 
   </div>
 
-  <!-- Page 3 Content -->
+  <!-- Page 3 Content - Always a new page -->
 
   <div class="content" style="page: page3;">
   <div id="header">
