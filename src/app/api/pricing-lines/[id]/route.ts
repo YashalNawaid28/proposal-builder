@@ -3,9 +3,10 @@ import { getServerSupabase } from "@/lib/supabase";
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabase = getServerSupabase();
     const { 
       list_price, 
@@ -26,7 +27,7 @@ export async function PUT(
         description_resolved,
         qty,
       })
-      .eq("id", params.id)
+      .eq("id", id)
       .select()
       .single();
 
@@ -50,15 +51,16 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabase = getServerSupabase();
 
     const { error } = await supabase
       .from("pricing_lines")
       .delete()
-      .eq("id", params.id);
+      .eq("id", id);
 
     if (error) {
       console.error("Error deleting pricing line:", error);
