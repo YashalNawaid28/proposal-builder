@@ -36,7 +36,7 @@ export default function SignIn() {
     try {
       console.log("Attempting to sign in with email:", email.toLowerCase());
 
-      // First try exact match
+      // Step 1: Check if user exists in users table first
       let { data: existingUser, error: checkError } = await supabase
         .from("users")
         .select("id, email, display_name, status")
@@ -82,7 +82,7 @@ export default function SignIn() {
 
       console.log("User found:", existingUser);
 
-      // Check if user is disabled
+      // Step 2: Check if user is disabled
       if (existingUser.status === "Disabled") {
         console.log("User is disabled");
         setError(
@@ -92,9 +92,9 @@ export default function SignIn() {
         return;
       }
 
-      console.log("User is active, syncing with auth system if needed");
+      console.log("User is active, syncing with auth system");
 
-      // Try to sync user with auth system if they don't exist there
+      // Step 3: Sync user with auth system (create if doesn't exist)
       try {
         const syncResponse = await fetch("/api/sync-user", {
           method: "POST",
@@ -116,6 +116,7 @@ export default function SignIn() {
 
       console.log("Sending magic link");
 
+      // Step 4: Send magic link (user now exists in auth system)
       const { error: signInError } = await supabase.auth.signInWithOtp({
         email: email.toLowerCase(),
         options: {
