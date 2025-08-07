@@ -3,7 +3,9 @@ import { Users, Grid2x2, ListTodo, Tag, House, LogOut } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useAuth } from "./supabase-auth-provider";
+import { useSupabaseAuth } from "./supabase-auth-provider";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -62,18 +64,19 @@ export function CustomSidebar({
   style,
 }: Readonly<CustomSidebarProps>) {
   const pathname = usePathname();
-  const { user, userData, signOut } = useAuth();
+  const { user } = useSupabaseAuth();
+  const router = useRouter();
 
   console.log("CustomSidebar - user:", user);
-  console.log("CustomSidebar - userData:", userData);
 
   const handleSignOut = async () => {
     try {
       console.log("Sign out button clicked");
       console.log("Current user:", user);
-      console.log("Current userData:", userData);
       
-      await signOut();
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      router.push("/sign-in");
       
       console.log("Sign out completed successfully");
     } catch (error) {
@@ -81,8 +84,8 @@ export function CustomSidebar({
     }
   };
 
-  // Use userData if available, otherwise fall back to session metadata
-  const displayUser = userData || {
+  // Use user metadata for display
+  const displayUser = {
     display_name: user?.user_metadata?.display_name || user?.email || "User",
     email: user?.email || "",
     avatar_url: user?.user_metadata?.avatar_url || null,

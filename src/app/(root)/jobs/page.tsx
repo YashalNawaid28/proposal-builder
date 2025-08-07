@@ -3,7 +3,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { PageTabs } from "@/components/ui/page-tabs";
 import { Pagination } from "@/components/ui/pagination";
-import { useAuth } from "@/components/supabase-auth-provider";
+import { useSupabaseAuth } from "@/components/supabase-auth-provider";
 
 export interface JobData {
   id: string;
@@ -97,7 +97,7 @@ export default function JobsPage() {
   const [totalPages, setTotalPages] = useState<number>(0);
   const router = useRouter();
 
-  const { user, userData } = useAuth();
+  const { user } = useSupabaseAuth();
 
   const handleNewJob = () => {
     router.push("/jobs/job-info");
@@ -109,7 +109,7 @@ export default function JobsPage() {
 
   useEffect(() => {
     const fetchJobs = async () => {
-      if (!userData) return;
+      if (!user) return;
       setLoading(true);
       setError(null);
       try {
@@ -119,7 +119,7 @@ export default function JobsPage() {
         const res = await fetch(
           `/api/jobs?page=${currentPage}&limit=${itemsPerPage}`,
           {
-            headers: { "request.user.id": userData.id },
+            headers: { "request.user.id": user.id },
             signal: controller.signal,
           }
         );
@@ -149,7 +149,7 @@ export default function JobsPage() {
     };
 
     fetchJobs();
-  }, [userData, currentPage, itemsPerPage]);
+  }, [user, currentPage, itemsPerPage]);
 
   // Filter jobs based on the selected tab
   const filteredJobs = useMemo(() => {

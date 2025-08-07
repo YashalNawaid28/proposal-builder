@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState, useEffect, useRef, useCallback } from "react";
-import { useAuth } from "@/components/supabase-auth-provider";
+import { useSupabaseAuth } from "@/components/supabase-auth-provider";
 import { PageTabs } from "@/components/ui/page-tabs";
 import {
   Dialog,
@@ -231,8 +231,8 @@ const ValuesCell = ({
 );
 
 const OptionsPage = () => {
-  const { user, userData } = useAuth();
-  console.log("OptionsPage - Component rendered, userData:", userData);
+  const { user } = useSupabaseAuth();
+  console.log("OptionsPage - Component rendered, user:", user);
   const [tab, setTab] = useState<"All" | "Active" | "Archived">("All");
   const [options, setOptions] = useState<OptionData[]>([]);
   const [optionValues, setOptionValues] = useState<{
@@ -245,12 +245,12 @@ const OptionsPage = () => {
   const [selectedValue, setSelectedValue] = useState<OptionValue | null>(null);
 
   const fetchOptions = useCallback(async () => {
-    console.log("OptionsPage - fetchOptions called, userData:", userData);
-    if (!userData) {
-      console.log("OptionsPage - No userData, returning early");
+    console.log("OptionsPage - fetchOptions called, user:", user);
+    if (!user) {
+      console.log("OptionsPage - No user, returning early");
       return;
     }
-    console.log("OptionsPage - Starting to fetch options with userData.id:", userData.id);
+    console.log("OptionsPage - Starting to fetch options with user.id:", user.id);
     setLoading(true);
     setError(null);
     try {
@@ -258,7 +258,7 @@ const OptionsPage = () => {
       const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
       const res = await fetch("/api/options", {
-        headers: { "request.user.id": userData.id },
+        headers: { "request.user.id": user.id },
         signal: controller.signal,
       });
 
@@ -289,7 +289,7 @@ const OptionsPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [userData]);
+  }, [user]);
 
   useEffect(() => {
     console.log("OptionsPage - useEffect triggered, fetchOptions:", fetchOptions);
