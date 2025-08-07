@@ -6,12 +6,20 @@ import "react-modern-drawer/dist/index.css";
 import { SignageTab } from "./SignageTab";
 import { ServicesTab } from "./ServicesTab";
 import { SignConfigurationStep } from "./SignConfigurationStep";
+import { ServiceConfigurationStep } from "./ServiceConfigurationStep";
 
 // Sign/Service Data Types
 export interface SignOption {
   id: string;
   name: string;
   image: string;
+  description: string;
+}
+
+export interface ServiceOption {
+  id: string;
+  name: string;
+  icon: string;
   description: string;
 }
 
@@ -27,6 +35,10 @@ export interface SignData {
       inches?: string;
     };
   };
+}
+
+export interface ServiceData {
+  price: string;
 }
 
 interface AddSignServiceSidebarProps {
@@ -47,10 +59,19 @@ export const AddSignServiceSidebar = ({
   const [activeTab, setActiveTab] = useState<"signage" | "services">("signage");
   const [step, setStep] = useState<1 | 2>(1);
   const [selectedSign, setSelectedSign] = useState<SignOption | null>(null);
+  const [selectedService, setSelectedService] = useState<ServiceOption | null>(
+    null
+  );
   const [signData, setSignData] = useState<SignData>({});
+  const [serviceData, setServiceData] = useState<ServiceData>({ price: "" });
 
   const handleSignSelect = (sign: SignOption) => {
     setSelectedSign(sign);
+    setStep(2);
+  };
+
+  const handleServiceSelect = (service: ServiceOption) => {
+    setSelectedService(service);
     setStep(2);
   };
 
@@ -58,13 +79,16 @@ export const AddSignServiceSidebar = ({
     if (step === 2) {
       setStep(1);
       setSelectedSign(null);
+      setSelectedService(null);
     }
   };
 
   const handleClose = () => {
     setStep(1);
     setSelectedSign(null);
+    setSelectedService(null);
     setSignData({});
+    setServiceData({ price: "" });
     onClose();
   };
 
@@ -72,19 +96,32 @@ export const AddSignServiceSidebar = ({
     setStep(1);
     setSelectedSign(null);
     setSignData({});
-    
+
     // Call the onSignAdded callback
     if (onSignAdded) {
       onSignAdded();
     }
-    
+
+    onClose();
+  };
+
+  const handleServiceAdded = () => {
+    setStep(1);
+    setSelectedService(null);
+    setServiceData({ price: "" });
+
+    // Call the onSignAdded callback (reusing the same callback for services)
+    if (onSignAdded) {
+      onSignAdded();
+    }
+
     onClose();
   };
 
   const renderStep1 = () => (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-[#DEE1EA]">
+      <div className="flex items-center justify-between p-4 border-b border-[#F2F2F2]">
         <h2 className="text-[20px] font-bold">Add New</h2>
         <button
           onClick={handleClose}
@@ -95,7 +132,7 @@ export const AddSignServiceSidebar = ({
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-[#DEE1EA]">
+      <div className="flex border-b border-[#F2F2F2]">
         <button
           onClick={() => setActiveTab("signage")}
           className={`flex-1 h-[60px] px-4 text-[14px] border-b-2 transition-colors ${
@@ -125,7 +162,18 @@ export const AddSignServiceSidebar = ({
               : "border-transparent text-[#60646C] bg-white font-normal"
           }`}
         >
-          Services
+          <div className="flex items-center justify-center gap-2">
+            <span>Services</span>
+            <span
+              className={`text-xs rounded-full px-2 py-1 ${
+                activeTab === "services"
+                  ? "bg-white text-black"
+                  : "bg-black text-white"
+              }`}
+            >
+              16
+            </span>
+          </div>
         </button>
       </div>
 
@@ -134,23 +182,46 @@ export const AddSignServiceSidebar = ({
         {activeTab === "signage" && (
           <SignageTab onSignSelect={handleSignSelect} />
         )}
-        {activeTab === "services" && <ServicesTab />}
+        {activeTab === "services" && (
+          <ServicesTab onServiceSelect={handleServiceSelect} />
+        )}
       </div>
     </div>
   );
 
-  const renderStep2 = () => (
-    <SignConfigurationStep
-      selectedSign={selectedSign}
-      signData={signData}
-      setSignData={setSignData}
-      onBack={handleBack}
-      onClose={handleClose}
-      onSignAdded={handleSignAdded}
-      jobId={jobId}
-      pricingVersionId={pricingVersionId}
-    />
-  );
+  const renderStep2 = () => {
+    if (selectedSign) {
+      return (
+        <SignConfigurationStep
+          selectedSign={selectedSign}
+          signData={signData}
+          setSignData={setSignData}
+          onBack={handleBack}
+          onClose={handleClose}
+          onSignAdded={handleSignAdded}
+          jobId={jobId}
+          pricingVersionId={pricingVersionId}
+        />
+      );
+    }
+
+    if (selectedService) {
+      return (
+        <ServiceConfigurationStep
+          selectedService={selectedService}
+          serviceData={serviceData}
+          setServiceData={setServiceData}
+          onBack={handleBack}
+          onClose={handleClose}
+          onServiceAdded={handleServiceAdded}
+          jobId={jobId}
+          pricingVersionId={pricingVersionId}
+        />
+      );
+    }
+
+    return null;
+  };
 
   return (
     <Drawer

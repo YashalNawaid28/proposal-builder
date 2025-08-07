@@ -4,27 +4,84 @@ import { getServerSupabase } from "@/lib/supabase";
 export async function POST(request: NextRequest) {
   try {
     const supabase = getServerSupabase();
-    const { pricing_version_id, sign_id, description_resolved, qty, list_price, cost_budget, list_install_price, cost_install_budget } = await request.json();
+    // Handle both JSON and FormData
+    let body;
+    const contentType = request.headers.get("content-type");
 
-    if (!pricing_version_id || !sign_id) {
+    if (contentType?.includes("application/json")) {
+      body = await request.json();
+    } else {
+      const formData = await request.formData();
+      body = {
+        pricing_version_id: formData.get("pricing_version_id"),
+        sign_id: formData.get("sign_id"),
+        service_name: formData.get("service_name"),
+        type: formData.get("type") || "sign",
+        description_resolved: formData.get("description_resolved"),
+        qty: formData.get("qty"),
+        list_price: formData.get("price") || formData.get("list_price"),
+        cost_budget: formData.get("cost_budget"),
+        list_install_price: formData.get("list_install_price"),
+        cost_install_budget: formData.get("cost_install_budget"),
+      };
+    }
+
+    const {
+      pricing_version_id,
+      sign_id,
+      service_name,
+      type = "sign",
+      description_resolved,
+      qty,
+      list_price,
+      cost_budget,
+      list_install_price,
+      cost_install_budget,
+    } = body;
+
+    if (!pricing_version_id) {
       return NextResponse.json(
-        { error: "pricing_version_id and sign_id are required" },
+        { error: "pricing_version_id is required" },
         { status: 400 }
       );
     }
 
+    // For signs, sign_id is required
+    if (type === "sign" && !sign_id) {
+      return NextResponse.json(
+        { error: "sign_id is required for signs" },
+        { status: 400 }
+      );
+    }
+
+    // For services, service_name is required
+    if (type === "service" && !service_name) {
+      return NextResponse.json(
+        { error: "service_name is required for services" },
+        { status: 400 }
+      );
+    }
+
+    const insertData: any = {
+      pricing_version_id,
+      type,
+      description_resolved:
+        description_resolved || (type === "service" ? service_name : ""),
+      qty: qty || 1,
+      list_price,
+      cost_budget,
+      list_install_price,
+      cost_install_budget,
+    };
+
+    // Only add sign_id if it's provided (for signs)
+    if (sign_id) {
+      insertData.sign_id = sign_id;
+    }
+
     const { data, error } = await supabase
       .from("pricing_lines")
-      .insert({
-        pricing_version_id,
-        sign_id,
-        description_resolved: description_resolved || "",
-        qty: qty || 1,
-        list_price,
-        cost_budget,
-        list_install_price,
-        cost_install_budget,
-      })
+      .insert(insertData)
       .select()
       .single();
 
@@ -61,14 +118,16 @@ export async function GET(request: NextRequest) {
 
     const { data, error } = await supabase
       .from("pricing_lines")
-      .select(`
+      .select(
+        `
         *,
         signs (
           id,
           sign_name,
           sign_image
         )
-      `)
+      `
+      )
       .eq("pricing_version_id", pricing_version_id)
       .order("created_at", { ascending: true });
 
@@ -88,4 +147,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}
