@@ -97,7 +97,7 @@ export default function JobsPage() {
   const [totalPages, setTotalPages] = useState<number>(0);
   const router = useRouter();
 
-  const { user } = useAuth();
+  const { user, userData } = useAuth();
 
   const handleNewJob = () => {
     router.push("/jobs/job-info");
@@ -109,7 +109,7 @@ export default function JobsPage() {
 
   useEffect(() => {
     const fetchJobs = async () => {
-      if (!user) return;
+      if (!userData) return;
       setLoading(true);
       setError(null);
       try {
@@ -119,7 +119,7 @@ export default function JobsPage() {
         const res = await fetch(
           `/api/jobs?page=${currentPage}&limit=${itemsPerPage}`,
           {
-            headers: { "request.user.id": user.id },
+            headers: { "request.user.id": userData.id },
             signal: controller.signal,
           }
         );
@@ -149,7 +149,7 @@ export default function JobsPage() {
     };
 
     fetchJobs();
-  }, [user, currentPage, itemsPerPage]);
+  }, [userData, currentPage, itemsPerPage]);
 
   // Filter jobs based on the selected tab
   const filteredJobs = useMemo(() => {
