@@ -293,7 +293,7 @@ export const EditPricingLineDrawer = ({
     };
 
     fetchSizes();
-  }, [selectedSignData?.id, setSignData, signData, dummyData]);
+  }, [selectedSignData?.id]);
 
   // Parse sign description and generate form fields
   useEffect(() => {
