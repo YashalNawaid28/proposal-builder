@@ -6,7 +6,14 @@ import type { NextRequest } from "next/server";
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
+  const token = requestUrl.searchParams.get("token");
   const error = requestUrl.searchParams.get("error");
+  
+  // Log all search parameters for debugging
+  const allParams = Object.fromEntries(requestUrl.searchParams.entries());
+  console.log("Callback - Full URL:", request.url);
+  console.log("Callback - All search params:", allParams);
+  console.log("Callback - URL params:", { code, token, error });
 
   if (error) {
     console.error("Auth error:", error);
@@ -15,13 +22,19 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  if (code) {
+  // Handle both code and token parameters
+  const authCode = code || token;
+  
+  if (authCode) {
     const supabase = createRouteHandlerClient({ cookies });
     try {
+      console.log("Callback - Exchanging auth code for session");
+      
       const {
         data: { session },
         error: sessionError,
-      } = await supabase.auth.exchangeCodeForSession(code);
+      } = await supabase.auth.exchangeCodeForSession(authCode);
+      
       if (sessionError || !session) {
         console.error("Session error:", sessionError);
         return NextResponse.redirect(
@@ -86,5 +99,6 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  console.log("Callback - No auth code found, redirecting to sign-in");
   return NextResponse.redirect(new URL("/sign-in", request.url));
 }

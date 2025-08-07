@@ -10,6 +10,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
+    console.log('Sync-user - Processing email:', email.toLowerCase());
+
     // First, check if user exists in our custom table
     const { data: existingUser, error: userError } = await supabase
       .from('users')
@@ -18,25 +20,31 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (userError || !existingUser) {
+      console.log('Sync-user - User not found in database:', userError);
       return NextResponse.json({ error: 'User not found in database' }, { status: 404 });
     }
+
+    console.log('Sync-user - User found in database:', existingUser.id);
 
     // Check if user already exists in auth system
     const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
     
     if (authError) {
-      console.error('Error listing auth users:', authError);
+      console.error('Sync-user - Error listing auth users:', authError);
       return NextResponse.json({ error: 'Failed to check auth users' }, { status: 500 });
     }
 
     const existingAuthUser = authUsers.users.find(user => user.email === email.toLowerCase());
     
     if (existingAuthUser) {
+      console.log('Sync-user - User already exists in auth system:', existingAuthUser.id);
       return NextResponse.json({ 
         message: 'User already exists in auth system',
         userId: existingAuthUser.id 
       });
     }
+
+    console.log('Sync-user - Creating user in auth system');
 
     // Create user in auth system
     const { data: authData, error: createError } = await supabase.auth.admin.createUser({
@@ -51,9 +59,11 @@ export async function POST(request: NextRequest) {
     });
 
     if (createError) {
-      console.error('Error creating auth user:', createError);
+      console.error('Sync-user - Error creating auth user:', createError);
       return NextResponse.json({ error: 'Failed to create auth user' }, { status: 500 });
     }
+
+    console.log('Sync-user - User created successfully in auth system:', authData.user.id);
 
     return NextResponse.json({ 
       message: 'User synced successfully',
@@ -61,7 +71,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error in sync-user route:', error);
+    console.error('Sync-user - Error in sync-user route:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
