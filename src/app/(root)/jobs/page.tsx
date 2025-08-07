@@ -97,7 +97,7 @@ export default function JobsPage() {
   const [totalPages, setTotalPages] = useState<number>(0);
   const router = useRouter();
 
-  const { user, userData } = useAuth();
+  const { user, userData, loading: authLoading } = useAuth();
 
   const handleNewJob = () => {
     router.push("/jobs/job-info");
@@ -109,7 +109,19 @@ export default function JobsPage() {
 
   useEffect(() => {
     const fetchJobs = async () => {
-      if (!userData) return;
+      console.log("Jobs page - userData:", userData);
+      console.log("Jobs page - user:", user);
+      console.log("Jobs page - loading:", loading);
+      
+      // Use user object if userData is not available
+      const userId = userData?.id || user?.id;
+      
+      if (!userId) {
+        console.log("Jobs page - No user ID available, not fetching jobs");
+        setLoading(false);
+        return;
+      }
+      
       setLoading(true);
       setError(null);
       try {
@@ -119,7 +131,7 @@ export default function JobsPage() {
         const res = await fetch(
           `/api/jobs?page=${currentPage}&limit=${itemsPerPage}`,
           {
-            headers: { "request.user.id": userData.id },
+            headers: { "request.user.id": userId },
             signal: controller.signal,
           }
         );
@@ -149,7 +161,7 @@ export default function JobsPage() {
     };
 
     fetchJobs();
-  }, [userData, currentPage, itemsPerPage]);
+  }, [userData, user, currentPage, itemsPerPage]);
 
   // Filter jobs based on the selected tab
   const filteredJobs = useMemo(() => {
@@ -358,8 +370,23 @@ export default function JobsPage() {
         </div>
       )}
 
+      {/* Authentication Error State */}
+      {!user && (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-red-500 text-[14px] mb-4">You need to be signed in to view jobs.</p>
+            <button
+              onClick={() => router.push('/sign-in')}
+              className="border border-[#DEE1EA] px-6 py-3 flex items-center justify-center h-10 text-black text-[14px] rounded-md bg-[#F9F9FB] font-medium"
+            >
+              Sign In
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Error State */}
-      {!loading && error && (
+      {!loading && user && error && (
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <p className="text-red-500 text-[14px] mb-4">Error: {error}</p>
@@ -374,7 +401,7 @@ export default function JobsPage() {
       )}
 
       {/* Table or Empty State */}
-      {!loading && !error && (
+      {!loading && user && !error && (
         <>
           {rowData.length > 0 ? (
             <div className="flex-1">
@@ -406,7 +433,7 @@ export default function JobsPage() {
       )}
 
       {/* Pagination Section */}
-      {rowData.length > 0 && totalPages > 0 && (
+      {!loading && user && rowData.length > 0 && totalPages > 0 && (
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
