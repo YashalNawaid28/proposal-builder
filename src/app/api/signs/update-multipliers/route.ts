@@ -1,35 +1,35 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/supabase/server';
+import { createClient } from '@/lib/supabase/server';
+import { NextRequest, NextResponse } from "next/server";
 
-export async function PUT(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient();
     const body = await request.json();
-    const { sign_id, sign_budget_multiplier, install_budget_multiplier } = body;
+    const { signId, multipliers } = body;
 
-    if (!sign_id) {
-      return NextResponse.json({ error: 'Sign ID is required' }, { status: 400 });
+    if (!signId || !multipliers) {
+      return NextResponse.json(
+        { error: "Sign ID and multipliers are required" },
+        { status: 400 }
+      );
     }
 
-    const updateData: any = {};
-    
-    // Only include fields that are provided
-    if (sign_budget_multiplier !== undefined) updateData.sign_budget_multiplier = sign_budget_multiplier;
-    if (install_budget_multiplier !== undefined) updateData.install_budget_multiplier = install_budget_multiplier;
-
     const { data, error } = await supabase
-      .from('signs')
-      .update(updateData)
-      .eq('id', sign_id)
+      .from("signs")
+      .update({ multipliers })
+      .eq("id", signId)
       .select();
 
     if (error) {
-      console.error('Error updating sign multipliers:', error);
-      return NextResponse.json({ error: 'Failed to update sign multipliers' }, { status: 500 });
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ data });
+    return NextResponse.json(data);
   } catch (error) {
-    console.error('Error in update-multipliers route:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error("POST /signs/update-multipliers error:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 } 

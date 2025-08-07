@@ -1,35 +1,28 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/supabase/server';
+import { createClient } from '@/lib/supabase/server';
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(request: NextRequest) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
-    const { searchParams } = new URL(request.url);
-    const brandId = searchParams.get('brand_id');
-
-    if (!brandId) {
-      return NextResponse.json({ error: 'Brand ID is required' }, { status: 400 });
-    }
-
-    // Use the imported supabase client directly
-    
-    const { data, error } = await supabase
-      .from('brands')
-      .select('brand_name')
-      .eq('id', brandId)
+    const supabase = await createClient();
+    const { data: brand, error } = await supabase
+      .from("brands")
+      .select("*")
+      .eq("id", params.id)
       .single();
 
     if (error) {
-      console.error('Error fetching brand:', error);
-      return NextResponse.json({ error: 'Failed to fetch brand' }, { status: 500 });
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    if (!data) {
-      return NextResponse.json({ data: null });
-    }
-
-    return NextResponse.json({ data });
+    return NextResponse.json(brand);
   } catch (error) {
-    console.error('Error in get-by-id route:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error("GET /brands/[id] error:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 } 

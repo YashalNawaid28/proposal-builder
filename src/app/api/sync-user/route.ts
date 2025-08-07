@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,6 +11,8 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('Sync-user - Processing email:', email.toLowerCase());
+
+    const supabase = await createClient();
 
     // First, check if user exists in our custom table
     const { data: existingUser, error: userError } = await supabase

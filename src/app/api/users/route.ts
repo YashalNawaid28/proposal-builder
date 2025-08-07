@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function GET(request: NextRequest) {
   try {
+    const supabase = await createClient();
     const { data, error } = await supabase
       .from('users')
       .select('*')
@@ -23,6 +24,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient();
     const body = await request.json();
     const { display_name, email, job_title, role, avatar_url } = body;
 

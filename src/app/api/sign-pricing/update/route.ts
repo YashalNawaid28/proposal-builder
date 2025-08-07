@@ -1,38 +1,34 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/supabase/server';
+import { createClient } from '@/lib/supabase/server';
+import { NextRequest, NextResponse } from "next/server";
 
-export async function PUT(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient();
     const body = await request.json();
-    const { id, sign_price, install_price, sign_budget, install_budget, raceway } = body;
+    const { signId, pricingData } = body;
 
-    if (!id) {
-      return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+    if (!signId || !pricingData) {
+      return NextResponse.json(
+        { error: "Sign ID and pricing data are required" },
+        { status: 400 }
+      );
     }
 
-    const updateData: any = {};
-    
-    // Only include fields that are provided
-    if (sign_price !== undefined) updateData.sign_price = sign_price;
-    if (install_price !== undefined) updateData.install_price = install_price;
-    if (sign_budget !== undefined) updateData.sign_budget = sign_budget;
-    if (install_budget !== undefined) updateData.install_budget = install_budget;
-    if (raceway !== undefined) updateData.raceway = raceway;
-
     const { data, error } = await supabase
-      .from('sign_pricing')
-      .update(updateData)
-      .eq('id', id)
+      .from("sign_pricing")
+      .upsert(pricingData)
       .select();
 
     if (error) {
-      console.error('Error updating sign pricing:', error);
-      return NextResponse.json({ error: 'Failed to update sign pricing' }, { status: 500 });
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ data });
+    return NextResponse.json(data);
   } catch (error) {
-    console.error('Error in sign-pricing update route:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error("POST /sign-pricing/update error:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 } 
