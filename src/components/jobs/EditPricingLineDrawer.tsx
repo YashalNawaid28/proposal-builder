@@ -681,7 +681,7 @@ export const EditPricingLineDrawer = ({
   };
 
   // Helper function to calculate modified sign price and budgets based on selected options
-  const calculateModifiedValues = () => {
+  const calculateModifiedValues = useCallback(() => {
     if (!currentPricing)
       return { signPrice: "0.00", signBudget: "0.00", installBudget: "0.00" };
 
@@ -755,7 +755,7 @@ export const EditPricingLineDrawer = ({
       signBudget: modifiedSignBudget.toFixed(2),
       installBudget: modifiedInstallBudget.toFixed(2),
     };
-  };
+  }, [currentPricing, signData, dynamicOptions, selectedSignData]);
 
   // Update modified values when options or pricing changes
   useEffect(() => {
