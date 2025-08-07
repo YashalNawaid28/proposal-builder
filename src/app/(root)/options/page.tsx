@@ -246,11 +246,18 @@ const OptionsPage = () => {
 
   const fetchOptions = useCallback(async () => {
     console.log("OptionsPage - fetchOptions called, userData:", userData);
-    if (!userData) {
-      console.log("OptionsPage - No userData, returning early");
+    console.log("OptionsPage - user:", user);
+    
+    // Use user object if userData is not available
+    const userId = userData?.id || user?.id;
+    
+    if (!userId) {
+      console.log("OptionsPage - No user ID available, returning early");
+      setLoading(false);
       return;
     }
-    console.log("OptionsPage - Starting to fetch options with userData.id:", userData.id);
+    
+    console.log("OptionsPage - Starting to fetch options with userId:", userId);
     setLoading(true);
     setError(null);
     try {
@@ -258,7 +265,7 @@ const OptionsPage = () => {
       const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
       const res = await fetch("/api/options", {
-        headers: { "request.user.id": userData.id },
+        headers: { "request.user.id": userId },
         signal: controller.signal,
       });
 
@@ -289,7 +296,7 @@ const OptionsPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [userData]);
+  }, [userData, user]);
 
   useEffect(() => {
     console.log("OptionsPage - useEffect triggered, fetchOptions:", fetchOptions);
