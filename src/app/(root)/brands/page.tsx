@@ -9,7 +9,7 @@ export interface BrandData {
   user_id: string;
   brand_image: string;
   brand_name: string;
-  proposal_label: string;
+  proposal_prefix: string;
   signs_count: number;
   services_number: number;
   status: string;
@@ -107,12 +107,20 @@ const BrandsPage = () => {
   // Fetch brands data when component mounts or user changes
   useEffect(() => {
     const fetchBrands = async () => {
-      if (!userData) return; // Don't fetch if user is not available
+      // Use user object if userData is not available
+      const userId = userData?.id || user?.id;
+      
+      if (!userId) {
+        console.log("Brands page - No user ID available, not fetching brands");
+        setLoading(false);
+        return;
+      }
+      
       setLoading(true);
       setError(null);
       try {
         const res = await fetch("/api/brands", {
-          headers: { "request.user.id": userData.id },
+          headers: { "request.user.id": userId },
         });
 
         if (!res.ok) {
@@ -132,7 +140,7 @@ const BrandsPage = () => {
     };
 
     fetchBrands();
-  }, [userData]);
+  }, [userData, user]);
 
   // Filter brands based on the selected tab
   const filteredBrands = useMemo(() => {
@@ -150,9 +158,9 @@ const BrandsPage = () => {
       id: brand.id,
       brandImage: brand.brand_image,
       brandName: brand.brand_name,
-      proposalLabel: brand.proposal_label,
-      signs: brand.signs_count,
-      services: brand.services_number,
+      proposalLabel: brand.proposal_prefix,
+      signs: brand.signs_count || 0,
+      services: brand.services_number || 0,
       status: brand.status,
       dateAdded: formatDate(brand.created_at),
     }));

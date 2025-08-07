@@ -106,10 +106,14 @@ export function SupabaseAuthProvider({
   useEffect(() => {
     const getInitialSession = async () => {
       console.log("Getting initial session...");
+      console.log("Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
+      console.log("Supabase Anon Key:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "Set" : "Not set");
+      
       const supabase = createClient();
       
       try {
         // First try to get the current session
+        console.log("Attempting to get session...");
         const {
           data: { session: currentSession },
         } = await supabase.auth.getSession();
@@ -151,6 +155,7 @@ export function SupabaseAuthProvider({
         }
       } catch (error) {
         console.error("Error getting initial session:", error);
+        console.error("This might be due to missing environment variables");
       }
 
       setLoading(false);

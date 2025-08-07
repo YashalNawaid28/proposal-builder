@@ -401,7 +401,10 @@ export default function AddJobPage() {
 
   // Function to create new version
   const createNewVersion = async () => {
-    if (!jobId || !userData) return;
+    // Use user object if userData is not available
+    const userId = userData?.id || user?.id;
+    
+    if (!jobId || !userId) return;
 
     try {
       // Find the latest version to determine new version/revision numbers
@@ -438,7 +441,7 @@ export default function AddJobPage() {
           job_id: jobId,
           version_no: newVersionNo,
           revision_no: newRevisionNo,
-          creator_id: userData.id,
+          creator_id: userId,
         }),
       });
 
@@ -644,14 +647,20 @@ export default function AddJobPage() {
         formData.append("pm_id", jobData.managerId || "");
         formData.append("client_id", data.clientId || "");
 
-        if (!userData) {
-          console.error("User data not available");
+        // Use user object if userData is not available
+        const userId = userData?.id || user?.id;
+        
+        if (!userId) {
+          console.error("User ID not available");
           return;
         }
 
         const response = await fetch("/api/jobs/add-job-info", {
           method: "POST",
-          headers: { "request.user.id": userData.id },
+          headers: { 
+            "request.user.id": userId,
+            "request.user.email": user?.email || ""
+          },
           body: formData,
         });
 
@@ -676,11 +685,14 @@ export default function AddJobPage() {
   // Load existing job data when jobId is provided
   useEffect(() => {
     const loadJobData = async () => {
-      if (!jobId || !userData) return;
+      // Use user object if userData is not available
+      const userId = userData?.id || user?.id;
+      
+      if (!jobId || !userId) return;
 
       try {
         const res = await fetch(`/api/jobs/${jobId}`, {
-          headers: { "request.user.id": userData.id },
+          headers: { "request.user.id": userId },
         });
 
         if (!res.ok) {
@@ -769,17 +781,20 @@ export default function AddJobPage() {
     };
 
     loadJobData();
-  }, [jobId, userData, fetchPricingData, fetchVersions]);
+  }, [jobId, userData, user, fetchPricingData, fetchVersions]);
 
   // Function to reload job data after update
   const reloadJobData = async () => {
-    if (!jobId || !userData) return;
+    // Use user object if userData is not available
+    const userId = userData?.id || user?.id;
+    
+    if (!jobId || !userId) return;
 
     console.log("Job Info Page - reloadJobData called for jobId:", jobId);
 
     try {
               const res = await fetch(`/api/jobs/${jobId}`, {
-          headers: { "request.user.id": userData.id },
+          headers: { "request.user.id": userId },
         });
 
       if (!res.ok) {
