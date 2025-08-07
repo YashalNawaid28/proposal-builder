@@ -1,30 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { sign_id, sign_budget_multiplier, install_budget_multiplier } = body;
+    const { signId, multipliers } = body;
 
-    if (!sign_id) {
-      return NextResponse.json({ error: 'Sign ID is required' }, { status: 400 });
+    if (!signId || !multipliers) {
+      return NextResponse.json({ error: 'Sign ID and multipliers are required' }, { status: 400 });
     }
 
-    const updateData: any = {};
-    
-    // Only include fields that are provided
-    if (sign_budget_multiplier !== undefined) updateData.sign_budget_multiplier = sign_budget_multiplier;
-    if (install_budget_multiplier !== undefined) updateData.install_budget_multiplier = install_budget_multiplier;
+    const supabase = await createClient();
 
     const { data, error } = await supabase
       .from('signs')
-      .update(updateData)
-      .eq('id', sign_id)
+      .update({ multipliers })
+      .eq('id', signId)
       .select();
 
     if (error) {
-      console.error('Error updating sign multipliers:', error);
-      return NextResponse.json({ error: 'Failed to update sign multipliers' }, { status: 500 });
+      console.error('Error updating multipliers:', error);
+      return NextResponse.json({ error: 'Failed to update multipliers' }, { status: 500 });
     }
 
     return NextResponse.json({ data });

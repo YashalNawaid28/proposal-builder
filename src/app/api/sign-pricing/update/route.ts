@@ -1,28 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { id, sign_price, install_price, sign_budget, install_budget, raceway } = body;
+    const { signId, pricingData } = body;
 
-    if (!id) {
-      return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+    if (!signId || !pricingData) {
+      return NextResponse.json({ error: 'Sign ID and pricing data are required' }, { status: 400 });
     }
 
-    const updateData: any = {};
-    
-    // Only include fields that are provided
-    if (sign_price !== undefined) updateData.sign_price = sign_price;
-    if (install_price !== undefined) updateData.install_price = install_price;
-    if (sign_budget !== undefined) updateData.sign_budget = sign_budget;
-    if (install_budget !== undefined) updateData.install_budget = install_budget;
-    if (raceway !== undefined) updateData.raceway = raceway;
+    const supabase = await createClient();
 
     const { data, error } = await supabase
       .from('sign_pricing')
-      .update(updateData)
-      .eq('id', id)
+      .update(pricingData)
+      .eq('sign_id', signId)
       .select();
 
     if (error) {
