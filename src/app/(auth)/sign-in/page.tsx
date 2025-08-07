@@ -117,11 +117,16 @@ export default function SignIn() {
       console.log("Sending magic link");
 
       // Step 4: Send magic link (user now exists in auth system)
+      // Use the getSiteUrl function which now returns the correct port
+      const redirectUrl = `${getSiteUrl()}/callback`;
+      
+      console.log("Using redirect URL:", redirectUrl);
+      
       const { error: signInError } = await supabase.auth.signInWithOtp({
         email: email.toLowerCase(),
         options: {
           shouldCreateUser: false, // Don't create new users, only use existing ones
-          emailRedirectTo: `${getSiteUrl()}/callback`,
+          emailRedirectTo: redirectUrl,
         },
       });
 
