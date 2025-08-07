@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SignOption, SignData } from "./AddSignServiceSidebar";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/components/supabase-auth-provider";
 
 interface SignConfigurationStepProps {
@@ -630,7 +630,7 @@ export const SignConfigurationStep = ({
   };
 
   // Helper function to calculate modified sign price and budgets based on selected options
-  const calculateModifiedValues = () => {
+  const calculateModifiedValues = useCallback(() => {
     if (!currentPricing)
       return { signPrice: "0.00", signBudget: "0.00", installBudget: "0.00" };
 
@@ -711,7 +711,7 @@ export const SignConfigurationStep = ({
       signBudget: modifiedSignBudget.toFixed(2),
       installBudget: modifiedInstallBudget.toFixed(2),
     };
-  };
+  }, [currentPricing, signData, dynamicOptions, selectedSignData]);
 
   // Update modified values when options or pricing changes
   useEffect(() => {

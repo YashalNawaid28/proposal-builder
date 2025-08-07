@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Brand ID is required' }, { status: 400 });
     }
 
-    // Use the imported supabase client directly
+    const supabase = await createClient();
     
     const { data, error } = await supabase
       .from('brands')

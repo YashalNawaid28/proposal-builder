@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { User, Session } from "@supabase/supabase-js";
-import { supabase } from "../supabase/client";
+import { createClient } from "../lib/supabase/client";
 import { usePathname } from "next/navigation";
 import { flushSync } from "react-dom";
 
@@ -55,6 +55,7 @@ export function SupabaseAuthProvider({
   const fetchUserData = useCallback(async (email: string) => {
     try {
       console.log("Fetching user data for email:", email);
+      const supabase = createClient();
       const { data, error } = await supabase
         .from("users")
         .select("*")
@@ -105,28 +106,59 @@ export function SupabaseAuthProvider({
   useEffect(() => {
     const getInitialSession = async () => {
       console.log("Getting initial session...");
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      setSession(session);
-      setUser(session?.user ?? null);
-
-      // Fetch user data if session exists
-      if (session?.user?.email) {
-        console.log(
-          "Session found, fetching user data for:",
-          session.user.email
-        );
-        const userData = await fetchUserData(session.user.email);
-        setUserData(userData);
-      } else {
-        console.log("No session found");
+      const supabase = createClient();
+      
+      try {
+        // First try to get the current session
+        const {
+          data: { session: currentSession },
+        } = await supabase.auth.getSession();
+        
+        console.log("Current session from getSession:", currentSession);
+        
+        if (currentSession) {
+          setSession(currentSession);
+          setUser(currentSession.user);
+          
+          // Fetch user data if session exists
+          if (currentSession.user?.email) {
+            console.log(
+              "Session found, fetching user data for:",
+              currentSession.user.email
+            );
+            const userData = await fetchUserData(currentSession.user.email);
+            setUserData(userData);
+          }
+        } else {
+          console.log("No session found in getSession");
+          // Try to refresh the session
+          const {
+            data: { session: refreshedSession },
+            error: refreshError,
+          } = await supabase.auth.refreshSession();
+          
+          console.log("Refresh session result:", { refreshedSession, refreshError });
+          
+          if (refreshedSession && !refreshError) {
+            setSession(refreshedSession);
+            setUser(refreshedSession.user);
+            
+            if (refreshedSession.user?.email) {
+              const userData = await fetchUserData(refreshedSession.user.email);
+              setUserData(userData);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error getting initial session:", error);
       }
 
       setLoading(false);
     };
+    
     getInitialSession();
 
+    const supabase = createClient();
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -166,13 +198,22 @@ export function SupabaseAuthProvider({
     });
 
     return () => subscription.unsubscribe();
-  }, [fetchUserData]);
+  }, [fetchUserData, user]);
 
   const signOut = useCallback(async () => {
     try {
       console.log("SignOut function called");
       console.log("Current session:", session);
       console.log("Current user:", user);
+
+      // Call the sign-out API
+      const response = await fetch('/api/auth/sign-out', {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        console.error('Sign-out API call failed');
+      }
 
       // Clear state immediately and redirect
       flushSync(() => {
@@ -185,6 +226,7 @@ export function SupabaseAuthProvider({
       window.location.replace("/sign-in");
 
       // Try to sign out from Supabase in the background (don't wait for it)
+      const supabase = createClient();
       supabase.auth.signOut().catch((error) => {
         console.error("Background Supabase signOut error:", error);
       });
