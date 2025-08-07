@@ -113,7 +113,10 @@ export default function SignIn() {
           console.log("User sync failed, but continuing with sign-in attempt");
         }
       } catch (syncError) {
-        console.log("User sync error, but continuing with sign-in attempt:", syncError);
+        console.log(
+          "User sync error, but continuing with sign-in attempt:",
+          syncError
+        );
       }
 
       console.log("Sending magic link");
@@ -121,14 +124,17 @@ export default function SignIn() {
       // Step 4: Send magic link (user now exists in auth system)
       // Use the getSiteUrl function which now returns the correct port
       const redirectUrl = `${getSiteUrl()}/callback`;
-      
+
       console.log("Using redirect URL:", redirectUrl);
-      
+
       const { error: signInError } = await supabase.auth.signInWithOtp({
         email: email.toLowerCase(),
         options: {
           shouldCreateUser: false, // Don't create new users, only use existing ones
           emailRedirectTo: redirectUrl,
+          data: {
+            name: existingUser.display_name || "User",
+          },
         },
       });
 
