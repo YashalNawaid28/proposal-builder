@@ -108,37 +108,9 @@ export const ClientInfoDialog = ({
       return;
     }
 
-    try {
-      // Get the job ID from the URL or job data
-      const urlParams = new URLSearchParams(window.location.search);
-      const jobId = urlParams.get('id');
-
-      if (jobId) {
-        // Update the existing job with the client ID
-        const response = await fetch(`/api/jobs/${jobId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            client_id: selectedClient,
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to update job with client');
-        }
-      } else {
-        // For new jobs, we need to create the job first with the client ID
-        // This will be handled by the parent component when it receives the client data
-        console.log('New job - client will be associated when job is created');
-      }
-
-      // Call the onComplete callback with the client data including the client ID
-      onComplete({ ...clientData, clientId: selectedClient });
-    } catch (error) {
-      console.error('Error updating job with client:', error);
-    }
+    // Call the onComplete callback with the client data including the client ID
+    // Let the parent component handle the job creation/update
+    onComplete({ ...clientData, clientId: selectedClient });
   };
 
   const handleSearchFocus = () => {
