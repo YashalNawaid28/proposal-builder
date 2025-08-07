@@ -1,119 +1,90 @@
 # Magic Link Authentication Debugging Guide
 
-## Issues Identified and Fixed
+## ✅ Migration to Supabase SSR Complete
 
-### 1. ✅ Fixed: Token vs Code Parameter Mismatch
-**Problem**: The magic link you received uses a `token` parameter, but the callback route was only looking for a `code` parameter.
+The application has been successfully migrated from the deprecated `@supabase/auth-helpers-nextjs` to the new `@supabase/ssr` package.
 
-**Solution**: Updated `src/app/(auth)/callback/route.ts` to handle both `code` and `token` parameters:
+### Key Changes Made:
 
-```typescript
-const code = requestUrl.searchParams.get("code");
-const token = requestUrl.searchParams.get("token");
-const authCode = code || token;
-```
+1. **New Utility Functions Created:**
+   - `src/lib/supabase/client.ts` - For client-side components
+   - `src/lib/supabase/server.ts` - For server-side components
+   - `src/lib/supabase/middleware.ts` - For middleware
 
-### 2. ⚠️ Potential Issue: Supabase Auth Helpers Version
-**Problem**: Using `@supabase/auth-helpers-nextjs` version `0.10.0`, which is quite old.
+2. **Updated Files:**
+   - `middleware.ts` - Now uses SSR middleware with custom user validation
+   - `src/app/(auth)/callback/route.ts` - Updated to use SSR server client
+   - `src/app/(auth)/sign-in/page.tsx` - Updated to use SSR client
+   - `src/app/api/sync-user/route.ts` - Updated to use SSR server client
+   - `src/app/api/auth/sign-out/route.ts` - Updated to use SSR server client
+   - `src/components/supabase-auth-provider.tsx` - Updated to use SSR client
 
-**Recommendation**: Consider upgrading to the latest version:
-```bash
-npm install @supabase/auth-helpers-nextjs@latest
-```
+3. **New Files:**
+   - `src/app/auth/confirm/route.ts` - Auth confirmation handler for email templates
 
-### 3. ✅ Working: Magic Link Configuration
-The current setup is correct:
-- `shouldCreateUser: false` - Prevents creating new users
-- `emailRedirectTo: 'http://localhost:3000/callback'` - Correct redirect URL
+4. **Removed Files:**
+   - `src/supabase/client.ts` - Replaced with SSR client
+   - `src/supabase/server.ts` - Replaced with SSR server client
 
-## Testing Steps
+### Email Template Configuration Required
 
-### Step 1: Verify User Exists in Database
+**IMPORTANT:** You need to update your Supabase email templates to support the new SSR flow:
+
 1. Go to your Supabase dashboard
-2. Check the `users` table
-3. Ensure the user email exists and status is 'Active'
+2. Navigate to Authentication > Email Templates
+3. In the "Confirm signup" template, change:
+   - From: `{{ .ConfirmationURL }}`
+   - To: `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email`
 
-### Step 2: Test Magic Link Flow
-1. Visit `http://localhost:3000/sign-in`
-2. Enter a valid email that exists in your `users` table
-3. Check browser console for any errors
-4. Check server logs for detailed error messages
+### Authentication Flow
 
-### Step 3: Check Magic Link URL
-The magic link should look like:
-```
-https://bqobctrcfgearocxjhxr.supabase.co/auth/v1/verify?token=TOKEN&type=magiclink&redirect_to=http://localhost:3000/callback
-```
+The authentication flow remains the same:
 
-### Step 4: Verify Callback Handling
-When you click the magic link, it should:
-1. Redirect to `http://localhost:3000/callback`
-2. Exchange the token for a session
-3. Check user exists in database
-4. Verify user status is 'Active'
-5. Redirect to `/jobs` on success
+1. User enters email on sign-in page
+2. System checks if user exists in `users` table with status 'Active'
+3. If valid, syncs user with auth system and sends magic link
+4. User clicks magic link → redirects to `/callback`
+5. Callback exchanges token for session and validates user
+6. User is redirected to `/jobs` on success
 
-## Debugging Commands
+### Testing Steps
 
-### Check Server Logs
-```bash
-# In your terminal where npm run dev is running
-# Look for console.log messages from:
-# - "Callback - URL params:"
-# - "Callback - Exchanging auth code for session"
-# - "Callback - Session user email:"
-# - "Callback - User lookup result:"
-```
+1. **Verify Environment Variables:**
+   ```bash
+   echo $NEXT_PUBLIC_SUPABASE_URL
+   echo $NEXT_PUBLIC_SUPABASE_ANON_KEY
+   echo $SUPABASE_SERVICE_ROLE_KEY
+   ```
 
-### Test API Endpoints
-```bash
-# Test sync-user API
-curl -X POST http://localhost:3000/api/sync-user \
-  -H "Content-Type: application/json" \
-  -d '{"email":"your-email@example.com"}'
-```
+2. **Test Magic Link Flow:**
+   - Visit `http://localhost:3000/sign-in`
+   - Enter a valid email from your `users` table
+   - Check email for magic link
+   - Click the link and verify redirect to `/jobs`
 
-### Check Environment Variables
-```bash
-# Verify all required env vars are set
-echo $NEXT_PUBLIC_SUPABASE_URL
-echo $NEXT_PUBLIC_SUPABASE_ANON_KEY
-echo $SUPABASE_SERVICE_ROLE_KEY
-echo $NEXT_PUBLIC_SITE_URL
-```
+3. **Check Server Logs:**
+   - Monitor console for authentication flow logs
+   - Verify user validation is working correctly
 
-## Common Issues and Solutions
+### Common Issues and Solutions
 
-### Issue 1: "User not found in database"
-**Cause**: User doesn't exist in the `users` table
-**Solution**: Add user to the `users` table with status 'Active'
+**Issue 1: "User not found in database"**
+- Cause: User doesn't exist in the `users` table
+- Solution: Add user to the `users` table with status 'Active'
 
-### Issue 2: "User is disabled"
-**Cause**: User exists but status is 'Disabled'
-**Solution**: Update user status to 'Active' in the `users` table
+**Issue 2: "User is disabled"**
+- Cause: User exists but status is 'Disabled'
+- Solution: Update user status to 'Active' in the `users` table
 
-### Issue 3: "Authentication failed"
-**Cause**: Token/code exchange failed
-**Solution**: Check Supabase configuration and ensure user exists in auth system
+**Issue 3: "Authentication failed"**
+- Cause: Token/code exchange failed
+- Solution: Check Supabase configuration and ensure user exists in auth system
 
-### Issue 4: "Access denied"
-**Cause**: User not found in database after authentication
-**Solution**: Ensure user sync is working properly
+**Issue 4: "Access denied"**
+- Cause: User not found in database after authentication
+- Solution: Ensure user sync is working properly
 
-## Updated Files
-
-1. **`src/app/(auth)/callback/route.ts`** - Now handles both `code` and `token` parameters
-2. **`src/app/api/sync-user/route.ts`** - Added better logging for debugging
-
-## Next Steps
-
-1. **Test the updated callback route** with your magic link
-2. **Check browser console** for any JavaScript errors
-3. **Monitor server logs** for detailed error messages
-4. **Verify user exists** in both auth system and database
-5. **Consider upgrading** Supabase auth helpers if issues persist
-
-## Magic Link Flow Summary
+### Magic Link Flow Summary
 
 ```
 User enters email → Check users table → Sync with auth system → Send magic link → 
@@ -121,4 +92,4 @@ User clicks link → Callback handles token → Exchange for session →
 Check user exists → Verify status → Redirect to /jobs
 ```
 
-The main fix was updating the callback route to handle the `token` parameter that your magic links are using instead of `code`. 
+The migration maintains all existing functionality while using the modern, supported Supabase SSR implementation. 

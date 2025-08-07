@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { supabase } from "../../../supabase/client";
+import { createClient } from "../../../lib/supabase/client";
 import { useSearchParams } from "next/navigation";
 import { getSiteUrl } from "../../../lib/utils";
 import { Input } from "../../../components/ui/input";
@@ -35,6 +35,8 @@ export default function SignIn() {
 
     try {
       console.log("Attempting to sign in with email:", email.toLowerCase());
+
+      const supabase = createClient();
 
       // Step 1: Check if user exists in users table first
       let { data: existingUser, error: checkError } = await supabase

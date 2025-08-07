@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/supabase/server';
+import { createClient } from '@/lib/supabase/server';
+import { createClient as createServiceClient } from '@supabase/supabase-js';
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,6 +12,8 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('Sync-user - Processing email:', email.toLowerCase());
+
+    const supabase = await createClient();
 
     // First, check if user exists in our custom table
     const { data: existingUser, error: userError } = await supabase
@@ -26,8 +29,14 @@ export async function POST(request: NextRequest) {
 
     console.log('Sync-user - User found in database:', existingUser.id);
 
+    // Create service role client for admin operations
+    const serviceClient = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     // Check if user already exists in auth system
-    const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+    const { data: authUsers, error: authError } = await serviceClient.auth.admin.listUsers();
     
     if (authError) {
       console.error('Sync-user - Error listing auth users:', authError);
@@ -46,8 +55,8 @@ export async function POST(request: NextRequest) {
 
     console.log('Sync-user - Creating user in auth system');
 
-    // Create user in auth system
-    const { data: authData, error: createError } = await supabase.auth.admin.createUser({
+    // Create user in auth system using service client
+    const { data: authData, error: createError } = await serviceClient.auth.admin.createUser({
       email: email.toLowerCase(),
       email_confirm: true, // Auto-confirm the email
       user_metadata: {

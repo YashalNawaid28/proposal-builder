@@ -1,39 +1,45 @@
-import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
+import { type NextRequest } from 'next/server'
+import { updateSession } from '@/lib/supabase/middleware'
+import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
 
-export async function middleware(req: NextRequest) {
-  const res = NextResponse.next();
-  const supabase = createMiddlewareClient({ req, res });
+export async function middleware(request: NextRequest) {
+  let supabaseResponse = await updateSession(request)
+
+  // If the user is authenticated, perform additional validation
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+          supabaseResponse = NextResponse.next({
+            request,
+          })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
+
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const protectedRoutes = ["/jobs", "/users", "/signs", "/options", "/brands"];
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    req.nextUrl.pathname.startsWith(route)
-  );
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  if (!session && isProtectedRoute) {
-    const redirectUrl = req.nextUrl.clone();
-    redirectUrl.pathname = "/sign-in";
-    const response = NextResponse.redirect(redirectUrl);
-    response.headers.set(
-      "Cache-Control",
-      "no-cache, no-store, must-revalidate"
-    );
-    response.headers.set("Pragma", "no-cache");
-    response.headers.set("Expires", "0");
-    return response;
-  }
-
-  if (session) {
-    console.log("Middleware - Session found for email:", session.user.email);
+  if (user) {
+    console.log("Middleware - Session found for email:", user.email);
     
     // Step 1: Get user data from users table (main source of truth)
     const { data: existingUser, error } = await supabase
       .from("users")
       .select("*")
-      .eq("email", session.user.email)
+      .eq("email", user.email)
       .single();
     
     console.log("Middleware - User lookup result:", { existingUser, error });
@@ -41,7 +47,7 @@ export async function middleware(req: NextRequest) {
     if (error || !existingUser) {
       console.log("Middleware - User not found in database, signing out");
       await supabase.auth.signOut();
-      const redirectUrl = req.nextUrl.clone();
+      const redirectUrl = request.nextUrl.clone();
       redirectUrl.pathname = "/sign-in";
       redirectUrl.searchParams.set("error", "access_denied");
       const response = NextResponse.redirect(redirectUrl);
@@ -56,7 +62,7 @@ export async function middleware(req: NextRequest) {
     if (existingUser.status === "Disabled") {
       console.log("Middleware - User is disabled, signing out");
       await supabase.auth.signOut();
-      const redirectUrl = req.nextUrl.clone();
+      const redirectUrl = request.nextUrl.clone();
       redirectUrl.pathname = "/sign-in";
       redirectUrl.searchParams.set("error", "account_disabled");
       const response = NextResponse.redirect(redirectUrl);
@@ -71,10 +77,10 @@ export async function middleware(req: NextRequest) {
     await supabase
       .from("users")
       .update({ last_active_at: new Date().toISOString() })
-      .eq("email", session.user.email);
+      .eq("email", user.email);
     
     // Step 4: Ensure session metadata has users table data
-    if (!session.user.user_metadata?.user_id) {
+    if (!user.user_metadata?.user_id) {
       await supabase.auth.updateUser({
         data: {
           user_id: existingUser.id,
@@ -90,22 +96,30 @@ export async function middleware(req: NextRequest) {
     
     // Step 5: Redirect authenticated users away from sign-in page
     if (
-      req.nextUrl.pathname.startsWith("/sign-in") ||
-      req.nextUrl.pathname === "/"
+      request.nextUrl.pathname.startsWith("/sign-in") ||
+      request.nextUrl.pathname === "/"
     ) {
-      const redirectUrl = req.nextUrl.clone();
+      const redirectUrl = request.nextUrl.clone();
       redirectUrl.pathname = "/jobs";
       return NextResponse.redirect(redirectUrl);
     }
   }
-  res.headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
-  res.headers.set("Pragma", "no-cache");
-  res.headers.set("Expires", "0");
-  return res;
+
+  supabaseResponse.headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
+  supabaseResponse.headers.set("Pragma", "no-cache");
+  supabaseResponse.headers.set("Expires", "0");
+  return supabaseResponse;
 }
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|api|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * Feel free to modify this pattern to include more paths.
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
-};
+}

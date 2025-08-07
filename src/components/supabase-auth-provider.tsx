@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { User, Session } from "@supabase/supabase-js";
-import { supabase } from "../supabase/client";
+import { createClient } from "../lib/supabase/client";
 import { usePathname } from "next/navigation";
 import { flushSync } from "react-dom";
 
@@ -55,6 +55,7 @@ export function SupabaseAuthProvider({
   const fetchUserData = useCallback(async (email: string) => {
     try {
       console.log("Fetching user data for email:", email);
+      const supabase = createClient();
       const { data, error } = await supabase
         .from("users")
         .select("*")
@@ -105,6 +106,7 @@ export function SupabaseAuthProvider({
   useEffect(() => {
     const getInitialSession = async () => {
       console.log("Getting initial session...");
+      const supabase = createClient();
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -127,6 +129,7 @@ export function SupabaseAuthProvider({
     };
     getInitialSession();
 
+    const supabase = createClient();
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -185,6 +188,7 @@ export function SupabaseAuthProvider({
       window.location.replace("/sign-in");
 
       // Try to sign out from Supabase in the background (don't wait for it)
+      const supabase = createClient();
       supabase.auth.signOut().catch((error) => {
         console.error("Background Supabase signOut error:", error);
       });
