@@ -107,12 +107,20 @@ const BrandsPage = () => {
   // Fetch brands data when component mounts or user changes
   useEffect(() => {
     const fetchBrands = async () => {
-      if (!userData) return; // Don't fetch if user is not available
+      // Use user object if userData is not available
+      const userId = userData?.id || user?.id;
+      
+      if (!userId) {
+        console.log("Brands page - No user ID available, not fetching brands");
+        setLoading(false);
+        return;
+      }
+      
       setLoading(true);
       setError(null);
       try {
         const res = await fetch("/api/brands", {
-          headers: { "request.user.id": userData.id },
+          headers: { "request.user.id": userId },
         });
 
         if (!res.ok) {
@@ -132,7 +140,7 @@ const BrandsPage = () => {
     };
 
     fetchBrands();
-  }, [userData]);
+  }, [userData, user]);
 
   // Filter brands based on the selected tab
   const filteredBrands = useMemo(() => {
