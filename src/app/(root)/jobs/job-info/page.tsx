@@ -769,7 +769,7 @@ export default function AddJobPage() {
     };
 
     loadJobData();
-  }, [jobId, userData, fetchPricingData]);
+  }, [jobId, userData, fetchPricingData, fetchVersions]);
 
   // Function to reload job data after update
   const reloadJobData = async () => {

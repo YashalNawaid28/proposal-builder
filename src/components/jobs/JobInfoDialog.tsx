@@ -129,7 +129,7 @@ export const JobInfoDialog = ({
       setSelectedBrandName(null);
       setBrandNameCache((prev) => ({ ...prev, [brandId]: null }));
     }
-  }, []);
+  }, [brandNameCache]);
 
   useEffect(() => {
     if (isOpen) {

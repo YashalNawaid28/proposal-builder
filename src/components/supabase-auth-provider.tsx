@@ -198,7 +198,7 @@ export function SupabaseAuthProvider({
     });
 
     return () => subscription.unsubscribe();
-  }, [fetchUserData]);
+  }, [fetchUserData, user]);
 
   const signOut = useCallback(async () => {
     try {

@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useAuth } from "@/components/supabase-auth-provider";
 import Drawer from "react-modern-drawer";
 import "react-modern-drawer/dist/index.css";
@@ -59,7 +59,7 @@ export const EditPricingLineDrawer = ({
   const hasDataFromProps = pricingLine && Object.keys(pricingLine).length > 0;
 
   // Dummy data if no props provided
-  const dummyData = {
+  const dummyData = useMemo(() => ({
     id: "dummy-sign-id",
     name: "Dummy Sign",
     image: "/images/dave1.png",
@@ -67,7 +67,7 @@ export const EditPricingLineDrawer = ({
       "{Size} {Color} {Fab Type} {Raceway} {Backer Panel} {Print Material} {Mounting Surface} {Anti-Graffiti}",
     sign_budget_multiplier: 0.8,
     install_budget_multiplier: 0.6,
-  };
+  }), []);
 
   const [isEditingPrices, setIsEditingPrices] = useState(false);
   const [editablePrices, setEditablePrices] = useState({
@@ -293,7 +293,7 @@ export const EditPricingLineDrawer = ({
     };
 
     fetchSizes();
-  }, [selectedSignData?.id, setSignData, signData]);
+  }, [selectedSignData?.id, setSignData, signData, dummyData]);
 
   // Parse sign description and generate form fields
   useEffect(() => {
@@ -763,7 +763,7 @@ export const EditPricingLineDrawer = ({
     setModifiedSignPrice(modifiedValues.signPrice);
     setModifiedSignBudget(modifiedValues.signBudget);
     setModifiedInstallBudget(modifiedValues.installBudget);
-  }, [currentPricing, signData, dynamicOptions, selectedSignData]);
+  }, [currentPricing, signData, dynamicOptions, selectedSignData, calculateModifiedValues]);
 
   const handlePriceChange = (
     field: keyof typeof editablePrices,
