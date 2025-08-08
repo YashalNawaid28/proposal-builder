@@ -41,16 +41,39 @@ LicenseManager.setLicenseKey(
 );
 
 const formatCurrency = (value: string | number | undefined | null) => {
-  if (value === null || value === undefined || isNaN(Number(value)))
-    return "$0.00";
-  const num =
-    typeof value === "string"
-      ? parseFloat(value.replace(/[^0-9.-]+/g, ""))
-      : value;
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(num);
+  if (value === null || value === undefined) return "$0.00";
+  
+  // If value is a string, check if it's numeric
+  if (typeof value === "string") {
+    const trimmedValue = value.trim();
+    // Check if the string is purely numeric (allows decimals and negative numbers)
+    if (/^-?\d*\.?\d+$/.test(trimmedValue)) {
+      const num = parseFloat(trimmedValue);
+      if (isNaN(num)) {
+        return trimmedValue; // Return original string if parsing fails
+      }
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+      }).format(num);
+    } else {
+      // If not numeric, return the original string value
+      return trimmedValue;
+    }
+  }
+  
+  // If value is a number, format as currency
+  if (typeof value === "number") {
+    if (isNaN(value)) {
+      return "Invalid"; // Handle NaN values
+    }
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(value);
+  }
+  
+  return "$0.00";
 };
 
 const optionIcons: { [key: string]: React.ReactNode } = {
@@ -66,11 +89,11 @@ const optionIcons: { [key: string]: React.ReactNode } = {
 interface PricingDetail {
   id?: string;
   size: string;
-  signPrice: number;
-  installPrice: number;
-  signBudget: number;
-  installBudget: number;
-  raceway: number;
+  signPrice: string | number;
+  installPrice: string | number;
+  signBudget: string | number;
+  installBudget: string | number;
+  raceway: string | number;
   signBudgetMultiplier?: number;
   installBudgetMultiplier?: number;
 }
@@ -92,16 +115,26 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       const installBudgetMultiplier =
         (item as any).installBudgetMultiplier || 0.55;
 
+      // Helper function to extract numeric value or preserve string
+      const extractValue = (value: string) => {
+        const trimmedValue = value.trim();
+        // Check if the string is purely numeric
+        if (/^-?\d*\.?\d+$/.test(trimmedValue)) {
+          return parseFloat(trimmedValue) || 0;
+        } else {
+          // If not numeric, return the original string
+          return trimmedValue;
+        }
+      };
+
       return {
         id: item.id, // Include the pricing ID for updates
         size: item.size,
-        signPrice: parseFloat(item.signPrice.replace(/[^0-9.-]+/g, "")) || 0,
-        installPrice:
-          parseFloat(item.installPrice.replace(/[^0-9.-]+/g, "")) || 0,
-        signBudget: parseFloat(item.signBudget.replace(/[^0-9.-]+/g, "")) || 0,
-        installBudget:
-          parseFloat(item.installBudget.replace(/[^0-9.-]+/g, "")) || 0,
-        raceway: parseFloat(item.raceway.replace(/[^0-9.-]+/g, "")) || 0,
+        signPrice: extractValue(item.signPrice),
+        installPrice: extractValue(item.installPrice),
+        signBudget: extractValue(item.signBudget),
+        installBudget: extractValue(item.installBudget),
+        raceway: extractValue(item.raceway),
         signBudgetMultiplier,
         installBudgetMultiplier,
       };
@@ -152,8 +185,16 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       flex: 1,
       minWidth: 120,
       valueFormatter: (p: ValueFormatterParams) => formatCurrency(p.value),
-      valueParser: (p: ValueParserParams) =>
-        Number(String(p.newValue).replace(/[^0-9.-]+/g, "")),
+      valueParser: (p: ValueParserParams) => {
+        const newValue = String(p.newValue).trim();
+        // Check if the new value is numeric
+        if (/^-?\d*\.?\d+$/.test(newValue)) {
+          return parseFloat(newValue) || 0;
+        } else {
+          // If not numeric, return the string value
+          return newValue;
+        }
+      },
       cellClass: "text-center",
       headerClass: "text-center",
     },
@@ -163,8 +204,16 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       flex: 1,
       minWidth: 120,
       valueFormatter: (p: ValueFormatterParams) => formatCurrency(p.value),
-      valueParser: (p: ValueParserParams) =>
-        Number(String(p.newValue).replace(/[^0-9.-]+/g, "")),
+      valueParser: (p: ValueParserParams) => {
+        const newValue = String(p.newValue).trim();
+        // Check if the new value is numeric
+        if (/^-?\d*\.?\d+$/.test(newValue)) {
+          return parseFloat(newValue) || 0;
+        } else {
+          // If not numeric, return the string value
+          return newValue;
+        }
+      },
       cellClass: "text-center",
       headerClass: "text-center",
     },
@@ -194,8 +243,16 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
       flex: 1,
       minWidth: 120,
       valueFormatter: (p: ValueFormatterParams) => formatCurrency(p.value),
-      valueParser: (p: ValueParserParams) =>
-        Number(String(p.newValue).replace(/[^0-9.-]+/g, "")),
+      valueParser: (p: ValueParserParams) => {
+        const newValue = String(p.newValue).trim();
+        // Check if the new value is numeric
+        if (/^-?\d*\.?\d+$/.test(newValue)) {
+          return parseFloat(newValue) || 0;
+        } else {
+          // If not numeric, return the string value
+          return newValue;
+        }
+      },
       cellClass: "text-center",
       headerClass: "text-center",
     },
@@ -302,6 +359,7 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
 
           // Prepare update data
           const updateData: any = { id: data.id };
+          // Save the value as-is (string or number)
           updateData[dbField] = newValue;
 
           // If price fields are updated, also update the calculated budgets
@@ -310,13 +368,14 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
             const installBudgetMultiplier =
               data.installBudgetMultiplier || 0.55;
 
-            if (field === "signPrice") {
+            // Only calculate budgets if the new value is numeric
+            if (field === "signPrice" && typeof newValue === "number") {
               const newSignBudget = newValue * signBudgetMultiplier;
               updateData.sign_budget = newSignBudget;
               console.log("Calculated new sign budget:", newSignBudget);
             }
 
-            if (field === "installPrice") {
+            if (field === "installPrice" && typeof newValue === "number") {
               const newInstallBudget = newValue * installBudgetMultiplier;
               updateData.install_budget = newInstallBudget;
               console.log("Calculated new install budget:", newInstallBudget);
@@ -349,7 +408,7 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
                   if (row.size === data.size) {
                     const updatedRow = { ...row };
 
-                    if (field === "signPrice") {
+                    if (field === "signPrice" && typeof newValue === "number") {
                       const newSignBudget =
                         newValue * (data.signBudgetMultiplier || 0.55);
                       updatedRow.signBudget = newSignBudget;
@@ -359,7 +418,7 @@ const PricingGrid = ({ rowData }: { rowData: ISignDetail[] }) => {
                       );
                     }
 
-                    if (field === "installPrice") {
+                    if (field === "installPrice" && typeof newValue === "number") {
                       const newInstallBudget =
                         newValue * (data.installBudgetMultiplier || 0.55);
                       updatedRow.installBudget = newInstallBudget;
@@ -484,20 +543,53 @@ const SignsPage = () => {
 
             // Use pricing data that's already included in the sign object
             const details = (sign.sign_pricing || []).map((pricing: any) => {
-              // Calculate budgets based on multipliers
-              const calculatedSignBudget =
-                (pricing.sign_price || 0) * signBudgetMultiplier;
-              const calculatedInstallBudget =
-                (pricing.install_price || 0) * installBudgetMultiplier;
+              // Helper function to safely extract numeric value or preserve string
+              const extractNumericOrString = (value: any) => {
+                if (value === null || value === undefined) return 0;
+                if (typeof value === "number") return value;
+                if (typeof value === "string") {
+                  const trimmedValue = value.trim();
+                  // Check if the string is purely numeric
+                  if (/^-?\d*\.?\d+$/.test(trimmedValue)) {
+                    return parseFloat(trimmedValue) || 0;
+                  } else {
+                    // If not numeric, return the original string
+                    return trimmedValue;
+                  }
+                }
+                return 0;
+              };
+
+              const signPrice = extractNumericOrString(pricing.sign_price);
+              const installPrice = extractNumericOrString(pricing.install_price);
+              const raceway = extractNumericOrString(pricing.raceway);
+
+              // Only calculate budgets if prices are numeric
+              let calculatedSignBudget: string | number = 0;
+              let calculatedInstallBudget: string | number = 0;
+
+              if (typeof signPrice === "number") {
+                calculatedSignBudget = signPrice * signBudgetMultiplier;
+              } else {
+                // If signPrice is a string (like a formula), use the original budget value
+                calculatedSignBudget = extractNumericOrString(pricing.sign_budget);
+              }
+
+              if (typeof installPrice === "number") {
+                calculatedInstallBudget = installPrice * installBudgetMultiplier;
+              } else {
+                // If installPrice is a string (like a formula), use the original budget value
+                calculatedInstallBudget = extractNumericOrString(pricing.install_budget);
+              }
 
               return {
                 id: pricing.id, // Include the pricing ID for updates
                 size: pricing.size || "",
-                signPrice: pricing.sign_price || 0,
-                installPrice: pricing.install_price || 0,
+                signPrice: signPrice,
+                installPrice: installPrice,
                 signBudget: calculatedSignBudget,
                 installBudget: calculatedInstallBudget,
-                raceway: pricing.raceway || 0,
+                raceway: raceway,
                 signBudgetMultiplier, // Include multipliers for future calculations
                 installBudgetMultiplier,
               };
@@ -623,15 +715,20 @@ const SignsPage = () => {
         const updatedSignData = signData.map((s) => {
           if (s.signName === signName) {
             const updatedDetails = s.details.map((detail) => {
-              const signPrice =
-                parseFloat(detail.signPrice.replace(/[^0-9.-]+/g, "")) || 0;
-              const installPrice =
-                parseFloat(detail.installPrice.replace(/[^0-9.-]+/g, "")) || 0;
+              // Helper function to extract numeric value safely
+              const extractNumericValue = (value: string) => {
+                const trimmedValue = value.trim();
+                if (/^-?\d*\.?\d+$/.test(trimmedValue)) {
+                  return parseFloat(trimmedValue) || 0;
+                }
+                return 0; // Return 0 for non-numeric values
+              };
 
-              let newSignBudget =
-                parseFloat(detail.signBudget.replace(/[^0-9.-]+/g, "")) || 0;
-              let newInstallBudget =
-                parseFloat(detail.installBudget.replace(/[^0-9.-]+/g, "")) || 0;
+              const signPrice = extractNumericValue(detail.signPrice);
+              const installPrice = extractNumericValue(detail.installPrice);
+
+              let newSignBudget = extractNumericValue(detail.signBudget);
+              let newInstallBudget = extractNumericValue(detail.installBudget);
 
               if (optionLabel === "Sign Budget") {
                 newSignBudget = signPrice * multiplierValue;
@@ -661,18 +758,24 @@ const SignsPage = () => {
           (s) => s.signName === signName
         );
         if (updatedSign) {
+          // Helper function to extract numeric value safely
+          const extractNumericValue = (value: string) => {
+            const trimmedValue = value.trim();
+            if (/^-?\d*\.?\d+$/.test(trimmedValue)) {
+              return parseFloat(trimmedValue) || 0;
+            }
+            return 0; // Return 0 for non-numeric values
+          };
+
           for (const detail of updatedSign.details) {
             if (detail.id) {
               const pricingUpdateData: any = { id: detail.id };
 
               if (optionLabel === "Sign Budget") {
-                const newSignBudget =
-                  parseFloat(detail.signBudget.replace(/[^0-9.-]+/g, "")) || 0;
+                const newSignBudget = extractNumericValue(detail.signBudget);
                 pricingUpdateData.sign_budget = newSignBudget;
               } else if (optionLabel === "Install Budget") {
-                const newInstallBudget =
-                  parseFloat(detail.installBudget.replace(/[^0-9.-]+/g, "")) ||
-                  0;
+                const newInstallBudget = extractNumericValue(detail.installBudget);
                 pricingUpdateData.install_budget = newInstallBudget;
               }
 
