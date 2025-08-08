@@ -554,21 +554,34 @@ export default function AddJobPage() {
 
           // Create new pricing lines for the new version
           for (const line of existingLines) {
+            // Prepare the request body based on whether it's a sign or service
+            const requestBody: any = {
+              pricing_version_id: newVersion.data.id,
+              description_resolved: line.description_resolved,
+              qty: line.qty,
+            };
+
+            // Add sign-specific fields if it's a sign
+            if (line.sign_id) {
+              requestBody.sign_id = line.sign_id;
+              requestBody.list_price = line.list_price;
+              requestBody.cost_budget = line.cost_budget;
+              requestBody.list_install_price = line.list_install_price;
+              requestBody.cost_install_budget = line.cost_install_budget;
+            }
+
+            // Add service-specific fields if it's a service
+            if (line.service_id) {
+              requestBody.service_id = line.service_id;
+              requestBody.service_unit_price = line.service_unit_price;
+            }
+
             const lineResponse = await fetch("/api/pricing-lines", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
               },
-              body: JSON.stringify({
-                pricing_version_id: newVersion.data.id,
-                sign_id: line.sign_id,
-                description_resolved: line.description_resolved,
-                qty: line.qty,
-                list_price: line.list_price,
-                cost_budget: line.cost_budget,
-                list_install_price: line.list_install_price,
-                cost_install_budget: line.cost_install_budget,
-              }),
+              body: JSON.stringify(requestBody),
             });
 
             if (!lineResponse.ok) {
@@ -880,6 +893,14 @@ export default function AddJobPage() {
 
     loadJobData();
   }, [jobId, userData, user, fetchPricingData, fetchVersions]);
+
+  // Fetch pricing data when selectedVersion changes
+  useEffect(() => {
+    if (jobId && selectedVersion) {
+      console.log("Job Info Page - Selected version changed, fetching pricing data for version:", selectedVersion.id);
+      fetchPricingData(jobId, selectedVersion.id);
+    }
+  }, [jobId, selectedVersion, fetchPricingData]);
 
   // Function to reload job data after update
   const reloadJobData = async () => {
@@ -1265,7 +1286,7 @@ export default function AddJobPage() {
                           </p>
                           <button
                             onClick={openSignSidebar}
-                            className="bg-[#F9F9FB] h-10 flex items-center justify-center px-4 gap-2 border border-[#E0E0E0] rounded-md font-semibold text-[14px]"
+                            className="bg-[#F9F9FB] h-10 flex items-center justify-center px-4 gap-2 border border-[#E0E0E0] rounded-md font-semibold text-[14px] justify-self-center"
                           >
                             Add Sign/Service
                           </button>
@@ -1302,7 +1323,7 @@ export default function AddJobPage() {
                           </p>
                           <button
                             onClick={openSignSidebar}
-                            className="bg-[#F9F9FB] h-10 flex items-center justify-center px-4 gap-2 border border-[#E0E0E0] rounded-md font-semibold text-[14px]"
+                            className="bg-[#F9F9FB] h-10 flex items-center justify-center px-4 gap-2 border border-[#E0E0E0] rounded-md font-semibold text-[14px] justify-self-center"
                           >
                             Add Sign
                           </button>
@@ -1339,7 +1360,7 @@ export default function AddJobPage() {
                           </p>
                           <button
                             onClick={openServiceSidebar}
-                            className="bg-[#F9F9FB] h-10 flex items-center justify-center px-4 gap-2 border border-[#E0E0E0] rounded-md font-semibold text-[14px]"
+                            className="bg-[#F9F9FB] h-10 flex items-center justify-center px-4 gap-2 border border-[#E0E0E0] rounded-md font-semibold text-[14px] justify-self-center"
                           >
                             Add Service
                           </button>
@@ -1572,9 +1593,11 @@ export default function AddJobPage() {
         initialTab={sidebarInitialTab}
         brandId={jobData?.brandId}
         onSignAdded={async () => {
-          // Refresh pricing data for the current version
-          if (jobId && selectedVersion) {
-            await fetchPricingData(jobId, selectedVersion.id);
+          // Refresh versions and pricing data
+          if (jobId) {
+            await fetchVersions(jobId);
+            // The fetchVersions function will automatically select the latest version
+            // and trigger fetchPricingData for the new version
           }
           // Update the job's updated_at field
           await updateJobLastModified();
