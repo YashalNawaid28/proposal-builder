@@ -159,6 +159,10 @@ export default function AddJobPage() {
   const [editDrawerOpen, setEditDrawerOpen] = useState(false); // State to track edit drawer
   const [editingPricingLine, setEditingPricingLine] = useState<any>(null); // State to track which line is being edited
 
+  // Filter pricing lines based on type
+  const signPricingLines = pricingData.lines.filter((line: any) => line.sign_id);
+  const servicePricingLines = pricingData.lines.filter((line: any) => line.service_id);
+
   // Function to generate initials from display name
   const getInitials = (displayName: string) => {
     return displayName
@@ -1231,16 +1235,7 @@ export default function AddJobPage() {
                 </div>
               ) : (
                 <>
-                  {selectedTab === "All" && (
-                    <AllItemsTable
-                      data={allItemsData}
-                      onRowClick={handleRowClick}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                      onAddSign={openSignSidebar}
-                    />
-                  )}
-                  {selectedTab === "Signs" &&
+                  {selectedTab === "All" &&
                     (loadingPricing ? (
                       <div className="flex-1 flex items-center justify-center">
                         <div className="text-center">
@@ -1251,8 +1246,45 @@ export default function AddJobPage() {
                         </div>
                       </div>
                     ) : pricingData.lines.length > 0 ? (
-                      <SignsTable
+                      <AllItemsTable
                         data={pricingData.lines}
+                        onRowClick={handleRowClick}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        onAddSign={openSignSidebar}
+                      />
+                    ) : (
+                      <div className="flex-1 flex items-center justify-center">
+                        <div className="text-center">
+                          <h3 className="text-2xl font-semibold mb-2">
+                            Add your first item.
+                          </h3>
+                          <p className="text-[#0D1216B2] text-[14px] mb-6 max-w-md">
+                            You&apos;ll use this section to add all the signs and services
+                            needed for this proposal.
+                          </p>
+                          <button
+                            onClick={openSignSidebar}
+                            className="bg-[#F9F9FB] h-10 flex items-center justify-center px-4 gap-2 border border-[#E0E0E0] rounded-md font-semibold text-[14px]"
+                          >
+                            Add Sign/Service
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  {selectedTab === "Signs" &&
+                    (loadingPricing ? (
+                      <div className="flex-1 flex items-center justify-center">
+                        <div className="text-center">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 mx-auto mb-2"></div>
+                          <p className="text-gray-600 text-sm">
+                            Loading pricing data...
+                          </p>
+                        </div>
+                      </div>
+                    ) : signPricingLines.length > 0 ? (
+                      <SignsTable
+                        data={signPricingLines}
                         onRowClick={handleRowClick}
                         onEdit={handleEdit}
                         onDelete={handleDelete}
@@ -1272,20 +1304,48 @@ export default function AddJobPage() {
                             onClick={openSignSidebar}
                             className="bg-[#F9F9FB] h-10 flex items-center justify-center px-4 gap-2 border border-[#E0E0E0] rounded-md font-semibold text-[14px]"
                           >
-                            Add Sign/Service
+                            Add Sign
                           </button>
                         </div>
                       </div>
                     ))}
-                  {selectedTab === "Services" && (
-                    <ServicesTable
-                      data={servicesData}
-                      onRowClick={handleRowClick}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                      onAddService={openServiceSidebar}
-                    />
-                  )}
+                  {selectedTab === "Services" &&
+                    (loadingPricing ? (
+                      <div className="flex-1 flex items-center justify-center">
+                        <div className="text-center">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 mx-auto mb-2"></div>
+                          <p className="text-gray-600 text-sm">
+                            Loading pricing data...
+                          </p>
+                        </div>
+                      </div>
+                    ) : servicePricingLines.length > 0 ? (
+                      <ServicesTable
+                        data={servicePricingLines}
+                        onRowClick={handleRowClick}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        onAddService={openServiceSidebar}
+                      />
+                    ) : (
+                      <div className="flex-1 flex items-center justify-center">
+                        <div className="text-center">
+                          <h3 className="text-2xl font-semibold mb-2">
+                            Add your first service.
+                          </h3>
+                          <p className="text-[#0D1216B2] text-[14px] mb-6 max-w-md">
+                            You&apos;ll use this section to add all the services
+                            needed for this proposal.
+                          </p>
+                          <button
+                            onClick={openServiceSidebar}
+                            className="bg-[#F9F9FB] h-10 flex items-center justify-center px-4 gap-2 border border-[#E0E0E0] rounded-md font-semibold text-[14px]"
+                          >
+                            Add Service
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                 </>
               )}
             </div>

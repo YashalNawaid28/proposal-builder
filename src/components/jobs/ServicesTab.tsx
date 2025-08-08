@@ -69,6 +69,7 @@ export const ServicesTab = ({ onServiceSelect, brandId }: ServicesTabProps) => {
           name: service.service_name,
           icon: service.service_image || "default", // Use service_image or default icon
           description: service.service_description || "",
+          service_id: service.id, // Add service_id for database reference
         }));
 
         setServices(transformedServices);

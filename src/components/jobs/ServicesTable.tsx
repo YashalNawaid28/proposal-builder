@@ -17,9 +17,13 @@ export const ServicesTable = ({
   onDelete,
   onAddService,
 }: ServicesTableProps) => {
-  // Calculate total price outside the JSX
+  // Calculate total price based on service_unit_price and qty
   const totalPrice = data.reduce(
-    (sum: number, line: any) => sum + (line.totalPrice || 0),
+    (sum: number, line: any) => {
+      const unitPrice = line.service_unit_price || 0;
+      const qty = line.qty || 1;
+      return sum + (unitPrice * qty);
+    },
     0
   );
 
@@ -58,19 +62,19 @@ export const ServicesTable = ({
               <td className="p-4 text-sm border-r border-[#DEE1EA]">
                 <div className="flex items-center justify-center">
                   <SignImageCell
-                    src={line.serviceImage || ""}
-                    signName={line.service || "Service"}
+                    src={line.services?.service_image || ""}
+                    signName={line.description_resolved || "Service"}
                   />
                 </div>
               </td>
               <td className="p-4 font-semibold border-r border-[#DEE1EA] text-[14px]">
-                {line.desc || "No description"}
+                {line.description_resolved || "No description"}
               </td>
               <td className="p-4 border-r text-center border-[#DEE1EA] text-[14px]">
-                ${line.unitPrice?.toFixed(2) || "0.00"}
+                ${(line.service_unit_price || 0).toFixed(2)}
               </td>
               <td className="p-4 text-center text-[14px]">
-                ${line.totalPrice?.toFixed(2) || "0.00"}
+                ${((line.service_unit_price || 0) * (line.qty || 1)).toFixed(2)}
               </td>
             </tr>
           ))}

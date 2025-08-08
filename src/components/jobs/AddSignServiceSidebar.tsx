@@ -21,6 +21,7 @@ export interface ServiceOption {
   name: string;
   icon: string;
   description: string;
+  service_id?: string; // Add service_id for database reference
 }
 
 export interface SignData {
