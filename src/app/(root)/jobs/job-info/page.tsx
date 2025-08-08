@@ -13,6 +13,9 @@ import { JobInfoDialog } from "@/components/jobs/JobInfoDialog";
 import { ClientInfoDialog } from "@/components/jobs/ClientInfoDialog";
 import { AddSignServiceSidebar } from "@/components/jobs/AddSignServiceSidebar";
 import { EditPricingLineDrawer } from "@/components/jobs/EditPricingLineDrawer";
+import { AllItemsTable } from "@/components/jobs/AllItemsTable";
+import { ServicesTable } from "@/components/jobs/ServicesTable";
+import { SignsTable } from "@/components/jobs/SignsTable";
 import Link from "next/link";
 import { PageTabs } from "@/components/ui/page-tabs";
 import { useSearchParams } from "next/navigation";
@@ -45,6 +48,67 @@ export default function AddJobPage() {
   const [selectedTab, setSelectedTab] = useState("All");
   const [addSignSidebarOpen, setAddSignSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(!!jobId);
+
+  // Dummy data for All and Services tabs
+  const [allItemsData, setAllItemsData] = useState([
+    {
+      id: 1,
+      qty: 2,
+      service: "LED Sign",
+      serviceImage: "/images/dave1.png",
+      desc: "Custom LED illuminated sign for storefront",
+      unitPrice: 1250.0,
+      totalPrice: 2500.0,
+    },
+    {
+      id: 2,
+      qty: 1,
+      service: "Installation",
+      serviceImage: "/images/dave2.png",
+      desc: "Professional installation and setup service",
+      unitPrice: 500.0,
+      totalPrice: 500.0,
+    },
+    {
+      id: 3,
+      qty: 3,
+      service: "Vinyl Graphics",
+      serviceImage: "/images/dave3.png",
+      desc: "High-quality vinyl graphics for windows",
+      unitPrice: 85.0,
+      totalPrice: 255.0,
+    },
+  ]);
+
+  const [servicesData, setServicesData] = useState([
+    {
+      id: 1,
+      qty: 1,
+      service: "Installation",
+      serviceImage: "/images/dave4.png",
+      desc: "Professional installation and setup service",
+      unitPrice: 500.0,
+      totalPrice: 500.0,
+    },
+    {
+      id: 2,
+      qty: 2,
+      service: "Maintenance",
+      serviceImage: "/images/dave5.png",
+      desc: "Regular maintenance and cleaning service",
+      unitPrice: 150.0,
+      totalPrice: 300.0,
+    },
+    {
+      id: 3,
+      qty: 1,
+      service: "Warranty",
+      serviceImage: "/images/dave6.png",
+      desc: "Extended warranty coverage for all signs",
+      unitPrice: 300.0,
+      totalPrice: 300.0,
+    },
+  ]);
   const [jobData, setJobData] = useState<{
     jobName?: string;
     jobNumber?: string;
@@ -403,7 +467,7 @@ export default function AddJobPage() {
   const createNewVersion = async () => {
     // Use primaryUserId from auth context which should be the correct ID from users table
     const userId = primaryUserId;
-    
+
     console.log("createNewVersion - Debug info:", {
       jobId,
       userId,
@@ -411,11 +475,16 @@ export default function AddJobPage() {
       userData: userData?.id,
       user: user?.id,
       userDataExists: !!userData,
-      userExists: !!user
+      userExists: !!user,
     });
-    
+
     if (!jobId || !userId) {
-      console.error("Missing jobId or userId:", { jobId, userId, userData, user });
+      console.error("Missing jobId or userId:", {
+        jobId,
+        userId,
+        userData,
+        user,
+      });
       return;
     }
 
@@ -1150,165 +1219,61 @@ export default function AddJobPage() {
                 </div>
               ) : (
                 <>
-                  <table className="w-full">
-                    <thead className="bg-[#F9F9FB]">
-                      <tr className="border-b border-[#EAEBEE]">
-                        <th className="text-left p-4 text-xs font-semibold w-16">
-                          Qty
-                        </th>
-                        <th className="text-left p-4 text-xs font-semibold w-32">
-                          Sign
-                        </th>
-                        <th className="text-left p-4 text-xs font-semibold w-96">
-                          Description
-                        </th>
-                        <th className="text-center p-4 text-xs font-semibold w-32">
-                          Sign Price
-                        </th>
-                        <th className="text-center p-4 text-xs font-semibold w-32">
-                          Install Price
-                        </th>
-                        <th className="text-center p-4 text-xs font-semibold w-32">
-                          Sign Budget
-                        </th>
-                        <th className="text-center p-4 text-xs font-semibold w-32">
-                          Install Budget
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {loadingPricing ? (
-                        <tr>
-                          <td colSpan={7} className="text-center py-8">
-                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 mx-auto mb-2"></div>
-                            <p className="text-gray-600 text-sm">
-                              Loading pricing data...
-                            </p>
-                          </td>
-                        </tr>
-                      ) : pricingData.lines.length > 0 ? (
-                        pricingData.lines.map((line: any, index: number) => (
-                          <tr
-                            key={line.id}
-                            className="border-b border-[#EAEBEE] hover:bg-gray-50 cursor-pointer"
-                            onClick={(e) => handleRowClick(e, line)}
+                  {selectedTab === "All" && (
+                    <AllItemsTable
+                      data={allItemsData}
+                      onRowClick={handleRowClick}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                      onAddSign={() => setAddSignSidebarOpen(true)}
+                    />
+                  )}
+                  {selectedTab === "Signs" &&
+                    (loadingPricing ? (
+                      <div className="flex-1 flex items-center justify-center">
+                        <div className="text-center">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 mx-auto mb-2"></div>
+                          <p className="text-gray-600 text-sm">
+                            Loading pricing data...
+                          </p>
+                        </div>
+                      </div>
+                    ) : pricingData.lines.length > 0 ? (
+                      <SignsTable
+                        data={pricingData.lines}
+                        onRowClick={handleRowClick}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        onAddSign={() => setAddSignSidebarOpen(true)}
+                      />
+                    ) : (
+                      <div className="flex-1 flex items-center justify-center">
+                        <div className="text-center">
+                          <h3 className="text-2xl font-semibold mb-2">
+                            Add your first sign.
+                          </h3>
+                          <p className="text-[#0D1216B2] text-[14px] mb-6 max-w-md">
+                            You&apos;ll use this section to add all the signs
+                            needed for this proposal.
+                          </p>
+                          <button
+                            onClick={() => setAddSignSidebarOpen(true)}
+                            className="bg-[#F9F9FB] h-10 flex items-center justify-center px-4 gap-2 border border-[#E0E0E0] rounded-md font-semibold text-[14px]"
                           >
-                            <td className="p-4 text-sm">{line.qty || 1}</td>
-                            <td>
-                              <div className="flex items-center gap-3">
-                                <div className=" rounded-lg flex items-center justify-center px-[8px]">
-                                  {line.signs?.sign_image ? (
-                                    <img
-                                      src={line.signs.sign_image}
-                                      alt={line.signs?.sign_name || "Sign"}
-                                    />
-                                  ) : (
-                                    <div className="text-gray-400 text-xs text-center">
-                                      No Image
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </td>
-                            <td className="p-4 text-sm">
-                              {line.description_resolved || "No description"}
-                            </td>
-                            <td className="p-4 text-sm font-medium text-center">
-                              ${line.list_price?.toFixed(2) || "0.00"}
-                            </td>
-                            <td className="p-4 text-sm font-medium text-center">
-                              ${line.list_install_price?.toFixed(2) || "0.00"}
-                            </td>
-                            <td className="p-4 text-sm font-medium text-center">
-                              ${line.cost_budget?.toFixed(2) || "0.00"}
-                            </td>
-                            <td className="p-4 text-sm font-medium text-center">
-                              ${line.cost_install_budget?.toFixed(2) || "0.00"}
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={7} className="text-center py-8">
-                            <div className="flex flex-col items-center justify-center text-center">
-                              <h3 className="text-2xl font-semibold mb-2">
-                                Add your first sign.
-                              </h3>
-                              <p className="text-[#0D1216B2] text-[14px] mb-6 max-w-md">
-                                You&apos;ll use this section to add all the
-                                signs needed for this proposal.
-                              </p>
-                              <button
-                                onClick={() => setAddSignSidebarOpen(true)}
-                                className="bg-[#F9F9FB] h-10 flex items-center justify-center px-4 gap-2 border border-[#E0E0E0] rounded-md font-semibold text-[14px]"
-                              >
-                                Add Sign/Service
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                      {/* Totals Row */}
-                      {pricingData.lines.length > 0 && (
-                        <tr>
-                          <td colSpan={2} className="p-4">
-                            <button
-                              onClick={() => setAddSignSidebarOpen(true)}
-                              className="h-10 flex items-center justify-center px-4 gap-2 font-semibold text-[14px] hover:bg-gray-50"
-                            >
-                              <Plus className="size-4" />
-                              Add Sign
-                            </button>
-                          </td>
-                          <td className="p-4">
-                            <p className="text-sm font-semibold text-right pr-10 w-full">
-                              Totals:
-                            </p>
-                          </td>
-                          <td className="p-4 text-sm font-semibold text-center">
-                            $
-                            {pricingData.lines
-                              .reduce(
-                                (sum: number, line: any) =>
-                                  sum + (line.list_price || 0),
-                                0
-                              )
-                              .toFixed(2)}
-                          </td>
-                          <td className="p-4 text-sm font-semibold text-center">
-                            $
-                            {pricingData.lines
-                              .reduce(
-                                (sum: number, line: any) =>
-                                  sum + (line.list_install_price || 0),
-                                0
-                              )
-                              .toFixed(2)}
-                          </td>
-                          <td className="p-4 text-sm font-semibold text-center">
-                            $
-                            {pricingData.lines
-                              .reduce(
-                                (sum: number, line: any) =>
-                                  sum + (line.cost_budget || 0),
-                                0
-                              )
-                              .toFixed(2)}
-                          </td>
-                          <td className="p-4 text-sm font-semibold text-center">
-                            $
-                            {pricingData.lines
-                              .reduce(
-                                (sum: number, line: any) =>
-                                  sum + (line.cost_install_budget || 0),
-                                0
-                              )
-                              .toFixed(2)}
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+                            Add Sign/Service
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  {selectedTab === "Services" && (
+                    <ServicesTable
+                      data={servicesData}
+                      onRowClick={handleRowClick}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                      onAddService={() => setAddSignSidebarOpen(true)}
+                    />
+                  )}
                 </>
               )}
             </div>
