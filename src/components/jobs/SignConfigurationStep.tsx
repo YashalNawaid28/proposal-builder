@@ -986,16 +986,7 @@ export const SignConfigurationStep = ({
             </div>
           ))}
 
-          {/* Debug section - temporary */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="mt-4 p-4 bg-gray-100 rounded text-xs">
-              <h4 className="font-bold mb-2">Debug Info:</h4>
-              <div>Sign Description: {selectedSignData?.sign_description}</div>
-              <div>Form Fields Count: {formFields.length}</div>
-              <div>Fields with 'Size' label: {formFields.filter(f => f.label === "Size").length}</div>
-              <div>All field labels: {formFields.map(f => f.label).join(", ")}</div>
-            </div>
-          )}
+
 
           {/* Always show Raceway Size if there's a raceway field */}
           {formFields.some(
