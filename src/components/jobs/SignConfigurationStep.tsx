@@ -56,7 +56,7 @@ export const SignConfigurationStep = ({
   jobId,
   pricingVersionId,
 }: SignConfigurationStepProps) => {
-  const { user, userData } = useAuth();
+  const { user, userData, primaryUserId } = useAuth();
   const [isEditingPrices, setIsEditingPrices] = useState(false);
   const [editablePrices, setEditablePrices] = useState({
     signPrice: "0.00",
@@ -188,8 +188,11 @@ export const SignConfigurationStep = ({
         .toLowerCase()
         .replace(/\s+/g, "");
 
+      console.log(`SignConfigurationStep - Processing placeholder: "${placeholder}" -> key: "${key}"`);
+
       // Skip Size field as it's handled separately
       if (key === "size") {
+        console.log(`SignConfigurationStep - Skipping size field: "${placeholder}"`);
         return;
       }
 
@@ -213,9 +216,12 @@ export const SignConfigurationStep = ({
         } else if (key.includes("backer")) {
           label = "Backer Size";
           type = "select"; // We'll handle this in rendering logic
+        } else if (key === "size") {
+          // Skip main size field as it's handled separately
+          return;
         } else {
-          label = "Size";
-          type = "select";
+          // Skip any other size-related fields that aren't raceway or backer
+          return;
         }
       } else if (key.includes("color")) {
         label = "Color";
@@ -251,6 +257,7 @@ export const SignConfigurationStep = ({
     });
 
     console.log("SignConfigurationStep - Generated fields:", fields);
+    console.log("SignConfigurationStep - Fields with 'Size' label:", fields.filter(f => f.label === "Size"));
     setFormFields(fields);
   }, [selectedSignData]);
 
@@ -482,6 +489,13 @@ export const SignConfigurationStep = ({
   };
 
   const handleAddSign = async () => {
+    console.log("handleAddSign - Function called");
+    console.log("handleAddSign - selectedSign:", selectedSign);
+    console.log("handleAddSign - userData:", userData);
+    console.log("handleAddSign - primaryUserId:", primaryUserId);
+    console.log("handleAddSign - jobId:", jobId);
+    console.log("handleAddSign - signData:", signData);
+    
     try {
       // Use the jobId passed as prop
       console.log("Component Debug - jobId:", jobId);
@@ -493,10 +507,10 @@ export const SignConfigurationStep = ({
       }
 
       // Get current user ID
-      if (!userData) {
+      if (!primaryUserId) {
         throw new Error("User not authenticated");
       }
-      const userId = userData.id;
+      const userId = primaryUserId;
 
       let targetPricingVersionId: string;
 
@@ -573,7 +587,8 @@ export const SignConfigurationStep = ({
       }
     } catch (error) {
       console.error("Error adding sign:", error);
-      // You might want to show an error message to the user
+      // Show error message to user
+      alert(`Error adding sign: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -591,7 +606,13 @@ export const SignConfigurationStep = ({
         .replace(/[{}]/g, "")
         .toLowerCase()
         .replace(/\s+/g, "");
-      const value = signData[key];
+      
+      // Handle both "Size" and "Letter Size" placeholders
+      let value = signData[key];
+      if (!value && (key === "size" || key === "lettersize")) {
+        // If the key is "size" or "lettersize", use the size value from signData
+        value = signData.size;
+      }
 
       if (value) {
         if (key.includes("raceway") && !key.includes("size")) {
@@ -858,104 +879,114 @@ export const SignConfigurationStep = ({
                   </SelectContent>
                 </Select>
               ) : field.type === "size-input" ? (
-                <div className="flex items-center">
-                  <section className="flex flex-col gap-2 items-center justify-between">
-                    <Label className="text-[14px] font-[400] text-[#60646C]">
-                      Height
-                    </Label>
-                    <div className="flex items-center gap-1">
-                      <div className="w-12">
-                        <Input
-                          value={signData.racewaySize?.height?.feet || ""}
-                          onChange={(e) =>
-                            setSignData({
-                              ...signData,
-                              racewaySize: {
-                                ...signData.racewaySize,
-                                height: {
-                                  ...signData.racewaySize?.height,
-                                  feet: e.target.value,
-                                },
-                              },
-                            })
-                          }
-                          className="h-9 border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0 text-center"
-                          placeholder=""
-                        />
-                      </div>
-                      <span className="text-gray-500">-</span>
-                      <div className="w-12">
-                        <Input
-                          value={signData.racewaySize?.height?.inches || ""}
-                          onChange={(e) =>
-                            setSignData({
-                              ...signData,
-                              racewaySize: {
-                                ...signData.racewaySize,
-                                height: {
-                                  ...signData.racewaySize?.height,
-                                  inches: e.target.value,
-                                },
-                              },
-                            })
-                          }
-                          className="h-9 border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0 text-center"
-                          placeholder=""
-                        />
-                      </div>
-                    </div>
-                  </section>
-                  <span className="text-gray-500 mx-2 mt-6">×</span>
-                  <section className="flex flex-col gap-2 items-center justify-between">
-                    <Label className="text-[14px] font-[400] text-[#60646C]">
-                      Width
-                    </Label>
-                    <div className="flex items-center gap-1">
-                      <div className="w-12">
-                        <Input
-                          value={signData.racewaySize?.width?.feet || ""}
-                          onChange={(e) =>
-                            setSignData({
-                              ...signData,
-                              racewaySize: {
-                                ...signData.racewaySize,
-                                width: {
-                                  ...signData.racewaySize?.width,
-                                  feet: e.target.value,
-                                },
-                              },
-                            })
-                          }
-                          className="h-9 border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0 text-center"
-                          placeholder=""
-                        />
-                      </div>
-                      <span className="text-gray-500">-</span>
-                      <div className="w-12">
-                        <Input
-                          value={signData.racewaySize?.width?.inches || ""}
-                          onChange={(e) =>
-                            setSignData({
-                              ...signData,
-                              racewaySize: {
-                                ...signData.racewaySize,
-                                width: {
-                                  ...signData.racewaySize?.width,
-                                  inches: e.target.value,
-                                },
-                              },
-                            })
-                          }
-                          className="h-9 border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0 text-center"
-                          placeholder=""
-                        />
-                      </div>
-                    </div>
-                  </section>
+                <div className="flex gap-2">
+                  <div className="w-12">
+                    <Input
+                      value={signData.racewaySize?.height?.feet || ""}
+                      onChange={(e) =>
+                        setSignData({
+                          ...signData,
+                          racewaySize: {
+                            ...signData.racewaySize,
+                            height: {
+                              ...signData.racewaySize?.height,
+                              feet: e.target.value,
+                            },
+                          },
+                        })
+                      }
+                      className="h-9 border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0 text-center"
+                      placeholder=""
+                    />
+                  </div>
+                  <div className="flex items-center text-[12px] text-[#60646C]">
+                    ft
+                  </div>
+                  <div className="w-12">
+                    <Input
+                      value={signData.racewaySize?.height?.inches || ""}
+                      onChange={(e) =>
+                        setSignData({
+                          ...signData,
+                          racewaySize: {
+                            ...signData.racewaySize,
+                            height: {
+                              ...signData.racewaySize?.height,
+                              inches: e.target.value,
+                            },
+                          },
+                        })
+                      }
+                      className="h-9 border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0 text-center"
+                      placeholder=""
+                    />
+                  </div>
+                  <div className="flex items-center text-[12px] text-[#60646C]">
+                    in
+                  </div>
+                  <div className="flex items-center text-[12px] text-[#60646C]">
+                    x
+                  </div>
+                  <div className="w-12">
+                    <Input
+                      value={signData.racewaySize?.width?.feet || ""}
+                      onChange={(e) =>
+                        setSignData({
+                          ...signData,
+                          racewaySize: {
+                            ...signData.racewaySize,
+                            width: {
+                              ...signData.racewaySize?.width,
+                              feet: e.target.value,
+                            },
+                          },
+                        })
+                      }
+                      className="h-9 border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0 text-center"
+                      placeholder=""
+                    />
+                  </div>
+                  <div className="flex items-center text-[12px] text-[#60646C]">
+                    ft
+                  </div>
+                  <div className="w-12">
+                    <Input
+                      value={signData.racewaySize?.width?.inches || ""}
+                      onChange={(e) =>
+                        setSignData({
+                          ...signData,
+                          racewaySize: {
+                            ...signData.racewaySize,
+                            width: {
+                              ...signData.racewaySize?.width,
+                              inches: e.target.value,
+                            },
+                          },
+                        })
+                      }
+                      className="h-9 border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0 text-center"
+                      placeholder=""
+                    />
+                  </div>
+                  <div className="flex items-center text-[12px] text-[#60646C]">
+                    in
+                  </div>
                 </div>
-              ) : null}
+              ) : (
+                // Default input for any other field types
+                <Input
+                  value={signData[field.key] || ""}
+                  onChange={(e) =>
+                    setSignData({ ...signData, [field.key]: e.target.value })
+                  }
+                  className="h-9 w-auto min-w-[120px] border-[#DEE1EA] focus:border-[#DEE1EA] focus:ring-0"
+                  placeholder={`Enter ${field.label.toLowerCase()}`}
+                />
+              )}
             </div>
           ))}
+
+
 
           {/* Always show Raceway Size if there's a raceway field */}
           {formFields.some(
@@ -1166,8 +1197,21 @@ export const SignConfigurationStep = ({
             </button>
           )}
           <button
-            onClick={isEditingPrices ? handleSavePrices : handleAddSign}
+            onClick={(e) => {
+              console.log("Add Sign button clicked");
+              console.log("isEditingPrices:", isEditingPrices);
+              console.log("Button disabled state:", !selectedSign || !primaryUserId || !jobId);
+              console.log("selectedSign:", selectedSign);
+              console.log("primaryUserId:", primaryUserId);
+              console.log("jobId:", jobId);
+              if (isEditingPrices) {
+                handleSavePrices();
+              } else {
+                handleAddSign();
+              }
+            }}
             className="flex-1 py-2 px-3 text-black disabled:text-[#464C53] bg-white disabled:bg-[#1018280D] h-10 flex items-center justify-center text-[14px] rounded-sm font-semibold"
+            disabled={!selectedSign || !primaryUserId || !jobId}
           >
             {isEditingPrices ? "Save Pricing" : "Add Sign"}
           </button>

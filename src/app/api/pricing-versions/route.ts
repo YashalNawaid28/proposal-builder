@@ -3,8 +3,26 @@ import { getServerSupabase } from "@/lib/supabase";
 
 export async function POST(request: NextRequest) {
   try {
+    console.log("pricing-versions POST - Request received");
     const supabase = getServerSupabase();
     const { job_id, creator_id, version_no, revision_no } = await request.json();
+    console.log("pricing-versions POST - Request body:", { job_id, creator_id, version_no, revision_no });
+
+    // Debug: Check if creator_id exists in users table
+    if (creator_id) {
+      const { data: userCheck, error: userCheckError } = await supabase
+        .from("users")
+        .select("id, display_name, email")
+        .eq("id", creator_id)
+        .single();
+      
+      console.log("pricing-versions POST - User check:", { 
+        creator_id, 
+        userExists: !!userCheck, 
+        userData: userCheck,
+        error: userCheckError 
+      });
+    }
 
     if (!job_id || !creator_id) {
       return NextResponse.json(

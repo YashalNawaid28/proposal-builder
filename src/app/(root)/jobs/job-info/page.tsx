@@ -36,7 +36,7 @@ import { generateProposalNumber } from "@/lib/utils";
 
 export default function AddJobPage() {
   const searchParams = useSearchParams();
-  const { user, userData } = useAuth();
+  const { user, userData, primaryUserId } = useAuth();
   const jobId = searchParams.get("id");
   console.log("Job Info Page Debug - jobId from URL:", jobId);
 
@@ -401,10 +401,23 @@ export default function AddJobPage() {
 
   // Function to create new version
   const createNewVersion = async () => {
-    // Use user object if userData is not available
-    const userId = userData?.id || user?.id;
-
-    if (!jobId || !userId) return;
+    // Use primaryUserId from auth context which should be the correct ID from users table
+    const userId = primaryUserId;
+    
+    console.log("createNewVersion - Debug info:", {
+      jobId,
+      userId,
+      primaryUserId,
+      userData: userData?.id,
+      user: user?.id,
+      userDataExists: !!userData,
+      userExists: !!user
+    });
+    
+    if (!jobId || !userId) {
+      console.error("Missing jobId or userId:", { jobId, userId, userData, user });
+      return;
+    }
 
     try {
       // Find the latest version to determine new version/revision numbers

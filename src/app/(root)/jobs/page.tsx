@@ -161,7 +161,7 @@ export default function JobsPage() {
     };
 
     fetchJobs();
-  }, [userData, user, currentPage, itemsPerPage]);
+  }, [userData, user, currentPage, itemsPerPage, loading]);
 
   // Filter jobs based on the selected tab
   const filteredJobs = useMemo(() => {

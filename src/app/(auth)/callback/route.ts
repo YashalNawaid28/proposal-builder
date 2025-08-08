@@ -88,7 +88,12 @@ export async function GET(request: NextRequest) {
       })
 
       console.log("Callback - Successfully authenticated user:", existingUser.display_name)
-      return NextResponse.redirect(new URL("/jobs", request.url))
+      
+      // Redirect to a page that will set localStorage
+      const redirectUrl = new URL("/set-user-role", request.url)
+      redirectUrl.searchParams.set("role", existingUser.role || "")
+      redirectUrl.searchParams.set("email", existingUser.email)
+      return NextResponse.redirect(redirectUrl)
     } catch (error) {
       console.error("Callback error:", error)
       return NextResponse.redirect(

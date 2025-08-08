@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "./supabase-auth-provider";
+import { isUserAdmin } from "@/lib/admin-utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,7 +18,7 @@ const navLinks = [
   {
     title: "Home",
     icon: House,
-    href: "/",
+    href: "/jobs",
   },
 ];
 
@@ -64,8 +65,8 @@ export function CustomSidebar({
   const pathname = usePathname();
   const { user, userData, signOut } = useAuth();
 
-  console.log("CustomSidebar - user:", user);
-  console.log("CustomSidebar - userData:", userData);
+  // console.log("CustomSidebar - user:", user);
+  // console.log("CustomSidebar - userData:", userData);
 
   const handleSignOut = async () => {
     try {
@@ -149,34 +150,38 @@ export function CustomSidebar({
           })}
         </div>
 
-        {/* Admin Section */}
-        <div className="text-[12px] text-gray-200 mb-1 mt-4 px-4">Admin</div>
-        <div className="w-full">
-          {adminLinks.map((link) => {
-            const isActive = pathname === link.href;
-            return (
-              <div key={link.title} className="mb-0.5">
-                <Link
-                  href={link.href}
-                  className={`w-full flex items-center gap-2 px-4 py-1 h-8 rounded-md transition-colors ${
-                    isActive
-                      ? "bg-gray-800 text-white"
-                      : "hover:bg-gray-900/60 text-white"
-                  }`}
-                >
-                  <link.icon
-                    className={`w-4 h-4 ${
-                      link.title === "Options" ? "rotate-[135deg]" : ""
-                    }`}
-                  />
-                  <span className="ml-1 text-[14px] font-medium">
-                    {link.title}
-                  </span>
-                </Link>
-              </div>
-            );
-          })}
-        </div>
+        {/* Admin Section - Only show for admin users */}
+        {isUserAdmin() && (
+          <>
+            <div className="text-[12px] text-gray-200 mb-1 mt-4 px-4">Admin</div>
+            <div className="w-full">
+              {adminLinks.map((link) => {
+                const isActive = pathname === link.href;
+                return (
+                  <div key={link.title} className="mb-0.5">
+                    <Link
+                      href={link.href}
+                      className={`w-full flex items-center gap-2 px-4 py-1 h-8 rounded-md transition-colors ${
+                        isActive
+                          ? "bg-gray-800 text-white"
+                          : "hover:bg-gray-900/60 text-white"
+                      }`}
+                    >
+                      <link.icon
+                        className={`w-4 h-4 ${
+                          link.title === "Options" ? "rotate-[135deg]" : ""
+                        }`}
+                      />
+                      <span className="ml-1 text-[14px] font-medium">
+                        {link.title}
+                      </span>
+                    </Link>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
       </div>
 
       {/* Footer */}

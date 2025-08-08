@@ -345,9 +345,12 @@ export const EditPricingLineDrawer = ({
         } else if (key.includes("backer")) {
           label = "Backer Size";
           type = "select";
+        } else if (key === "size") {
+          // Skip main size field as it's handled separately
+          return;
         } else {
-          label = "Size";
-          type = "select";
+          // Skip any other size-related fields that aren't raceway or backer
+          return;
         }
       } else if (key.includes("color")) {
         label = "Color";

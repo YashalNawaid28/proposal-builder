@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { IAccount, ISignDetail, ISignOption } from "@/lib/interfaces";
 import { PageTabs } from "@/components/ui/page-tabs";
+import { AdminGuard } from "@/components/admin-guard";
 import { AgGridReact } from "ag-grid-react";
 import {
   ColDef,
@@ -692,10 +693,11 @@ const SignsPage = () => {
   };
 
   return (
-    <div className="bg-white">
-      <h1 className="text-2xl font-bold p-5">Signs</h1>
-      <PageTabs tabs={brands} activeTab={tab} onTabChange={setTab} />
-      <div className="border border-[#DEE1EA] overflow-hidden">
+    <AdminGuard>
+      <div className="bg-white">
+        <h1 className="text-2xl font-bold p-5">Signs</h1>
+        <PageTabs tabs={brands} activeTab={tab} onTabChange={setTab} />
+        <div className="border border-[#DEE1EA] overflow-hidden">
         {(() => {
           if (loading)
             return <div className="p-8 text-center">Loading sign data...</div>;
@@ -884,8 +886,9 @@ const SignsPage = () => {
             </div>
           );
         })()}
+        </div>
       </div>
-    </div>
+    </AdminGuard>
   );
 };
 

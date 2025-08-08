@@ -231,8 +231,11 @@ const ValuesCell = ({
 );
 
 const OptionsPage = () => {
-  const { user, userData } = useAuth();
+  const { user, userData, primaryUserId, isAuthenticated } = useAuth();
   console.log("OptionsPage - Component rendered, userData:", userData);
+  console.log("OptionsPage - Primary user ID:", primaryUserId);
+  console.log("OptionsPage - Is authenticated:", isAuthenticated);
+  
   const [tab, setTab] = useState<"All" | "Active" | "Archived">("All");
   const [options, setOptions] = useState<OptionData[]>([]);
   const [optionValues, setOptionValues] = useState<{
@@ -247,17 +250,16 @@ const OptionsPage = () => {
   const fetchOptions = useCallback(async () => {
     console.log("OptionsPage - fetchOptions called, userData:", userData);
     console.log("OptionsPage - user:", user);
+    console.log("OptionsPage - primaryUserId:", primaryUserId);
     
-    // Use user object if userData is not available
-    const userId = userData?.id || user?.id;
-    
-    if (!userId) {
-      console.log("OptionsPage - No user ID available, returning early");
+    // Use the consistent primary user ID
+    if (!primaryUserId) {
+      console.log("OptionsPage - No primary user ID available, returning early");
       setLoading(false);
       return;
     }
     
-    console.log("OptionsPage - Starting to fetch options with userId:", userId);
+    console.log("OptionsPage - Starting to fetch options with primaryUserId:", primaryUserId);
     setLoading(true);
     setError(null);
     try {
@@ -265,7 +267,7 @@ const OptionsPage = () => {
       const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
       const res = await fetch("/api/options", {
-        headers: { "request.user.id": userId },
+        headers: { "request.user.id": primaryUserId },
         signal: controller.signal,
       });
 
@@ -296,7 +298,7 @@ const OptionsPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [userData, user]);
+  }, [userData, user, primaryUserId]);
 
   useEffect(() => {
     console.log("OptionsPage - useEffect triggered, fetchOptions:", fetchOptions);
