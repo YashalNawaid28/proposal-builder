@@ -71,9 +71,9 @@ export const ServiceConfigurationStep = ({
       // Create the pricing line for the service
       const formData = new FormData();
       formData.append("pricing_version_id", pricingVersionId || "");
+      formData.append("service_id", selectedService.service_id || selectedService.id);
       formData.append("service_name", selectedService.name);
-      formData.append("price", serviceData.price);
-      formData.append("type", "service");
+      formData.append("service_unit_price", serviceData.price);
 
       const response = await fetch("/api/pricing-lines", {
         method: "POST",

@@ -28,13 +28,11 @@ interface SignPricing {
   id: string;
   sign_id: string;
   size: string;
-  sign_price: number;
-  install_price: number;
-  sign_budget: number;
-  install_budget: number;
+  sign_price: string | number;
+  install_price: string | number;
+  sign_budget: string | number;
+  install_budget: string | number;
   raceway: number;
-  sign_budget_multiplier: number;
-  install_budget_multiplier: number;
 }
 
 interface OptionValue {
@@ -414,20 +412,12 @@ export const SignConfigurationStep = ({
         if (result.data && result.data.length > 0) {
           const pricing = result.data[0];
           console.log("Component Debug - Pricing data received:", pricing);
-          console.log(
-            "Component Debug - Sign budget multiplier:",
-            pricing.sign_budget_multiplier
-          );
-          console.log(
-            "Component Debug - Install budget multiplier:",
-            pricing.install_budget_multiplier
-          );
           setCurrentPricing(pricing);
           setEditablePrices({
-            signPrice: pricing.sign_price.toFixed(2),
-            installPrice: pricing.install_price.toFixed(2),
-            signBudget: pricing.sign_budget.toFixed(2),
-            installBudget: pricing.install_budget.toFixed(2),
+            signPrice: parseFloat(pricing.sign_price).toFixed(2),
+            installPrice: parseFloat(pricing.install_price).toFixed(2),
+            signBudget: parseFloat(pricing.sign_budget).toFixed(2),
+            installBudget: parseFloat(pricing.install_budget).toFixed(2),
           });
         } else {
           setCurrentPricing(null);
@@ -655,8 +645,8 @@ export const SignConfigurationStep = ({
     if (!currentPricing)
       return { signPrice: "0.00", signBudget: "0.00", installBudget: "0.00" };
 
-    const baseSignPrice = currentPricing.sign_price;
-    const baseInstallPrice = currentPricing.install_price;
+    const baseSignPrice = parseFloat(currentPricing.sign_price.toString());
+    const baseInstallPrice = parseFloat(currentPricing.install_price.toString());
     let signPriceModifier = 0;
     let installPriceModifier = 0;
 
