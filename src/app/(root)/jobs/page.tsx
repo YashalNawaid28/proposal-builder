@@ -279,10 +279,10 @@ export default function JobsPage() {
                 <td className="p-4 border-r text-center border-[#DEE1EA] text-[14px]">
                   {row.proposalNo}
                 </td>
-                <td className="p-4 border-r border-[#DEE1EA] text-center text-[14px]">
+                <td className="p-4 border-r border-[#DEE1EA] text-center text-[14px] text-[#15191E]">
                   {row.date}
                 </td>
-                <td className="p-4 border-r border-[#DEE1EA] text-center text-[14px]">
+                <td className="p-4 border-r border-[#DEE1EA] text-center text-[14px] text-[#15191E]">
                   <UserInfo user={row.creator} />
                 </td>
                 <td className="p-4 text-center text-[14px]">
@@ -325,9 +325,9 @@ export default function JobsPage() {
           )}
         </div>
         <div className="flex flex-col">
-          <div className="font-medium text-sm">{user.display_name}</div>
+          <div className="font-[600] text-[14px] text-start text-[#15191E]">{user.display_name}</div>
           {user.job_title && (
-            <div className="text-xs text-gray-500">{user.job_title}</div>
+            <div className="text-[12px] font-[400] text-[#15191E] text-start">{user.job_title}</div>
           )}
         </div>
       </div>
