@@ -1536,13 +1536,16 @@ export default function AddJobPage() {
           }}
         >
           <div className="p-1 space-y-1">
-            <button
-              onClick={() => handleEdit(clickedRow)}
-              className="w-full px-4 py-2 text-sm rounded-md text-left hover:bg-[#F5F5F5] flex items-center gap-2"
-            >
-              <Pencil className="size-4" />
-              Edit
-            </button>
+            {/* Only show Edit button for sign lines (lines with sign_id) */}
+            {clickedRow.sign_id && (
+              <button
+                onClick={() => handleEdit(clickedRow)}
+                className="w-full px-4 py-2 text-sm rounded-md text-left hover:bg-[#F5F5F5] flex items-center gap-2"
+              >
+                <Pencil className="size-4" />
+                Edit
+              </button>
+            )}
             <button
               onClick={() => handleDelete(clickedRow)}
               className="w-full px-4 py-2 text-sm rounded-md text-left hover:bg-[#F5F5F5] flex items-center gap-2"
