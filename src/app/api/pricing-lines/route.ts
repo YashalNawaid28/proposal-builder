@@ -17,41 +17,44 @@ export async function POST(request: NextRequest) {
       body = {
         pricing_version_id: formData.get("pricing_version_id"),
         sign_id: formData.get("sign_id"),
+        service_id: formData.get("service_id"),
         service_name: formData.get("service_name"),
-        type: formData.get("type") || "sign",
         description_resolved: formData.get("description_resolved"),
         qty: formData.get("qty"),
         list_price: formData.get("price") || formData.get("list_price"),
         cost_budget: formData.get("cost_budget"),
         list_install_price: formData.get("list_install_price"),
         cost_install_budget: formData.get("cost_install_budget"),
+        service_unit_price: formData.get("service_unit_price") || formData.get("price"),
       };
     }
 
     const {
       pricing_version_id,
       sign_id,
+      service_id,
       service_name,
-      type = "sign",
       description_resolved,
       qty,
       list_price,
       cost_budget,
       list_install_price,
       cost_install_budget,
+      service_unit_price,
     } = body;
     
     console.log("pricing-lines POST - Parsed body:", {
       pricing_version_id,
       sign_id,
+      service_id,
       service_name,
-      type,
       description_resolved,
       qty,
       list_price,
       cost_budget,
       list_install_price,
       cost_install_budget,
+      service_unit_price,
     });
 
     if (!pricing_version_id) {
@@ -61,44 +64,74 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // For signs, sign_id is required
-    if (type === "sign" && !sign_id) {
+    // Determine if it's a sign or service based on which ID is provided
+    const isSign = !!sign_id;
+    const isService = !!service_id;
+
+    // Validate that we have either sign_id or service_id, but not both
+    if (!isSign && !isService) {
       return NextResponse.json(
-        { error: "sign_id is required for signs" },
+        { error: "Either sign_id or service_id is required" },
         { status: 400 }
       );
     }
 
-    // For services, service_name is required
-    if (type === "service" && !service_name) {
+    if (isSign && isService) {
       return NextResponse.json(
-        { error: "service_name is required for services" },
+        { error: "Cannot have both sign_id and service_id" },
         { status: 400 }
       );
     }
 
-    // Validate that we have at least some pricing data
-    if (!list_price && !cost_budget && !list_install_price && !cost_install_budget) {
-      return NextResponse.json(
-        { error: "At least one price field is required" },
-        { status: 400 }
-      );
+    // Validate pricing data based on type
+    if (isSign) {
+      // For signs, validate that we have at least some pricing data
+      if (!list_price && !cost_budget && !list_install_price && !cost_install_budget) {
+        return NextResponse.json(
+          { error: "At least one price field is required for signs" },
+          { status: 400 }
+        );
+      }
+    } else if (isService) {
+      // For services, validate that we have service_unit_price
+      if (!service_unit_price || parseFloat(service_unit_price) <= 0) {
+        return NextResponse.json(
+          { error: "service_unit_price is required for services" },
+          { status: 400 }
+        );
+      }
     }
 
     const insertData: any = {
       pricing_version_id,
       description_resolved:
-        description_resolved || (type === "service" ? service_name : ""),
+        description_resolved || (isService ? service_name : ""),
       qty: parseInt(qty) || 1,
-      list_price: parseFloat(list_price) || 0,
-      cost_budget: parseFloat(cost_budget) || 0,
-      list_install_price: parseFloat(list_install_price) || 0,
-      cost_install_budget: parseFloat(cost_install_budget) || 0,
     };
+
+    if (isSign) {
+      // For signs, use the existing price fields
+      insertData.list_price = parseFloat(list_price) || 0;
+      insertData.cost_budget = parseFloat(cost_budget) || 0;
+      insertData.list_install_price = parseFloat(list_install_price) || 0;
+      insertData.cost_install_budget = parseFloat(cost_install_budget) || 0;
+    } else if (isService) {
+      // For services, use service_unit_price and set other fields to 0
+      insertData.service_unit_price = parseFloat(service_unit_price) || 0;
+      insertData.list_price = 0;
+      insertData.cost_budget = 0;
+      insertData.list_install_price = 0;
+      insertData.cost_install_budget = 0;
+    }
 
     // Only add sign_id if it's provided (for signs)
     if (sign_id) {
       insertData.sign_id = sign_id;
+    }
+
+    // Only add service_id if it's provided (for services)
+    if (service_id) {
+      insertData.service_id = service_id;
     }
 
     console.log("pricing-lines POST - Final insert data:", insertData);
@@ -153,6 +186,12 @@ export async function GET(request: NextRequest) {
           id,
           sign_name,
           sign_image
+        ),
+        services (
+          id,
+          service_name,
+          service_image,
+          service_description
         )
       `
       )

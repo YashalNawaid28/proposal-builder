@@ -17,9 +17,30 @@ export const AllItemsTable = ({
   onDelete,
   onAddSign,
 }: AllItemsTableProps) => {
-  // Calculate total of total price values
+  // Helper function to calculate unit price for signs and services
+  const calculateUnitPrice = (line: any) => {
+    if (line.sign_id) {
+      // For signs: sign_price + install_price
+      const signPrice = line.list_price || 0;
+      const installPrice = line.list_install_price || 0;
+      return signPrice + installPrice;
+    } else if (line.service_id) {
+      // For services: service_unit_price
+      return line.service_unit_price || 0;
+    }
+    return 0;
+  };
+
+  // Helper function to calculate total price
+  const calculateTotalPrice = (line: any) => {
+    const unitPrice = calculateUnitPrice(line);
+    const qty = line.qty || 1;
+    return unitPrice * qty;
+  };
+
+  // Calculate total of all items
   const totalPrice = data.reduce(
-    (sum: number, line: any) => sum + (line.totalPrice || 0),
+    (sum: number, line: any) => sum + calculateTotalPrice(line),
     0
   );
 
@@ -58,19 +79,19 @@ export const AllItemsTable = ({
               <td className="p-4 text-sm border-r border-[#DEE1EA]">
                 <div className="flex items-center justify-center">
                   <SignImageCell
-                    src={line.serviceImage || ""}
-                    signName={line.service || "Service"}
+                    src={line.sign_id ? (line.signs?.sign_image || "") : (line.services?.service_image || "")}
+                    signName={line.sign_id ? (line.signs?.sign_name || "Sign") : (line.description_resolved || "Service")}
                   />
                 </div>
               </td>
               <td className="p-4 font-semibold border-r border-[#DEE1EA] text-[14px]">
-                {line.desc || "No description"}
+                {line.description_resolved || "No description"}
               </td>
               <td className="p-4 border-r text-center border-[#DEE1EA] text-[14px]">
-                ${line.unitPrice?.toFixed(2) || "0.00"}
+                ${calculateUnitPrice(line).toFixed(2)}
               </td>
               <td className="p-4 text-center text-[14px]">
-                ${line.totalPrice?.toFixed(2) || "0.00"}
+                ${calculateTotalPrice(line).toFixed(2)}
               </td>
             </tr>
           ))}

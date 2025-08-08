@@ -47,7 +47,19 @@ export default function AddJobPage() {
   const [clientInfoOpen, setClientInfoOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState("All");
   const [addSignSidebarOpen, setAddSignSidebarOpen] = useState(false);
+  const [sidebarInitialTab, setSidebarInitialTab] = useState<"signage" | "services">("signage");
   const [loading, setLoading] = useState(!!jobId);
+
+  // Functions to open sidebar with specific tabs
+  const openSignSidebar = () => {
+    setSidebarInitialTab("signage");
+    setAddSignSidebarOpen(true);
+  };
+
+  const openServiceSidebar = () => {
+    setSidebarInitialTab("services");
+    setAddSignSidebarOpen(true);
+  };
 
   // Dummy data for All and Services tabs
   const [allItemsData, setAllItemsData] = useState([
@@ -146,6 +158,10 @@ export default function AddJobPage() {
   const [dropdownPosition, setDropdownPosition] = useState({ x: 0, y: 0 }); // State to track dropdown position
   const [editDrawerOpen, setEditDrawerOpen] = useState(false); // State to track edit drawer
   const [editingPricingLine, setEditingPricingLine] = useState<any>(null); // State to track which line is being edited
+
+  // Filter pricing lines based on type
+  const signPricingLines = pricingData.lines.filter((line: any) => line.sign_id);
+  const servicePricingLines = pricingData.lines.filter((line: any) => line.service_id);
 
   // Function to generate initials from display name
   const getInitials = (displayName: string) => {
@@ -538,21 +554,34 @@ export default function AddJobPage() {
 
           // Create new pricing lines for the new version
           for (const line of existingLines) {
+            // Prepare the request body based on whether it's a sign or service
+            const requestBody: any = {
+              pricing_version_id: newVersion.data.id,
+              description_resolved: line.description_resolved,
+              qty: line.qty,
+            };
+
+            // Add sign-specific fields if it's a sign
+            if (line.sign_id) {
+              requestBody.sign_id = line.sign_id;
+              requestBody.list_price = line.list_price;
+              requestBody.cost_budget = line.cost_budget;
+              requestBody.list_install_price = line.list_install_price;
+              requestBody.cost_install_budget = line.cost_install_budget;
+            }
+
+            // Add service-specific fields if it's a service
+            if (line.service_id) {
+              requestBody.service_id = line.service_id;
+              requestBody.service_unit_price = line.service_unit_price;
+            }
+
             const lineResponse = await fetch("/api/pricing-lines", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
               },
-              body: JSON.stringify({
-                pricing_version_id: newVersion.data.id,
-                sign_id: line.sign_id,
-                description_resolved: line.description_resolved,
-                qty: line.qty,
-                list_price: line.list_price,
-                cost_budget: line.cost_budget,
-                list_install_price: line.list_install_price,
-                cost_install_budget: line.cost_install_budget,
-              }),
+              body: JSON.stringify(requestBody),
             });
 
             if (!lineResponse.ok) {
@@ -864,6 +893,14 @@ export default function AddJobPage() {
 
     loadJobData();
   }, [jobId, userData, user, fetchPricingData, fetchVersions]);
+
+  // Fetch pricing data when selectedVersion changes
+  useEffect(() => {
+    if (jobId && selectedVersion) {
+      console.log("Job Info Page - Selected version changed, fetching pricing data for version:", selectedVersion.id);
+      fetchPricingData(jobId, selectedVersion.id);
+    }
+  }, [jobId, selectedVersion, fetchPricingData]);
 
   // Function to reload job data after update
   const reloadJobData = async () => {
@@ -1219,16 +1256,7 @@ export default function AddJobPage() {
                 </div>
               ) : (
                 <>
-                  {selectedTab === "All" && (
-                    <AllItemsTable
-                      data={allItemsData}
-                      onRowClick={handleRowClick}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                      onAddSign={() => setAddSignSidebarOpen(true)}
-                    />
-                  )}
-                  {selectedTab === "Signs" &&
+                  {selectedTab === "All" &&
                     (loadingPricing ? (
                       <div className="flex-1 flex items-center justify-center">
                         <div className="text-center">
@@ -1239,12 +1267,49 @@ export default function AddJobPage() {
                         </div>
                       </div>
                     ) : pricingData.lines.length > 0 ? (
-                      <SignsTable
+                      <AllItemsTable
                         data={pricingData.lines}
                         onRowClick={handleRowClick}
                         onEdit={handleEdit}
                         onDelete={handleDelete}
-                        onAddSign={() => setAddSignSidebarOpen(true)}
+                        onAddSign={openSignSidebar}
+                      />
+                    ) : (
+                      <div className="flex-1 flex items-center justify-center">
+                        <div className="text-center">
+                          <h3 className="text-2xl font-semibold mb-2">
+                            Add your first item.
+                          </h3>
+                          <p className="text-[#0D1216B2] text-[14px] mb-6 max-w-md">
+                            You&apos;ll use this section to add all the signs and services
+                            needed for this proposal.
+                          </p>
+                          <button
+                            onClick={openSignSidebar}
+                            className="bg-[#F9F9FB] h-10 flex items-center justify-center px-4 gap-2 border border-[#E0E0E0] rounded-md font-semibold text-[14px] justify-self-center"
+                          >
+                            Add Sign/Service
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  {selectedTab === "Signs" &&
+                    (loadingPricing ? (
+                      <div className="flex-1 flex items-center justify-center">
+                        <div className="text-center">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 mx-auto mb-2"></div>
+                          <p className="text-gray-600 text-sm">
+                            Loading pricing data...
+                          </p>
+                        </div>
+                      </div>
+                    ) : signPricingLines.length > 0 ? (
+                      <SignsTable
+                        data={signPricingLines}
+                        onRowClick={handleRowClick}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        onAddSign={openSignSidebar}
                       />
                     ) : (
                       <div className="flex-1 flex items-center justify-center">
@@ -1257,23 +1322,51 @@ export default function AddJobPage() {
                             needed for this proposal.
                           </p>
                           <button
-                            onClick={() => setAddSignSidebarOpen(true)}
-                            className="bg-[#F9F9FB] h-10 flex items-center justify-center px-4 gap-2 border border-[#E0E0E0] rounded-md font-semibold text-[14px]"
+                            onClick={openSignSidebar}
+                            className="bg-[#F9F9FB] h-10 flex items-center justify-center px-4 gap-2 border border-[#E0E0E0] rounded-md font-semibold text-[14px] justify-self-center"
                           >
-                            Add Sign/Service
+                            Add Sign
                           </button>
                         </div>
                       </div>
                     ))}
-                  {selectedTab === "Services" && (
-                    <ServicesTable
-                      data={servicesData}
-                      onRowClick={handleRowClick}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                      onAddService={() => setAddSignSidebarOpen(true)}
-                    />
-                  )}
+                  {selectedTab === "Services" &&
+                    (loadingPricing ? (
+                      <div className="flex-1 flex items-center justify-center">
+                        <div className="text-center">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 mx-auto mb-2"></div>
+                          <p className="text-gray-600 text-sm">
+                            Loading pricing data...
+                          </p>
+                        </div>
+                      </div>
+                    ) : servicePricingLines.length > 0 ? (
+                      <ServicesTable
+                        data={servicePricingLines}
+                        onRowClick={handleRowClick}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        onAddService={openServiceSidebar}
+                      />
+                    ) : (
+                      <div className="flex-1 flex items-center justify-center">
+                        <div className="text-center">
+                          <h3 className="text-2xl font-semibold mb-2">
+                            Add your first service.
+                          </h3>
+                          <p className="text-[#0D1216B2] text-[14px] mb-6 max-w-md">
+                            You&apos;ll use this section to add all the services
+                            needed for this proposal.
+                          </p>
+                          <button
+                            onClick={openServiceSidebar}
+                            className="bg-[#F9F9FB] h-10 flex items-center justify-center px-4 gap-2 border border-[#E0E0E0] rounded-md font-semibold text-[14px] justify-self-center"
+                          >
+                            Add Service
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                 </>
               )}
             </div>
@@ -1497,10 +1590,14 @@ export default function AddJobPage() {
         }}
         jobId={jobId || ""}
         pricingVersionId={selectedVersion?.id}
+        initialTab={sidebarInitialTab}
+        brandId={jobData?.brandId}
         onSignAdded={async () => {
-          // Refresh pricing data for the current version
-          if (jobId && selectedVersion) {
-            await fetchPricingData(jobId, selectedVersion.id);
+          // Refresh versions and pricing data
+          if (jobId) {
+            await fetchVersions(jobId);
+            // The fetchVersions function will automatically select the latest version
+            // and trigger fetchPricingData for the new version
           }
           // Update the job's updated_at field
           await updateJobLastModified();
