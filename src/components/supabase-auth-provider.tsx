@@ -203,6 +203,13 @@ export function SupabaseAuthProvider({
       // Handle sign-out event
       if (event === "SIGNED_OUT") {
         console.log("SIGNED_OUT event triggered - clearing state");
+        
+        // Clear localStorage
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("userRole");
+          localStorage.removeItem("userEmail");
+        }
+        
         setUserData(null);
         setUser(null);
         setSession(null);
@@ -226,6 +233,12 @@ export function SupabaseAuthProvider({
       console.log("SignOut function called");
       console.log("Current session:", session);
       console.log("Current user:", user);
+
+      // Clear localStorage
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("userRole");
+        localStorage.removeItem("userEmail");
+      }
 
       // Call the sign-out API
       const response = await fetch('/api/auth/sign-out', {

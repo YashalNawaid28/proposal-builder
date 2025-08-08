@@ -14,6 +14,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "./supabase-auth-provider";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { isUserAdmin } from "@/lib/admin-utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -153,37 +154,41 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           })}
         </SidebarMenu>
 
-        {/* Admin Section */}
-        <div className="text-[14px] text-gray-400 mb-2 mt-4 px-4">Admin</div>
-        <SidebarMenu className="w-full">
-          {adminLinks.map((link) => {
-            const isActive = pathname === link.href;
-            return (
-              <SidebarMenuItem key={link.title}>
-                <SidebarMenuButton
-                  asChild
-                  isActive={isActive}
-                  className={`w-full flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
-                    isActive
-                      ? "bg-gray-800 text-white"
-                      : "hover:bg-gray-900/60 text-white"
-                  }`}
-                >
-                  <Link href={link.href} className="w-full flex items-center">
-                    <link.icon
-                      className={`w-5 h-5 ${
-                        link.title === "Options" ? "rotate-[135deg]" : ""
+        {/* Admin Section - Only show for admin users */}
+        {isUserAdmin() && (
+          <>
+            <div className="text-[14px] text-gray-400 mb-2 mt-4 px-4">Admin</div>
+            <SidebarMenu className="w-full">
+              {adminLinks.map((link) => {
+                const isActive = pathname === link.href;
+                return (
+                  <SidebarMenuItem key={link.title}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive}
+                      className={`w-full flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+                        isActive
+                          ? "bg-gray-800 text-white"
+                          : "hover:bg-gray-900/60 text-white"
                       }`}
-                    />
-                    <span className="ml-2 text-[14px] font-medium">
-                      {link.title}
-                    </span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            );
-          })}
-        </SidebarMenu>
+                    >
+                      <Link href={link.href} className="w-full flex items-center">
+                        <link.icon
+                          className={`w-5 h-5 ${
+                            link.title === "Options" ? "rotate-[135deg]" : ""
+                          }`}
+                        />
+                        <span className="ml-2 text-[14px] font-medium">
+                          {link.title}
+                        </span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </>
+        )}
       </SidebarContent>
       <SidebarFooter className="mt-auto bg-black text-[14px] px-4 pb-4">
         {user && (

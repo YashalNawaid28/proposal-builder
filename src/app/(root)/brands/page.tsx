@@ -2,6 +2,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { useAuth } from "@/components/supabase-auth-provider";
 import { PageTabs } from "@/components/ui/page-tabs";
+import { AdminGuard } from "@/components/admin-guard";
 
 // Define interfaces for our data structures
 export interface BrandData {
@@ -281,17 +282,19 @@ const BrandsPage = () => {
   const tabs = ["All", "Active", "Archived"];
 
   return (
-    <div className="bg-white">
-      <h1 className="text-2xl font-semibold p-5">Brands</h1>
-      <PageTabs
-        tabs={tabs}
-        activeTab={tab}
-        onTabChange={(tab) => setTab(tab as "All" | "Active" | "Archived")}
-      />
-      <div className="border border-[#DEE1EA] rounded-lg overflow-hidden">
-        <div>{renderTable()}</div>
+    <AdminGuard>
+      <div className="bg-white">
+        <h1 className="text-2xl font-semibold p-5">Brands</h1>
+        <PageTabs
+          tabs={tabs}
+          activeTab={tab}
+          onTabChange={(tab) => setTab(tab as "All" | "Active" | "Archived")}
+        />
+        <div className="border border-[#DEE1EA] rounded-lg overflow-hidden">
+          <div>{renderTable()}</div>
+        </div>
       </div>
-    </div>
+    </AdminGuard>
   );
 };
 
