@@ -47,7 +47,19 @@ export default function AddJobPage() {
   const [clientInfoOpen, setClientInfoOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState("All");
   const [addSignSidebarOpen, setAddSignSidebarOpen] = useState(false);
+  const [sidebarInitialTab, setSidebarInitialTab] = useState<"signage" | "services">("signage");
   const [loading, setLoading] = useState(!!jobId);
+
+  // Functions to open sidebar with specific tabs
+  const openSignSidebar = () => {
+    setSidebarInitialTab("signage");
+    setAddSignSidebarOpen(true);
+  };
+
+  const openServiceSidebar = () => {
+    setSidebarInitialTab("services");
+    setAddSignSidebarOpen(true);
+  };
 
   // Dummy data for All and Services tabs
   const [allItemsData, setAllItemsData] = useState([
@@ -1225,7 +1237,7 @@ export default function AddJobPage() {
                       onRowClick={handleRowClick}
                       onEdit={handleEdit}
                       onDelete={handleDelete}
-                      onAddSign={() => setAddSignSidebarOpen(true)}
+                      onAddSign={openSignSidebar}
                     />
                   )}
                   {selectedTab === "Signs" &&
@@ -1244,7 +1256,7 @@ export default function AddJobPage() {
                         onRowClick={handleRowClick}
                         onEdit={handleEdit}
                         onDelete={handleDelete}
-                        onAddSign={() => setAddSignSidebarOpen(true)}
+                        onAddSign={openSignSidebar}
                       />
                     ) : (
                       <div className="flex-1 flex items-center justify-center">
@@ -1257,7 +1269,7 @@ export default function AddJobPage() {
                             needed for this proposal.
                           </p>
                           <button
-                            onClick={() => setAddSignSidebarOpen(true)}
+                            onClick={openSignSidebar}
                             className="bg-[#F9F9FB] h-10 flex items-center justify-center px-4 gap-2 border border-[#E0E0E0] rounded-md font-semibold text-[14px]"
                           >
                             Add Sign/Service
@@ -1271,7 +1283,7 @@ export default function AddJobPage() {
                       onRowClick={handleRowClick}
                       onEdit={handleEdit}
                       onDelete={handleDelete}
-                      onAddService={() => setAddSignSidebarOpen(true)}
+                      onAddService={openServiceSidebar}
                     />
                   )}
                 </>
@@ -1497,6 +1509,7 @@ export default function AddJobPage() {
         }}
         jobId={jobId || ""}
         pricingVersionId={selectedVersion?.id}
+        initialTab={sidebarInitialTab}
         onSignAdded={async () => {
           // Refresh pricing data for the current version
           if (jobId && selectedVersion) {
