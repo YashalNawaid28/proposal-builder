@@ -65,8 +65,8 @@ export function CustomSidebar({
   const pathname = usePathname();
   const { user, userData, signOut } = useAuth();
 
-  console.log("CustomSidebar - user:", user);
-  console.log("CustomSidebar - userData:", userData);
+  // console.log("CustomSidebar - user:", user);
+  // console.log("CustomSidebar - userData:", userData);
 
   const handleSignOut = async () => {
     try {
