@@ -1,56 +1,21 @@
 "use client";
+import { useState, useEffect } from "react";
 import { ServiceOption } from "./AddSignServiceSidebar";
-import { Clipboard, X, Package, Truck, Palette, Settings } from "lucide-react";
+import { Clipboard, X, Package, Truck, Palette, Settings, Image } from "lucide-react";
 
 interface ServicesTabProps {
   onServiceSelect: (service: ServiceOption) => void;
+  brandId?: string; // Add brandId prop to filter services by brand
 }
 
-// Define the services data with proper icons
-const servicesData: ServiceOption[] = [
-  {
-    id: "site-survey",
-    name: "Site Survey",
-    icon: "clipboard",
-    description: "On-site survey and assessment",
-  },
-  {
-    id: "sign-removal",
-    name: "Sign Removal",
-    icon: "x",
-    description: "Removal of existing signs",
-  },
-  {
-    id: "shipping-exterior",
-    name: "Shipping & Crating (Exterior)",
-    icon: "package",
-    description: "Shipping and crating for exterior signs",
-  },
-  {
-    id: "shipping-interior",
-    name: "Shipping & Crating (Interior)",
-    icon: "package",
-    description: "Shipping and crating for interior signs",
-  },
-  {
-    id: "delivery",
-    name: "Delivery",
-    icon: "truck",
-    description: "Delivery service",
-  },
-  {
-    id: "design",
-    name: "Design",
-    icon: "palette",
-    description: "Design services",
-  },
-  {
-    id: "engineering",
-    name: "Engineering",
-    icon: "settings",
-    description: "Engineering services",
-  },
-];
+// Database service interface
+interface DatabaseService {
+  id: string;
+  brand_id: string;
+  service_image: string | null;
+  service_name: string;
+  service_description: string | null;
+}
 
 const getServiceIcon = (iconName: string) => {
   switch (iconName) {
@@ -71,19 +36,109 @@ const getServiceIcon = (iconName: string) => {
   }
 };
 
-export const ServicesTab = ({ onServiceSelect }: ServicesTabProps) => {
+export const ServicesTab = ({ onServiceSelect, brandId }: ServicesTabProps) => {
+  const [services, setServices] = useState<ServiceOption[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const url = brandId 
+          ? `/api/services?brand_id=${encodeURIComponent(brandId)}`
+          : '/api/services';
+        
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch services');
+        }
+
+        const result = await response.json();
+        
+        if (!result.data) {
+          throw new Error('Invalid response format');
+        }
+
+        // Transform database services to ServiceOption format
+        const transformedServices: ServiceOption[] = result.data.map((service: DatabaseService) => ({
+          id: service.id,
+          name: service.service_name,
+          icon: service.service_image || "default", // Use service_image or default icon
+          description: service.service_description || "",
+          service_id: service.id, // Add service_id for database reference
+        }));
+
+        setServices(transformedServices);
+      } catch (err) {
+        console.error('Error fetching services:', err);
+        setError(err instanceof Error ? err.message : 'Failed to fetch services');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchServices();
+  }, [brandId]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
+        <span className="ml-2 text-sm text-gray-600">Loading services...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="text-center">
+          <p className="text-red-500 text-sm mb-2">Error loading services</p>
+          <p className="text-gray-600 text-xs">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (services.length === 0) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="text-center">
+          <p className="text-gray-500 text-sm">No services available</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="">
-      {servicesData.map((service) => (
+      {services.map((service) => (
         <div
           key={service.id}
           className="flex items-center justify-between py-5 px-4 border-b border-[#F2F2F2] hover:bg-gray-50 transition-colors"
         >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[#F3F4F8] rounded-lg flex items-center justify-center">
-              {getServiceIcon(service.icon)}
+                      <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-[#F3F4F8] rounded-lg flex items-center justify-center">
+                {service.icon && service.icon !== "default" && service.icon.startsWith("http") ? (
+                  <img 
+                    src={service.icon} 
+                    alt={service.name}
+                    className="w-6 h-6 object-contain"
+                  />
+                ) : (
+                  getServiceIcon(service.icon)
+                )}
+              </div>
+            <div className="flex flex-col">
+              <h3 className="font-semibold text-[16px]">{service.name}</h3>
+              {service.description && (
+                <p className="text-sm text-gray-500 mt-1">{service.description}</p>
+              )}
             </div>
-            <h3 className="font-semibold text-[16px]">{service.name}</h3>
           </div>
           <button
             onClick={() => onServiceSelect(service)}
