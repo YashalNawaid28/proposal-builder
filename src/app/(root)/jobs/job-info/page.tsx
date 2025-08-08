@@ -1510,6 +1510,7 @@ export default function AddJobPage() {
         jobId={jobId || ""}
         pricingVersionId={selectedVersion?.id}
         initialTab={sidebarInitialTab}
+        brandId={jobData?.brandId}
         onSignAdded={async () => {
           // Refresh pricing data for the current version
           if (jobId && selectedVersion) {

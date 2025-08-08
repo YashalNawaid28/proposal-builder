@@ -48,6 +48,7 @@ interface AddSignServiceSidebarProps {
   pricingVersionId?: string; // Add this prop
   onSignAdded?: () => void; // Callback when a sign is successfully added
   initialTab?: "signage" | "services"; // Add this prop to control which tab opens initially
+  brandId?: string; // Add brandId prop to filter services by brand
 }
 
 export const AddSignServiceSidebar = ({
@@ -57,6 +58,7 @@ export const AddSignServiceSidebar = ({
   pricingVersionId,
   onSignAdded,
   initialTab = "signage",
+  brandId,
 }: AddSignServiceSidebarProps) => {
   const [activeTab, setActiveTab] = useState<"signage" | "services">(initialTab);
   const [step, setStep] = useState<1 | 2>(1);
@@ -190,7 +192,7 @@ export const AddSignServiceSidebar = ({
           <SignageTab onSignSelect={handleSignSelect} />
         )}
         {activeTab === "services" && (
-          <ServicesTab onServiceSelect={handleServiceSelect} />
+          <ServicesTab onServiceSelect={handleServiceSelect} brandId={brandId} />
         )}
       </div>
     </div>
