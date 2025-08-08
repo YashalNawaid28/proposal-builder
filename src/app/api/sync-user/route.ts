@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found in database' }, { status: 404 });
     }
 
-    console.log('Sync-user - User found in database:', existingUser.id);
+    console.log('Sync-user - User found in database with ID:', existingUser.id);
 
     // Create service role client for admin operations
     const serviceClient = createServiceClient(
@@ -46,24 +46,63 @@ export async function POST(request: NextRequest) {
     const existingAuthUser = authUsers.users.find(user => user.email === email.toLowerCase());
     
     if (existingAuthUser) {
-      console.log('Sync-user - User already exists in auth system:', existingAuthUser.id);
-      return NextResponse.json({ 
-        message: 'User already exists in auth system',
-        userId: existingAuthUser.id 
-      });
+      console.log('Sync-user - User already exists in auth system with ID:', existingAuthUser.id);
+      
+      // Always update the auth user metadata to ensure consistency
+      try {
+        const { data: updateData, error: updateError } = await serviceClient.auth.admin.updateUserById(
+          existingAuthUser.id,
+          {
+            user_metadata: {
+              user_id: existingUser.id, // Store our custom table ID in metadata
+              display_name: existingUser.display_name,
+              job_title: existingUser.job_title,
+              role: existingUser.role,
+              avatar_url: existingUser.avatar_url,
+              status: existingUser.status,
+              email: existingUser.email,
+            }
+          }
+        );
+        
+        if (updateError) {
+          console.error('Sync-user - Error updating auth user metadata:', updateError);
+          return NextResponse.json({ 
+            error: 'Failed to update auth user metadata',
+            details: updateError.message 
+          }, { status: 500 });
+        }
+        
+        console.log('Sync-user - Successfully updated auth user metadata');
+        return NextResponse.json({ 
+          message: 'User synced successfully (metadata updated)',
+          userId: existingUser.id, // Return our custom table ID as the primary ID
+          authUserId: existingAuthUser.id,
+          note: 'Auth user exists but using custom table ID as primary'
+        });
+      } catch (updateError) {
+        console.error('Sync-user - Error updating auth user:', updateError);
+        return NextResponse.json({ 
+          error: 'Failed to update auth user',
+          details: updateError instanceof Error ? updateError.message : 'Unknown error'
+        }, { status: 500 });
+      }
     }
 
-    console.log('Sync-user - Creating user in auth system');
+    console.log('Sync-user - Creating new user in auth system');
 
-    // Create user in auth system using service client
+    // Create user in auth system (Supabase will generate its own ID)
     const { data: authData, error: createError } = await serviceClient.auth.admin.createUser({
       email: email.toLowerCase(),
       email_confirm: true, // Auto-confirm the email
       user_metadata: {
+        user_id: existingUser.id, // Store our custom table ID in metadata
         display_name: existingUser.display_name,
         job_title: existingUser.job_title,
         role: existingUser.role,
         avatar_url: existingUser.avatar_url,
+        status: existingUser.status,
+        email: existingUser.email,
       }
     });
 
@@ -72,11 +111,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create auth user' }, { status: 500 });
     }
 
-    console.log('Sync-user - User created successfully in auth system:', authData.user.id);
+    console.log('Sync-user - User created successfully in auth system');
+    console.log('  Custom table ID:', existingUser.id);
+    console.log('  Auth system ID:', authData.user.id);
 
     return NextResponse.json({ 
       message: 'User synced successfully',
-      userId: authData.user.id 
+      userId: existingUser.id, // Return our custom table ID as the primary ID
+      authUserId: authData.user.id,
+      note: 'New auth user created with custom table ID stored in metadata'
     });
 
   } catch (error) {

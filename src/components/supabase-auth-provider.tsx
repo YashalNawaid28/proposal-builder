@@ -12,6 +12,7 @@ import { User, Session } from "@supabase/supabase-js";
 import { createClient } from "../lib/supabase/client";
 import { usePathname } from "next/navigation";
 import { flushSync } from "react-dom";
+import { getPrimaryUserId, isUserAuthenticated, getUserEmail } from "../lib/utils";
 
 interface UserData {
   id: string;
@@ -31,6 +32,8 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  primaryUserId: string | null; // Add this for consistent ID access
+  isAuthenticated: boolean; // Add this for easy auth checks
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -39,6 +42,8 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   loading: true,
   signOut: async () => {},
+  primaryUserId: null,
+  isAuthenticated: false,
 });
 
 export function SupabaseAuthProvider({
@@ -51,6 +56,10 @@ export function SupabaseAuthProvider({
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const pathname = usePathname();
+
+  // Compute derived values
+  const primaryUserId = useMemo(() => getPrimaryUserId(user, userData), [user, userData]);
+  const isAuthenticated = useMemo(() => isUserAuthenticated(user, userData), [user, userData]);
 
   const fetchUserData = useCallback(async (email: string) => {
     try {
@@ -77,7 +86,7 @@ export function SupabaseAuthProvider({
 
   // Client-side route protection
   useEffect(() => {
-    if (!loading && !session) {
+    if (!loading && !isAuthenticated) {
       const protectedRoutes = [
         "/jobs",
         "/users",
@@ -94,14 +103,16 @@ export function SupabaseAuthProvider({
         window.location.replace("/sign-in");
       }
     }
-  }, [session, loading, pathname]);
+  }, [isAuthenticated, loading, pathname]);
 
   // Debug effect to monitor user state changes
   useEffect(() => {
     console.log("User state changed:", user);
     console.log("Session state changed:", session);
     console.log("UserData state changed:", userData);
-  }, [user, session, userData]);
+    console.log("Primary user ID:", primaryUserId);
+    console.log("Is authenticated:", isAuthenticated);
+  }, [user, session, userData, primaryUserId, isAuthenticated]);
 
   useEffect(() => {
     const getInitialSession = async () => {
@@ -125,12 +136,13 @@ export function SupabaseAuthProvider({
           setUser(currentSession.user);
           
           // Fetch user data if session exists
-          if (currentSession.user?.email) {
+          const email = getUserEmail(currentSession.user, null);
+          if (email) {
             console.log(
               "Session found, fetching user data for:",
-              currentSession.user.email
+              email
             );
-            const userData = await fetchUserData(currentSession.user.email);
+            const userData = await fetchUserData(email);
             setUserData(userData);
           }
         } else {
@@ -147,8 +159,9 @@ export function SupabaseAuthProvider({
             setSession(refreshedSession);
             setUser(refreshedSession.user);
             
-            if (refreshedSession.user?.email) {
-              const userData = await fetchUserData(refreshedSession.user.email);
+            const email = getUserEmail(refreshedSession.user, null);
+            if (email) {
+              const userData = await fetchUserData(email);
               setUserData(userData);
             }
           }
@@ -175,13 +188,16 @@ export function SupabaseAuthProvider({
       setUser(session?.user ?? null);
 
       // Fetch user data on sign in
-      if (event === "SIGNED_IN" && session?.user?.email) {
-        console.log(
-          "User signed in, fetching user data for:",
-          session.user.email
-        );
-        const userData = await fetchUserData(session.user.email);
-        setUserData(userData);
+      if (event === "SIGNED_IN" && session?.user) {
+        const email = getUserEmail(session.user, null);
+        if (email) {
+          console.log(
+            "User signed in, fetching user data for:",
+            email
+          );
+          const userData = await fetchUserData(email);
+          setUserData(userData);
+        }
       }
 
       // Handle sign-out event
@@ -255,8 +271,10 @@ export function SupabaseAuthProvider({
       session,
       loading,
       signOut,
+      primaryUserId,
+      isAuthenticated,
     }),
-    [user, userData, session, loading, signOut]
+    [user, userData, session, loading, signOut, primaryUserId, isAuthenticated]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -3,8 +3,10 @@ import { getServerSupabase } from "@/lib/supabase";
 
 export async function POST(request: NextRequest) {
   try {
+    console.log("pricing-versions POST - Request received");
     const supabase = getServerSupabase();
     const { job_id, creator_id, version_no, revision_no } = await request.json();
+    console.log("pricing-versions POST - Request body:", { job_id, creator_id, version_no, revision_no });
 
     if (!job_id || !creator_id) {
       return NextResponse.json(

@@ -3,10 +3,12 @@ import { getServerSupabase } from "@/lib/supabase";
 
 export async function POST(request: NextRequest) {
   try {
+    console.log("pricing-lines POST - Request received");
     const supabase = getServerSupabase();
     // Handle both JSON and FormData
     let body;
     const contentType = request.headers.get("content-type");
+    console.log("pricing-lines POST - Content type:", contentType);
 
     if (contentType?.includes("application/json")) {
       body = await request.json();
@@ -38,6 +40,19 @@ export async function POST(request: NextRequest) {
       list_install_price,
       cost_install_budget,
     } = body;
+    
+    console.log("pricing-lines POST - Parsed body:", {
+      pricing_version_id,
+      sign_id,
+      service_name,
+      type,
+      description_resolved,
+      qty,
+      list_price,
+      cost_budget,
+      list_install_price,
+      cost_install_budget,
+    });
 
     if (!pricing_version_id) {
       return NextResponse.json(
@@ -62,22 +77,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate that we have at least some pricing data
+    if (!list_price && !cost_budget && !list_install_price && !cost_install_budget) {
+      return NextResponse.json(
+        { error: "At least one price field is required" },
+        { status: 400 }
+      );
+    }
+
     const insertData: any = {
       pricing_version_id,
-      type,
       description_resolved:
         description_resolved || (type === "service" ? service_name : ""),
-      qty: qty || 1,
-      list_price,
-      cost_budget,
-      list_install_price,
-      cost_install_budget,
+      qty: parseInt(qty) || 1,
+      list_price: parseFloat(list_price) || 0,
+      cost_budget: parseFloat(cost_budget) || 0,
+      list_install_price: parseFloat(list_install_price) || 0,
+      cost_install_budget: parseFloat(cost_install_budget) || 0,
     };
 
     // Only add sign_id if it's provided (for signs)
     if (sign_id) {
       insertData.sign_id = sign_id;
     }
+
+    console.log("pricing-lines POST - Final insert data:", insertData);
 
     const { data, error } = await supabase
       .from("pricing_lines")
@@ -88,7 +112,11 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error("Error creating pricing line:", error);
       return NextResponse.json(
-        { error: "Failed to create pricing line" },
+        { 
+          error: "Failed to create pricing line",
+          details: error.message,
+          code: error.code
+        },
         { status: 500 }
       );
     }

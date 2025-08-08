@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSupabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = getServerSupabase();
+    const supabase = await createClient();
 
     const { searchParams } = new URL(request.url);
     const sign_id = searchParams.get("sign_id");
@@ -40,13 +40,20 @@ export async function GET(request: NextRequest) {
 
     // If size is provided, filter by size as well
     if (size) {
-      // Remove any existing quotes and add the Unicode quote that's in the database
-      const cleanSize = size.replace(/["″]/g, '');
-      const sizeWithUnicodeQuote = `${cleanSize}″`;
-      console.log("API Debug - Original size:", size);
-      console.log("API Debug - Cleaned size:", cleanSize);
-      console.log("API Debug - Searching for size:", sizeWithUnicodeQuote);
-      query = query.eq("size", sizeWithUnicodeQuote);
+      // Try multiple size formats to handle different quote characters
+      const sizeVariations = [
+        size, // Original size
+        size.replace(/["″]/g, ''), // Remove quotes
+        `${size.replace(/["″]/g, '')}″`, // Add Unicode quote
+        `${size.replace(/["″]/g, '')}"`, // Add regular quote
+        size.replace(/″/g, '"'), // Replace Unicode quote with regular quote
+        size.replace(/"/g, '″'), // Replace regular quote with Unicode quote
+      ];
+      
+      console.log("API Debug - Size variations to try:", sizeVariations);
+      
+      // Use OR condition to try multiple size formats
+      query = query.or(sizeVariations.map(s => `size.eq.${s}`).join(','));
     }
 
     const { data, error } = await query;
@@ -54,7 +61,30 @@ export async function GET(request: NextRequest) {
     console.log("API Debug - Final query result:", { data, error });
 
     if (error) {
+      console.error("API Debug - Database error:", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    // If no data found with size filter, try without size filter
+    if (!data || data.length === 0) {
+      console.log("API Debug - No data found with size filter, trying without size filter");
+      
+      const { data: dataWithoutSize, error: errorWithoutSize } = await supabase
+        .from("sign_pricing")
+        .select("*")
+        .eq("sign_id", sign_id);
+      
+      console.log("API Debug - Data without size filter:", dataWithoutSize);
+      
+      if (errorWithoutSize) {
+        console.error("API Debug - Error without size filter:", errorWithoutSize);
+        return NextResponse.json({ error: errorWithoutSize.message }, { status: 500 });
+      }
+      
+      return NextResponse.json({ 
+        data: dataWithoutSize,
+        note: "No exact size match found, returning all sizes for this sign"
+      });
     }
 
     return NextResponse.json({ data });
