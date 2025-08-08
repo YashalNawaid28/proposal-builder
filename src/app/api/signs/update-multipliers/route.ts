@@ -4,18 +4,34 @@ import { createClient } from '@/lib/supabase/server';
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { signId, multipliers } = body;
+    console.log('update-multipliers - Received body:', body);
 
-    if (!signId || !multipliers) {
-      return NextResponse.json({ error: 'Sign ID and multipliers are required' }, { status: 400 });
+    // Handle the actual data structure being sent
+    const { sign_id, sign_budget_multiplier, install_budget_multiplier } = body;
+
+    if (!sign_id) {
+      return NextResponse.json({ error: 'Sign ID is required' }, { status: 400 });
+    }
+
+    // Build the update object with only the fields that are provided
+    const updateData: any = {};
+    if (sign_budget_multiplier !== undefined) {
+      updateData.sign_budget_multiplier = sign_budget_multiplier;
+    }
+    if (install_budget_multiplier !== undefined) {
+      updateData.install_budget_multiplier = install_budget_multiplier;
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json({ error: 'No multiplier data provided' }, { status: 400 });
     }
 
     const supabase = await createClient();
 
     const { data, error } = await supabase
       .from('signs')
-      .update({ multipliers })
-      .eq('id', signId)
+      .update(updateData)
+      .eq('id', sign_id)
       .select();
 
     if (error) {
