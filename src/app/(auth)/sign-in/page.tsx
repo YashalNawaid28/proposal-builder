@@ -4,6 +4,8 @@ import { createClient } from "../../../lib/supabase/client";
 import { useSearchParams } from "next/navigation";
 import { getSiteUrl } from "../../../lib/utils";
 import { Input } from "../../../components/ui/input";
+import Image from "next/image";
+import { Label } from "@/components/ui/label";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
@@ -32,71 +34,45 @@ export default function SignIn() {
     setLoading(true);
     setError("");
     setSuccess("");
-
     try {
-      console.log("Attempting to sign in with email:", email.toLowerCase());
-
       const supabase = createClient();
-
-      // Step 1: Check if user exists in users table first
       let { data: existingUser, error: checkError } = await supabase
         .from("users")
         .select("id, email, display_name, status")
         .eq("email", email.toLowerCase())
         .single();
-
-      console.log("User lookup result:", { existingUser, checkError });
-
-      // If no exact match, try case-insensitive search
       if (checkError && checkError.code === "PGRST116") {
-        console.log("No exact match found, trying case-insensitive search");
         const { data: users, error: searchError } = await supabase
           .from("users")
           .select("id, email, display_name, status")
           .ilike("email", `%${email}%`);
-
-        console.log("Case-insensitive search result:", { users, searchError });
-
         if (!searchError && users && users.length > 0) {
           existingUser = users[0];
           checkError = null;
           console.log("Found user with case-insensitive search:", existingUser);
         }
       }
-
       if (checkError) {
-        console.error("Database error:", checkError);
         setError(
           "Access denied. Please contact your administrator to get access."
         );
         setLoading(false);
         return;
       }
-
       if (!existingUser) {
-        console.log("No user found in database");
         setError(
           "Access denied. Please contact your administrator to get access."
         );
         setLoading(false);
         return;
       }
-
-      console.log("User found:", existingUser);
-
-      // Step 2: Check if user is disabled
       if (existingUser.status === "Disabled") {
-        console.log("User is disabled");
         setError(
           "Your account has been disabled. Please contact your administrator for assistance."
         );
         setLoading(false);
         return;
       }
-
-      console.log("User is active, syncing with auth system");
-
-      // Step 3: Sync user with auth system (create if doesn't exist)
       try {
         const syncResponse = await fetch("/api/sync-user", {
           method: "POST",
@@ -105,44 +81,27 @@ export default function SignIn() {
           },
           body: JSON.stringify({ email: email.toLowerCase() }),
         });
-
-        if (syncResponse.ok) {
-          const syncResult = await syncResponse.json();
-          console.log("User sync result:", syncResult);
-        } else {
-          console.log("User sync failed, but continuing with sign-in attempt");
-        }
       } catch (syncError) {
         console.log(
           "User sync error, but continuing with sign-in attempt:",
           syncError
         );
       }
-
-      console.log("Sending magic link");
-
-      // Step 4: Send magic link (user now exists in auth system)
-      // Use the getSiteUrl function which now returns the correct port
       const redirectUrl = `${getSiteUrl()}/callback`;
-
-      console.log("Using redirect URL:", redirectUrl);
-
       const { error: signInError } = await supabase.auth.signInWithOtp({
         email: email.toLowerCase(),
         options: {
-          shouldCreateUser: false, // Don't create new users, only use existing ones
+          shouldCreateUser: false,
           emailRedirectTo: redirectUrl,
           data: {
             name: existingUser.display_name || "User",
           },
         },
       });
-
       if (signInError) {
         console.error("Sign in error:", signInError);
         setError(signInError.message);
       } else {
-        console.log("Magic link sent successfully");
         setSuccess(
           "Magic link sent to your email! Check your inbox and click the link to sign in."
         );
@@ -160,52 +119,59 @@ export default function SignIn() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-[24px] font-bold text-gray-900">
-            Sign in to your account
-          </h2>
-        </div>
-
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              disabled={loading}
-            />
-          </div>
-
-          {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="text-sm text-red-700">{error}</div>
-            </div>
-          )}
-
-          {success && (
-            <div className="rounded-md bg-green-50 p-4">
-              <div className="text-sm text-green-700">{success}</div>
-            </div>
-          )}
-
-          <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-black disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? "Sending..." : "Send Email"}
-            </button>
-          </div>
-        </form>
+    <div className="min-h-screen items-center justify-center bg-gray-50 flex flex-col">
+      <div className="h-32 bg-black flex items-center justify-center w-full">
+        <Image src="/images/logo.svg" alt="Logo" width={250} height={100} />
       </div>
+      <section className="flex-1 max-w-md w-full flex items-center justify-center">
+        <div className="w-full space-y-8">
+          <div>
+            <h2 className="mt-6 text-center text-[30px] font-semibold text-gray-900">
+              Sign in
+            </h2>
+            <h3 className="text-center text-sm text-gray-500">
+              Please enter your email to receive link.
+            </h3>
+          </div>
+          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+            <div>
+              <Label className="text-sm mb-2">Email</Label>
+              <div>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+            {error && (
+              <div className="rounded-md bg-red-50 p-4">
+                <div className="text-sm text-red-700">{error}</div>
+              </div>
+            )}
+            {success && (
+              <div className="rounded-md bg-green-50 p-4">
+                <div className="text-sm text-green-700">{success}</div>
+              </div>
+            )}
+            <div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-black disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? "Sending..." : "Send Email"}
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
     </div>
   );
 }

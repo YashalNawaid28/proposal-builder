@@ -662,7 +662,7 @@ export default function AddJobPage() {
 
         // Use user object if userData is not available
         const userId = userData?.id || user?.id;
-        
+
         if (!userId) {
           console.error("User ID not available");
           return;
@@ -670,9 +670,9 @@ export default function AddJobPage() {
 
         const response = await fetch("/api/jobs/add-job-info", {
           method: "POST",
-          headers: { 
+          headers: {
             "request.user.id": userId,
-            "request.user.email": user?.email || ""
+            "request.user.email": user?.email || "",
           },
           body: formData,
         });
@@ -700,7 +700,7 @@ export default function AddJobPage() {
     const loadJobData = async () => {
       // Use user object if userData is not available
       const userId = userData?.id || user?.id;
-      
+
       if (!jobId || !userId) return;
 
       try {
@@ -800,15 +800,15 @@ export default function AddJobPage() {
   const reloadJobData = async () => {
     // Use user object if userData is not available
     const userId = userData?.id || user?.id;
-    
+
     if (!jobId || !userId) return;
 
     console.log("Job Info Page - reloadJobData called for jobId:", jobId);
 
     try {
-              const res = await fetch(`/api/jobs/${jobId}`, {
-          headers: { "request.user.id": userId },
-        });
+      const res = await fetch(`/api/jobs/${jobId}`, {
+        headers: { "request.user.id": userId },
+      });
 
       if (!res.ok) {
         throw new Error("Failed to fetch job data");
@@ -1056,16 +1056,16 @@ export default function AddJobPage() {
                 {loading
                   ? "Loading..."
                   : jobId
-                  ? `${jobData.jobName || "Job"} - ${jobData.jobNumber || ""}`
-                  : "Create New Job"}
+                    ? `${jobData.jobName || "Job"} - ${jobData.jobNumber || ""}`
+                    : "Create New Job"}
               </h1>
               <div className="text-sm text-[#60646C] flex items-center gap-2">
                 <span className="font-semibold">Last Updated:</span>
                 {loading
                   ? "Loading..."
                   : jobData.updatedAt
-                  ? formatDateTime(jobData.updatedAt)
-                  : "Never"}
+                    ? formatDateTime(jobData.updatedAt)
+                    : "Never"}
                 <div className="size-2 bg-gray-300 rounded-full" />
                 <span className="font-semibold">Version:</span>
                 {loadingVersions ? (
@@ -1133,7 +1133,7 @@ export default function AddJobPage() {
         <div className="flex-1 flex flex-col">
           {/* Tabs */}
           <PageTabs
-            tabs={["All", "Budget", "Pricing"]}
+            tabs={["All", "Signs", "Services"]}
             activeTab={selectedTab}
             onTabChange={setSelectedTab}
             variant="border-bottom"
