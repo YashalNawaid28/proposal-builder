@@ -6,7 +6,25 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from('jobs')
-      .select('*')
+      .select(`
+        *,
+        creator:creator_id(
+          id,
+          display_name,
+          avatar_url,
+          job_title
+        ),
+        project_manager:pm_id(
+          id,
+          display_name,
+          avatar_url,
+          job_title
+        ),
+        client:client_id(
+          id,
+          legal_name
+        )
+      `)
       .order('created_at', { ascending: false });
 
     if (error) {
