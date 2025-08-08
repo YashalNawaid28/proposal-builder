@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import Drawer from "react-modern-drawer";
 import "react-modern-drawer/dist/index.css";
@@ -47,6 +47,7 @@ interface AddSignServiceSidebarProps {
   jobId: string;
   pricingVersionId?: string; // Add this prop
   onSignAdded?: () => void; // Callback when a sign is successfully added
+  initialTab?: "signage" | "services"; // Add this prop to control which tab opens initially
 }
 
 export const AddSignServiceSidebar = ({
@@ -55,8 +56,9 @@ export const AddSignServiceSidebar = ({
   jobId,
   pricingVersionId,
   onSignAdded,
+  initialTab = "signage",
 }: AddSignServiceSidebarProps) => {
-  const [activeTab, setActiveTab] = useState<"signage" | "services">("signage");
+  const [activeTab, setActiveTab] = useState<"signage" | "services">(initialTab);
   const [step, setStep] = useState<1 | 2>(1);
   const [selectedSign, setSelectedSign] = useState<SignOption | null>(null);
   const [selectedService, setSelectedService] = useState<ServiceOption | null>(
@@ -64,6 +66,11 @@ export const AddSignServiceSidebar = ({
   );
   const [signData, setSignData] = useState<SignData>({});
   const [serviceData, setServiceData] = useState<ServiceData>({ price: "" });
+
+  // Update activeTab when initialTab prop changes
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   const handleSignSelect = (sign: SignOption) => {
     setSelectedSign(sign);
