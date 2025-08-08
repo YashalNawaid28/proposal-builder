@@ -606,7 +606,13 @@ export const SignConfigurationStep = ({
         .replace(/[{}]/g, "")
         .toLowerCase()
         .replace(/\s+/g, "");
-      const value = signData[key];
+      
+      // Handle both "Size" and "Letter Size" placeholders
+      let value = signData[key];
+      if (!value && (key === "size" || key === "lettersize")) {
+        // If the key is "size" or "lettersize", use the size value from signData
+        value = signData.size;
+      }
 
       if (value) {
         if (key.includes("raceway") && !key.includes("size")) {
